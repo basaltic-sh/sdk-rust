@@ -45,7 +45,9 @@ def main():
                 if relative == ".cargo_vcs_info.json":
                     vcs = json.loads(content)
                     assert vcs["path_in_vcs"] == "", "Nested private path in archive"
-                    expected = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+                    # Hosted CI containers may use a different UID from checkout.
+                    # Trust only this reviewed source directory for this command.
+                    expected = subprocess.check_output(["git", "-c", "safe.directory=" + str(ROOT), "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
                     assert vcs["git"]["sha1"] == expected
             assert {"src/" + str(p.relative_to(ROOT / "src")) for p in (ROOT / "src").rglob("*.rs")} <= seen
             assert {"Cargo.toml", "Cargo.toml.orig", "Cargo.lock", "README.md", "SECURITY.md", "LICENSE"} <= seen

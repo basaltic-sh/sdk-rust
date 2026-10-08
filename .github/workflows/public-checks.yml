@@ -60,7 +60,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           python3 scripts/check_package.py
-          git diff --exit-code
+          git -c safe.directory="$GITHUB_WORKSPACE" diff --exit-code
       - name: Authenticate with trusted publishing
         if: vars.CRATES_BOOTSTRAP != 'true'
         id: auth

@@ -133,7 +133,7 @@ response headers. Authentication, transport, timeout, configuration, protocol an
 ambiguous-reference failures have separate variants. Raw HTTP errors and authentication
 response bodies are not retained in errors.
 
-See the [API reference](docs/api.md) for every operation and the
+See the [API reference](https://github.com/basaltic-sh/sdk-rust/blob/main/docs/api.md) for every operation and the
 [Basaltic documentation](https://docs.basaltic.sh) for API concepts.
 
 ## Development and security
@@ -141,6 +141,6 @@ See the [API reference](docs/api.md) for every operation and the
 This repository is a release snapshot for reference. Development happens internally;
 external pull requests and contributions are not accepted. Public GitHub Actions run
 formatting, lint, tests, documentation and package verification on the released source.
-Report vulnerabilities privately to **security@basaltic.sh**; see [SECURITY.md](SECURITY.md).
+Report vulnerabilities privately to **security@basaltic.sh**; see [SECURITY.md](https://github.com/basaltic-sh/sdk-rust/blob/main/SECURITY.md).
 
 Licensed under Apache-2.0.
