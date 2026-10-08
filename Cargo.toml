@@ -1,0 +1,32 @@
+[package]
+name = "basaltic-sdk-rust"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "Official typed asynchronous Rust SDK for Basaltic"
+license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://basaltic.sh"
+documentation = "https://docs.rs/basaltic-sdk-rust"
+repository = "https://github.com/basaltic-sh/sdk-rust"
+keywords = ["basaltic", "cloud", "sdk", "async"]
+categories = ["api-bindings", "web-programming::http-client"]
+include = ["src/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "SECURITY.md"]
+
+[lib]
+name = "basaltic"
+
+[dependencies]
+bytes = "1.12.1"
+fastrand = "2.5.0"
+futures-util = "0.3.34"
+httpdate = "1.0.3"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "json", "form", "stream"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tokio = { version = "1.53.2", features = ["sync", "time", "rt"] }
+uuid = { version = "1.27.0", features = ["v4"] }
+
+[dev-dependencies]
+tokio = { version = "1.53.2", features = ["macros", "rt-multi-thread"] }
+wiremock = "0.6.5"
