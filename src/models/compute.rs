@@ -1593,6 +1593,23 @@ pub struct Flavor {
     /// Which product can book the flavor. "general" flavors are for regular instances and instance pools; "loadbalancer" and "database" flavors are reserved for the managed products (their nodes are platform- operated and priced accordingly) and cannot be used for regular instances.
     #[serde(rename = "family", default, skip_serializing_if = "Option::is_none")]
     pub family: Option<FlavorFamily>,
+    /// Aggregate instance network throughput limit in megabits per second. Omitted when uncapped.
+    #[serde(rename = "net_mbps", default, skip_serializing_if = "Option::is_none")]
+    pub net_mbps: Option<i64>,
+    /// Guaranteed CPU floor as a percentage of each vCPU. Omitted when no floor is guaranteed.
+    #[serde(
+        rename = "cpu_baseline_pct",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cpu_baseline_pct: Option<i64>,
+    /// CPU ceiling as a percentage of each vCPU. A value of 100 or an omitted field allows the full vCPU count.
+    #[serde(
+        rename = "cpu_burst_pct",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cpu_burst_pct: Option<i64>,
 
     #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<FlavorStatus>,
@@ -1824,6 +1841,12 @@ pub type CreateInstanceResponse = CreateInstanceResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolCreateRequestInput {
+    #[serde(
+        rename = "autoscaling",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub autoscaling: Option<AutoscalingPolicyInput>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
@@ -1859,6 +1882,7 @@ impl InstancePoolCreateRequestInput {
     #[allow(clippy::too_many_arguments)]
     pub fn new(name: String, template: InstancePoolTemplateRequestInput) -> Self {
         Self {
+            autoscaling: None,
             name,
             description: None,
             tags: None,
@@ -1867,6 +1891,281 @@ impl InstancePoolCreateRequestInput {
             min_count: None,
             max_count: None,
         }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AutoscalingPolicyInput {
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+
+    #[serde(rename = "metrics")]
+    pub metrics: Vec<ScalingMetricInput>,
+
+    #[serde(
+        rename = "warmup_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub warmup_seconds: Option<i64>,
+
+    #[serde(
+        rename = "cooldown_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cooldown_seconds: Option<i64>,
+
+    #[serde(
+        rename = "scale_down_stabilization_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub scale_down_stabilization_seconds: Option<i64>,
+
+    #[serde(
+        rename = "max_scale_out_step",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_scale_out_step: Option<i64>,
+
+    #[serde(
+        rename = "max_scale_in_step",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_scale_in_step: Option<i64>,
+    /// Grace period after route withdrawal and proxy acknowledgements, before deleting a retiring member. Long-lived TCP/UDP sessions may end at the deadline; arbitrary application shutdown hooks are not supported.
+    #[serde(
+        rename = "drain_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub drain_seconds: Option<i64>,
+}
+impl AutoscalingPolicyInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(enabled: bool, metrics: Vec<ScalingMetricInput>) -> Self {
+        Self {
+            enabled,
+            metrics,
+            warmup_seconds: None,
+            cooldown_seconds: None,
+            scale_down_stabilization_seconds: None,
+            max_scale_out_step: None,
+            max_scale_in_step: None,
+            drain_seconds: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ScalingMetricInput {
+    #[serde(rename = "source")]
+    pub source: ScalingMetricInputSource,
+
+    #[serde(rename = "target_type")]
+    pub target_type: ScalingMetricInputTargetType,
+
+    #[serde(rename = "target_value")]
+    pub target_value: f64,
+
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Exact-match labels; tenancy labels and __name__ cannot be supplied.
+    #[serde(rename = "labels", default, skip_serializing_if = "Option::is_none")]
+    pub labels: Option<std::collections::BTreeMap<String, String>>,
+    /// Use last for queue gauges; rate for monotonically increasing counters, with reset handling.
+    #[serde(
+        rename = "sample_aggregation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub sample_aggregation: Option<ScalingMetricInputSampleAggregation>,
+
+    #[serde(
+        rename = "series_aggregation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub series_aggregation: Option<ScalingMetricInputSeriesAggregation>,
+    /// Exact expected cardinality; incomplete or ambiguous selectors are unavailable.
+    #[serde(
+        rename = "expected_series",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub expected_series: Option<i64>,
+
+    #[serde(
+        rename = "window_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub window_seconds: Option<i64>,
+    /// Actual newest observation age per series; must not exceed window_seconds. Defaults to the smaller of 90 and the window.
+    #[serde(
+        rename = "max_age_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_age_seconds: Option<i64>,
+}
+impl ScalingMetricInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        source: ScalingMetricInputSource,
+        target_type: ScalingMetricInputTargetType,
+        target_value: f64,
+    ) -> Self {
+        Self {
+            source,
+            target_type,
+            target_value,
+            name: None,
+            labels: None,
+            sample_aggregation: None,
+            series_aggregation: None,
+            expected_series: None,
+            window_seconds: None,
+            max_age_seconds: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricInputSource {
+    Cpu,
+    Telemetry,
+    Unknown(String),
+}
+impl ScalingMetricInputSource {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Cpu => "cpu",
+            Self::Telemetry => "telemetry",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricInputSource {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricInputSource {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "cpu" => Self::Cpu,
+            "telemetry" => Self::Telemetry,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricInputTargetType {
+    Utilization,
+    AverageValue,
+    Unknown(String),
+}
+impl ScalingMetricInputTargetType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Utilization => "utilization",
+            Self::AverageValue => "average_value",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricInputTargetType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricInputTargetType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "utilization" => Self::Utilization,
+            "average_value" => Self::AverageValue,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricInputSampleAggregation {
+    Last,
+    Avg,
+    Max,
+    Rate,
+    Unknown(String),
+}
+impl ScalingMetricInputSampleAggregation {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Last => "last",
+            Self::Avg => "avg",
+            Self::Max => "max",
+            Self::Rate => "rate",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricInputSampleAggregation {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricInputSampleAggregation {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "last" => Self::Last,
+            "avg" => Self::Avg,
+            "max" => Self::Max,
+            "rate" => Self::Rate,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricInputSeriesAggregation {
+    Sum,
+    Avg,
+    Max,
+    Unknown(String),
+}
+impl ScalingMetricInputSeriesAggregation {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Sum => "sum",
+            Self::Avg => "avg",
+            Self::Max => "max",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricInputSeriesAggregation {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricInputSeriesAggregation {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "sum" => Self::Sum,
+            "avg" => Self::Avg,
+            "max" => Self::Max,
+            _ => Self::Unknown(value),
+        })
     }
 }
 
@@ -1900,7 +2199,7 @@ pub struct InstancePoolTemplateRequestInput {
     /// IAM role reference from the same account (UUID, CRN or exact name). PassRole and instance trust authorization apply.
     #[serde(rename = "iam_role", default, skip_serializing_if = "Option::is_none")]
     pub iam_role: Option<String>,
-    /// Per-replica disks, the boot disk included — mark it with `boot: true`. Same shape as instance create.
+    /// Per-replica disks, the boot disk included — mark it with `boot: true`. Each new replica receives the configured provisioned performance. Omitted performance uses the included allowance. Existing volumes and snapshot schedules are not supported in pool templates.
     #[serde(rename = "volumes", default, skip_serializing_if = "Option::is_none")]
     pub volumes: Option<Vec<InstanceVolumeInput>>,
 }
@@ -1939,6 +2238,13 @@ pub struct InstanceVolumeInput {
     pub volume_type: Option<String>,
 
     #[serde(
+        rename = "performance",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub performance: Option<VolumePerformanceRequestInput>,
+
+    #[serde(
         rename = "mount_path",
         default,
         skip_serializing_if = "Option::is_none"
@@ -1963,6 +2269,7 @@ impl InstanceVolumeInput {
             boot: None,
             size_gb,
             volume_type: None,
+            performance: None,
             mount_path: None,
             fstype: None,
             delete_on_termination: None,
@@ -1984,6 +2291,34 @@ pub struct InstancePoolResponse {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePool {
+    #[serde(
+        rename = "autoscaling",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub autoscaling: Option<AutoscalingPolicy>,
+
+    #[serde(
+        rename = "autoscaling_status",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub autoscaling_status: Option<AutoscalingStatus>,
+    /// Temporary rollout capacity; desired_count remains the steady target.
+    #[serde(
+        rename = "rollout_surge",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub rollout_surge: Option<bool>,
+
+    #[serde(
+        rename = "retiring_instances",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub retiring_instances: Option<Vec<RetiringPoolMember>>,
+
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     /// Cloud Resource Name. This is the value an IAM policy statement must name to scope a permission to this pool alone; a policy written against anything else will not match.
@@ -2061,6 +2396,365 @@ pub struct InstancePool {
     pub template: Option<InstancePoolTemplate>,
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AutoscalingPolicy {
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+
+    #[serde(rename = "metrics")]
+    pub metrics: Vec<ScalingMetric>,
+
+    #[serde(
+        rename = "warmup_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub warmup_seconds: Option<i64>,
+
+    #[serde(
+        rename = "cooldown_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cooldown_seconds: Option<i64>,
+
+    #[serde(
+        rename = "scale_down_stabilization_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub scale_down_stabilization_seconds: Option<i64>,
+
+    #[serde(
+        rename = "max_scale_out_step",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_scale_out_step: Option<i64>,
+
+    #[serde(
+        rename = "max_scale_in_step",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_scale_in_step: Option<i64>,
+    /// Grace period after route withdrawal and proxy acknowledgements, before deleting a retiring member. Long-lived TCP/UDP sessions may end at the deadline; arbitrary application shutdown hooks are not supported.
+    #[serde(
+        rename = "drain_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub drain_seconds: Option<i64>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ScalingMetric {
+    #[serde(rename = "source")]
+    pub source: ScalingMetricSource,
+
+    #[serde(rename = "target_type")]
+    pub target_type: ScalingMetricTargetType,
+
+    #[serde(rename = "target_value")]
+    pub target_value: f64,
+
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Exact-match labels; tenancy labels and __name__ cannot be supplied.
+    #[serde(rename = "labels", default, skip_serializing_if = "Option::is_none")]
+    pub labels: Option<std::collections::BTreeMap<String, String>>,
+    /// Use last for queue gauges; rate for monotonically increasing counters, with reset handling.
+    #[serde(
+        rename = "sample_aggregation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub sample_aggregation: Option<ScalingMetricSampleAggregation>,
+
+    #[serde(
+        rename = "series_aggregation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub series_aggregation: Option<ScalingMetricSeriesAggregation>,
+    /// Exact expected cardinality; incomplete or ambiguous selectors are unavailable.
+    #[serde(
+        rename = "expected_series",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub expected_series: Option<i64>,
+
+    #[serde(
+        rename = "window_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub window_seconds: Option<i64>,
+    /// Actual newest observation age per series; must not exceed window_seconds. Defaults to the smaller of 90 and the window.
+    #[serde(
+        rename = "max_age_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub max_age_seconds: Option<i64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricSource {
+    Cpu,
+    Telemetry,
+    Unknown(String),
+}
+impl ScalingMetricSource {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Cpu => "cpu",
+            Self::Telemetry => "telemetry",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricSource {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricSource {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "cpu" => Self::Cpu,
+            "telemetry" => Self::Telemetry,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricTargetType {
+    Utilization,
+    AverageValue,
+    Unknown(String),
+}
+impl ScalingMetricTargetType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Utilization => "utilization",
+            Self::AverageValue => "average_value",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricTargetType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricTargetType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "utilization" => Self::Utilization,
+            "average_value" => Self::AverageValue,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricSampleAggregation {
+    Last,
+    Avg,
+    Max,
+    Rate,
+    Unknown(String),
+}
+impl ScalingMetricSampleAggregation {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Last => "last",
+            Self::Avg => "avg",
+            Self::Max => "max",
+            Self::Rate => "rate",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricSampleAggregation {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricSampleAggregation {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "last" => Self::Last,
+            "avg" => Self::Avg,
+            "max" => Self::Max,
+            "rate" => Self::Rate,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScalingMetricSeriesAggregation {
+    Sum,
+    Avg,
+    Max,
+    Unknown(String),
+}
+impl ScalingMetricSeriesAggregation {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Sum => "sum",
+            Self::Avg => "avg",
+            Self::Max => "max",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ScalingMetricSeriesAggregation {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ScalingMetricSeriesAggregation {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "sum" => Self::Sum,
+            "avg" => Self::Avg,
+            "max" => Self::Max,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AutoscalingStatus {
+    #[serde(rename = "status")]
+    pub status: AutoscalingStatusStatus,
+
+    #[serde(rename = "reason")]
+    pub reason: String,
+
+    #[serde(
+        rename = "evaluated_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub evaluated_at: Option<String>,
+
+    #[serde(
+        rename = "last_scaled_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub last_scaled_at: Option<String>,
+
+    #[serde(rename = "history")]
+    pub history: Vec<AutoscalingStatusHistoryItem>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AutoscalingStatusStatus {
+    Pending,
+    Disabled,
+    Stable,
+    Scaling,
+    Waiting,
+    WarmingUp,
+    MetricsUnavailable,
+    Stabilizing,
+    Cooldown,
+    Draining,
+    Unknown(String),
+}
+impl AutoscalingStatusStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Pending => "pending",
+            Self::Disabled => "disabled",
+            Self::Stable => "stable",
+            Self::Scaling => "scaling",
+            Self::Waiting => "waiting",
+            Self::WarmingUp => "warming_up",
+            Self::MetricsUnavailable => "metrics_unavailable",
+            Self::Stabilizing => "stabilizing",
+            Self::Cooldown => "cooldown",
+            Self::Draining => "draining",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AutoscalingStatusStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AutoscalingStatusStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "pending" => Self::Pending,
+            "disabled" => Self::Disabled,
+            "stable" => Self::Stable,
+            "scaling" => Self::Scaling,
+            "waiting" => Self::Waiting,
+            "warming_up" => Self::WarmingUp,
+            "metrics_unavailable" => Self::MetricsUnavailable,
+            "stabilizing" => Self::Stabilizing,
+            "cooldown" => Self::Cooldown,
+            "draining" => Self::Draining,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AutoscalingStatusHistoryItem {
+    #[serde(rename = "at")]
+    pub at: String,
+
+    #[serde(rename = "from")]
+    pub from: i64,
+
+    #[serde(rename = "to")]
+    pub to: i64,
+
+    #[serde(rename = "reason")]
+    pub reason: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RetiringPoolMember {
+    #[serde(rename = "requested_at")]
+    pub requested_at: String,
+
+    #[serde(rename = "drain_seconds")]
+    pub drain_seconds: i64,
+
+    #[serde(
+        rename = "agent_acknowledged_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub agent_acknowledged_at: Option<String>,
+    /// Earliest deletion time; absent while withdrawal is pending.
+    #[serde(
+        rename = "drain_until",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub drain_until: Option<String>,
+
+    #[serde(rename = "instance_id")]
+    pub instance_id: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum InstancePoolStatus {
     Active,
@@ -2120,7 +2814,7 @@ pub struct InstancePoolTemplate {
     /// Summary of the IAM role attached to every replica, visible with pool read access without iam:GetRole. Omitted when no role is attached, the role was deleted, or it belongs to another account. Sensitive role fields remain available only through the IAM API.
     #[serde(rename = "iam_role", default, skip_serializing_if = "Option::is_none")]
     pub iam_role: Option<InstanceRole>,
-    /// Per-replica disks, the boot disk included — mark it with `boot: true`. Same shape as instance create.
+    /// Per-replica disks, the boot disk included — mark it with `boot: true`. Each new replica receives the configured provisioned performance. Omitted performance uses the included allowance. Existing volumes and snapshot schedules are not supported in pool templates.
     #[serde(rename = "volumes", default, skip_serializing_if = "Option::is_none")]
     pub volumes: Option<Vec<InstanceVolume>>,
 }
@@ -2365,6 +3059,13 @@ pub struct InstanceVolume {
     pub volume_type: Option<String>,
 
     #[serde(
+        rename = "performance",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub performance: Option<VolumePerformanceRequest>,
+
+    #[serde(
         rename = "mount_path",
         default,
         skip_serializing_if = "Option::is_none"
@@ -2380,6 +3081,19 @@ pub struct InstanceVolume {
         skip_serializing_if = "Option::is_none"
     )]
     pub delete_on_termination: Option<bool>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct VolumePerformanceRequest {
+    #[serde(rename = "iops", default, skip_serializing_if = "Option::is_none")]
+    pub iops: Option<i64>,
+
+    #[serde(
+        rename = "throughput_mib_s",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub throughput_mib_s: Option<f64>,
 }
 
 pub type CreateInstancePoolResponse = InstancePoolResponse;
@@ -3645,6 +4359,12 @@ pub type UpdateInstanceResponse = UpdateInstanceResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct InstancePoolUpdateRequestInput {
+    #[serde(
+        rename = "autoscaling",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub autoscaling: Option<AutoscalingPolicyInput>,
     /// Customer note on the pool. Omit to preserve it; send an empty string to clear it. Changes no instances, sizing or launch configuration.
     #[serde(
         rename = "description",
