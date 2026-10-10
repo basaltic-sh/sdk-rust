@@ -1562,7 +1562,7 @@ pub struct User {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LinuxIdentity {
-    /// Home directory derived from the permanent username, as /home/&lt;username&gt;. Numeric file ownership is defined by UID and GID.
+    /// Home allocated to this identity. New human identities use /home/bsu_&lt;uid&gt; and service accounts use /home/bsa_&lt;uid&gt;. Existing identities retain their home. Read this value instead of deriving it from the username.
     #[serde(rename = "home_directory")]
     pub home_directory: String,
 
