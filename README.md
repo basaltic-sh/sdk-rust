@@ -13,7 +13,7 @@ Rustls. Clone a client to share its connection pool and cached credentials.
 
 ```toml
 [dependencies]
-basaltic = { package = "basaltic-sdk-rust", version = "0.1" }
+basaltic = { package = "basaltic-sdk-rust", version = "0.3" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures-util = "0.3"
 ```

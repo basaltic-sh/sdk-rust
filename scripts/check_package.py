@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 import subprocess
 import tarfile
 import tempfile
@@ -12,11 +13,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_install_examples(readme, version):
+    # Pre-1.0 Cargo minor requirements deliberately exclude later API minors.
+    dependencies = [tomllib.loads(block).get("dependencies", {}).get("basaltic")
+                    for block in re.findall(r"```toml\n(.*?)```", readme, re.S)]
+    examples = [value for value in dependencies if value is not None]
+    assert examples, "README has no Basaltic installation dependency"
+    api_minor = ".".join(version.split(".")[:2])
+    for example in examples:
+        assert example["package"] == "basaltic-sdk-rust"
+        assert example["version"] == api_minor, "README dependency must select the current API minor"
+
+
 def main():
     package = tomllib.loads((ROOT / "Cargo.toml").read_text())["package"]
     assert package["name"] == "basaltic-sdk-rust"
     assert package["repository"] == "https://github.com/basaltic-sh/sdk-rust"
     assert not package.get("authors"), "Do not embed developer identities"
+    check_install_examples((ROOT / "README.md").read_text(), package["version"])
     tag = os.environ.get("RELEASE_TAG")
     if tag: assert tag == "v" + package["version"], "Tag and crate version differ"
     subprocess.run(["cargo", "package", "--locked", "--allow-dirty"], cwd=ROOT, check=True)
