@@ -236,6 +236,20 @@ pub struct Snapshot {
     /// Frozen size of the source volume at the time the snapshot was taken — the volume may have been extended since.
     #[serde(rename = "size_gb", default, skip_serializing_if = "Option::is_none")]
     pub size_gb: Option<i64>,
+    /// Frozen logical restore capacity in bytes (size_gb multiplied by 2^30), not measured written data.
+    #[serde(
+        rename = "logical_size_bytes",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub logical_size_bytes: Option<i64>,
+
+    #[serde(
+        rename = "snapshot_usage",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub snapshot_usage: Option<SnapshotUsage>,
 
     #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
     pub status: Option<SnapshotStatus>,
@@ -259,6 +273,87 @@ pub struct Snapshot {
 }
 
 pub type Tags = std::collections::BTreeMap<String, String>;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SnapshotUsage {
+    /// Measured means a complete observation with a matching current catalog generation and age at most 90 minutes. Stale means its generation changed or it expired. This is a last-observed value, not continuous backend verification. Unknown and stale never imply zero usage.
+    #[serde(rename = "state")]
+    pub state: SnapshotUsageState,
+
+    #[serde(rename = "scope")]
+    pub scope: SnapshotUsageScope,
+    /// These observations do not produce charges.
+    #[serde(rename = "billable")]
+    pub billable: bool,
+    /// Observation timestamp for measured or stale data; null when unknown.
+    #[serde(rename = "measured_at")]
+    pub measured_at: crate::Nullable<String>,
+    /// Exact retained lineage bytes only when measured; null when unknown or stale. An explicit measured zero is distinct from unavailable data.
+    #[serde(rename = "lineage_retained_bytes")]
+    pub lineage_retained_bytes: crate::Nullable<i64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SnapshotUsageState {
+    Unknown1,
+    Stale,
+    Measured,
+    Unknown(String),
+}
+impl SnapshotUsageState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Unknown1 => "unknown",
+            Self::Stale => "stale",
+            Self::Measured => "measured",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SnapshotUsageState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SnapshotUsageState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "unknown" => Self::Unknown1,
+            "stale" => Self::Stale,
+            "measured" => Self::Measured,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SnapshotUsageScope {
+    VolumeLineage,
+    Unknown(String),
+}
+impl SnapshotUsageScope {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::VolumeLineage => "volume_lineage",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SnapshotUsageScope {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SnapshotUsageScope {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "volume_lineage" => Self::VolumeLineage,
+            _ => Self::Unknown(value),
+        })
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SnapshotStatus {
