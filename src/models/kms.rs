@@ -344,7 +344,7 @@ pub type EncryptBody = EncryptRequestInput;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct EncryptResponse2 {
-    /// Base64-encoded ciphertext. Opaque — store verbatim. For AES-GCM the layout is nonce(12) || ct || tag; for RSA-OAEP the standard PKCS#1 RSAES output.
+    /// Base64-encoded opaque, versioned ciphertext. Store verbatim; do not parse its internal layout. Decrypt selects the original material version automatically after rotation.
     #[serde(
         rename = "ciphertext",
         default,
@@ -360,7 +360,7 @@ pub type EncryptResponse = EncryptResponse2;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct GenerateDataKeyRequestInput {
-    /// Size of the generated data key in bytes: 16 (AES-128), 32 (AES-256, the default) or 64 (HMAC-SHA512). No other size is supported — the HSM mints data keys at those three widths only, and any other value fails the operation.
+    /// Size of the generated data key in bytes: 16 (AES-128), 32 (AES-256, the default) or 64 (HMAC-SHA512). No other size is supported; any other value fails the operation.
     #[serde(
         rename = "number_of_bytes",
         default,
@@ -434,6 +434,214 @@ impl<'de> serde::Deserialize<'de> for KeyStateInput {
     }
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationResponse {
+    #[serde(rename = "rotation")]
+    pub rotation: KeyRotation,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotation {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "key_id")]
+    pub key_id: String,
+
+    #[serde(rename = "trigger")]
+    pub trigger: KeyRotationTrigger,
+    /// Pending work is durable. Reconciliation_required means the backend outcome is unknown; no second rotation is sent and further requests are blocked until resolved. Failed means the request was cancelled before dispatch.
+    #[serde(rename = "status")]
+    pub status: KeyRotationStatus,
+
+    #[serde(rename = "previous_version")]
+    pub previous_version: crate::Nullable<i64>,
+    /// New material version, populated only on success.
+    #[serde(rename = "key_version")]
+    pub key_version: crate::Nullable<i64>,
+
+    #[serde(rename = "requested_at")]
+    pub requested_at: String,
+
+    #[serde(rename = "started_at")]
+    pub started_at: crate::Nullable<String>,
+
+    #[serde(rename = "completed_at")]
+    pub completed_at: crate::Nullable<String>,
+    /// Machine-readable cancellation or reconciliation reason. Null on success.
+    #[serde(rename = "error_code")]
+    pub error_code: crate::Nullable<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum KeyRotationTrigger {
+    OnDemand,
+    Automatic,
+    Unknown(String),
+}
+impl KeyRotationTrigger {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::OnDemand => "on_demand",
+            Self::Automatic => "automatic",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for KeyRotationTrigger {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for KeyRotationTrigger {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "on_demand" => Self::OnDemand,
+            "automatic" => Self::Automatic,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum KeyRotationStatus {
+    Pending,
+    InProgress,
+    ReconciliationRequired,
+    Succeeded,
+    Failed,
+    Unknown(String),
+}
+impl KeyRotationStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Pending => "pending",
+            Self::InProgress => "in_progress",
+            Self::ReconciliationRequired => "reconciliation_required",
+            Self::Succeeded => "succeeded",
+            Self::Failed => "failed",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for KeyRotationStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for KeyRotationStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "pending" => Self::Pending,
+            "in_progress" => Self::InProgress,
+            "reconciliation_required" => Self::ReconciliationRequired,
+            "succeeded" => Self::Succeeded,
+            "failed" => Self::Failed,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type GetKeyRotationResponse = KeyRotationResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationStatusResponse {
+    #[serde(rename = "rotation")]
+    pub rotation: KeyRotationStatus2,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationStatus2 {
+    /// Automatic rotation is opt-in and defaults to false.
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+
+    #[serde(rename = "rotation_period_days")]
+    pub rotation_period_days: i64,
+    /// Next scheduled rotation, or null when automatic rotation is disabled. Disabled keys are skipped until re-enabled.
+    #[serde(rename = "next_rotation_at")]
+    pub next_rotation_at: crate::Nullable<String>,
+    /// Current material version used for new cryptographic operations.
+    #[serde(rename = "current_version")]
+    pub current_version: i64,
+}
+
+pub type GetKeyRotationStatusResponse = KeyRotationStatusResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct GetPublicKeyParameters {
+    #[serde(
+        rename = "key_version",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub key_version: Option<i64>,
+}
+
+pub type GetPublicKeyQuery = GetPublicKeyParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct PublicKeyResponse {
+    #[serde(rename = "key_crn")]
+    pub key_crn: String,
+
+    #[serde(rename = "key_version")]
+    pub key_version: i64,
+
+    #[serde(rename = "key_spec")]
+    pub key_spec: KeySpec,
+
+    #[serde(rename = "key_usage")]
+    pub key_usage: KeyUsage,
+    /// PEM-encoded SubjectPublicKeyInfo for the requested asymmetric material version. No private material is exported.
+    #[serde(rename = "public_key")]
+    pub public_key: String,
+}
+
+pub type GetPublicKeyResponse = PublicKeyResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct ListKeyRotationsParameters {
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+}
+
+pub type ListKeyRotationsQuery = ListKeyRotationsParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationListResponse {
+    #[serde(rename = "rotations")]
+    pub rotations: Vec<KeyRotation>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct PaginationMeta {
+    /// Total number of items
+    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+    /// Number of items per page
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+    /// Whether there are more items
+    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
+    pub has_more: Option<bool>,
+}
+
+pub type ListKeyRotationsResponse = KeyRotationListResponse;
+
+pub type ListKeyRotationsItem = KeyRotation;
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListKeysParameters {
     #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
@@ -463,25 +671,29 @@ pub struct KeyListResponse {
     pub meta: Option<PaginationMeta>,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PaginationMeta {
-    /// Total number of items
-    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
-    pub total: Option<i64>,
-    /// Number of items per page
-    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
-    pub limit: Option<i64>,
-    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
-    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
-    pub marker: Option<String>,
-    /// Whether there are more items
-    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
-    pub has_more: Option<bool>,
-}
-
 pub type ListKeysResponse = KeyListResponse;
 
 pub type ListKeysItem = Key;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RewrapRequestInput {
+    /// Base64-encoded ciphertext or wrapped data key produced by this KMS key. AAD is neither required nor changed.
+    #[serde(rename = "ciphertext")]
+    pub ciphertext: String,
+}
+impl RewrapRequestInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(ciphertext: String) -> Self {
+        Self { ciphertext }
+    }
+}
+
+pub type RewrapBody = RewrapRequestInput;
+
+pub type RewrapResponse = EncryptResponse2;
+
+pub type RotateKeyOnDemandResponse = KeyRotationResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ScheduleKeyDeletionRequestInput {
@@ -497,6 +709,52 @@ pub struct ScheduleKeyDeletionRequestInput {
 pub type ScheduleKeyDeletionBody = ScheduleKeyDeletionRequestInput;
 
 pub type ScheduleKeyDeletionResponse = KeyResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SetKeyRotationRequestInput {
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+    /// Whole days between rotations. Omission selects 365 days.
+    #[serde(
+        rename = "rotation_period_days",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub rotation_period_days: Option<i64>,
+}
+impl SetKeyRotationRequestInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            enabled,
+            rotation_period_days: None,
+        }
+    }
+}
+
+pub type SetKeyRotationBody = SetKeyRotationRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationPolicyResponse {
+    #[serde(rename = "rotation")]
+    pub rotation: KeyRotationPolicy,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct KeyRotationPolicy {
+    /// Automatic rotation is opt-in and defaults to false.
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+
+    #[serde(rename = "rotation_period_days")]
+    pub rotation_period_days: i64,
+    /// Next scheduled rotation, or null when automatic rotation is disabled. Disabled keys are skipped until re-enabled.
+    #[serde(rename = "next_rotation_at")]
+    pub next_rotation_at: crate::Nullable<String>,
+}
+
+pub type SetKeyRotationResponse = KeyRotationPolicyResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SignRequestInput {
@@ -560,6 +818,13 @@ pub type SignBody = SignRequestInput;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct SignResponse2 {
+    /// Material version that produced this signature. Persist with the signature for explicit verification and public-key retrieval.
+    #[serde(
+        rename = "key_version",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub key_version: Option<i64>,
     /// Base64-encoded signature. RSA-PSS: PKCS#1 octet string with saltLen=hashLen=32. ECDSA: ASN.1 DER (r,s) tuple per ANSI X9.62.
     #[serde(rename = "signature", default, skip_serializing_if = "Option::is_none")]
     pub signature: Option<String>,
@@ -627,6 +892,13 @@ pub type UpdateKeyResponse = KeyResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct VerifyRequestInput {
+    /// Optional material version returned by Sign. When omitted, all retained public-key versions are tried for compatibility with older signatures.
+    #[serde(
+        rename = "key_version",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub key_version: Option<i64>,
     /// Base64-encoded original message.
     #[serde(rename = "message")]
     pub message: String,
@@ -646,6 +918,7 @@ impl VerifyRequestInput {
     #[allow(clippy::too_many_arguments)]
     pub fn new(message: String, signature: String) -> Self {
         Self {
+            key_version: None,
             message,
             signature,
             signing_algorithm: None,

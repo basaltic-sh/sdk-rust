@@ -425,13 +425,7 @@ impl<'de> serde::Deserialize<'de> for FaultSeverity {
 
 pub type Tags = std::collections::BTreeMap<String, String>;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(untagged)]
-pub enum CreateCertificateResult {
-    Variant1(Box<CertificateResponse>),
-}
-
-pub type CreateCertificateResponse = CreateCertificateResult;
+pub type CreateCertificateResponse = CertificateResponse;
 
 pub type GetCertificateResponse = CertificateResponse;
 

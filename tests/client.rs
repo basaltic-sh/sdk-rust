@@ -612,3 +612,47 @@ fn enums_accept_future_values_and_idempotency_keys_are_unique() {
     assert!(uuid::Uuid::parse_str(&key).is_ok());
     assert_ne!(key, basaltic::new_idempotency_key());
 }
+
+#[tokio::test]
+async fn kms_rotation_202_and_optional_versions_remain_typed() {
+    use basaltic::models::kms::{SetKeyRotationBody, VerifyBody};
+    let server = MockServer::start().await;
+    Mock::given(method("PUT"))
+        .and(path("/v1/keys/key/rotation"))
+        .and(wiremock::matchers::body_json(
+            json!({"enabled":false,"rotation_period_days":90}),
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            json!({"rotation":{"enabled":false,"rotation_period_days":90,"next_rotation_at":null}}),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/keys/key/rotate"))
+        .and(header("Idempotency-Key","rotation-request"))
+        .respond_with(ResponseTemplate::new(202).set_body_json(json!({"rotation":{"id":"rotation","key_id":"key","trigger":"on_demand","status":"pending","previous_version":null,"key_version":null,"requested_at":"2026-10-12T12:00:00Z","started_at":null,"completed_at":null,"error_code":null}})))
+        .expect(1).mount(&server).await;
+    let mut cfg = config(&server);
+    cfg.endpoints.insert("kms".into(), server.uri());
+    let c = Client::new(cfg).unwrap();
+    let mut body = SetKeyRotationBody::new(false);
+    body.rotation_period_days = Some(90);
+    let policy = c.kms().set_key_rotation("key", &body).send().await.unwrap();
+    assert!(!policy.data.rotation.enabled);
+    let result = c
+        .kms()
+        .rotate_key_on_demand("key")
+        .options(RequestOptions {
+            idempotency_key: Some("rotation-request".into()),
+            ..Default::default()
+        })
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(result.status, 202);
+    assert_eq!(result.data.rotation.id, "rotation");
+    let mut verify = VerifyBody::new("bXNn".into(), "c2ln".into());
+    verify.key_version = Some(1);
+    assert_eq!(serde_json::to_value(verify).unwrap()["key_version"], 1);
+}

@@ -1,103 +1,44 @@
 //! Generated typed wire models. Unknown string enum values are retained.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BillingProfile {
-    #[serde(
-        rename = "customer_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub customer_type: Option<BillingProfileCustomerType>,
+    #[serde(rename = "customer_type")]
+    pub customer_type: BillingProfileCustomerType,
     /// Full legal name of the individual or company.
-    #[serde(
-        rename = "company_name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub company_name: Option<String>,
-    /// ISO 3166-1 alpha-2 country code.
-    #[serde(rename = "country", default, skip_serializing_if = "Option::is_none")]
-    pub country: Option<String>,
-    /// CPF for a Brazilian individual or CNPJ for a Brazilian company. Check digits are validated.
-    #[serde(rename = "tax_id", default, skip_serializing_if = "Option::is_none")]
-    pub tax_id: Option<String>,
-    /// Foreign identifier; not validated as a Brazilian document.
-    #[serde(
-        rename = "foreign_tax_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub foreign_tax_id: Option<String>,
-    /// Required for a foreign recipient without a tax identifier.
-    #[serde(
-        rename = "no_tax_id_reason",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub no_tax_id_reason: Option<String>,
+    #[serde(rename = "company_name")]
+    pub company_name: String,
+    /// The recipient's tax identifier in the country — CPF or CNPJ in Brazil, an EIN, a VAT number. Stored without separators and upper-cased.
+    #[serde(rename = "tax_id")]
+    pub tax_id: String,
+    /// The country rule the identifier satisfied, from `CountryRules.tax_ids`. Empty when there is no identifier.
+    #[serde(rename = "tax_id_kind")]
+    pub tax_id_kind: String,
+    /// Why there is no identifier, where the country's rule does not require one.
+    #[serde(rename = "no_tax_id_reason")]
+    pub no_tax_id_reason: String,
     /// Billing email for fiscal invoice delivery. The onboarding form prefills this from the signed-in user's email.
-    #[serde(rename = "email", default, skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
+    #[serde(rename = "email")]
+    pub email: String,
+    /// E.164 phone number, or empty.
+    #[serde(rename = "phone")]
+    pub phone: String,
 
-    #[serde(rename = "phone", default, skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
+    #[serde(rename = "country")]
+    pub country: ResourceRef,
+    /// The catalog state, where the country lists states. Otherwise the state is text in `address.state`.
+    #[serde(rename = "state")]
+    pub state: BillingProfileState,
+    /// The catalog city, where the country lists cities. Otherwise the city is text in `address.city`.
+    #[serde(rename = "city")]
+    pub city: BillingProfileCity,
 
-    #[serde(
-        rename = "street_name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub street_name: Option<String>,
+    #[serde(rename = "address")]
+    pub address: BillingAddress,
 
-    #[serde(
-        rename = "street_number",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub street_number: Option<String>,
-
-    #[serde(
-        rename = "complement",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub complement: Option<String>,
-
-    #[serde(
-        rename = "neighborhood",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub neighborhood: Option<String>,
-
-    #[serde(rename = "city", default, skip_serializing_if = "Option::is_none")]
-    pub city: Option<String>,
-    /// Seven-digit IBGE municipality code, required for a Brazilian recipient.
-    #[serde(
-        rename = "municipality_code",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub municipality_code: Option<String>,
-    /// Two-letter UF for Brazil; free-form state/province abroad.
-    #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
-    pub state: Option<String>,
-    /// Eight-digit CEP for Brazil; optional international postal code abroad.
-    #[serde(
-        rename = "postal_code",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub postal_code: Option<String>,
-
-    #[serde(rename = "ready", default, skip_serializing_if = "Option::is_none")]
-    pub ready: Option<bool>,
-
-    #[serde(
-        rename = "missing_fields",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub missing_fields: Option<Vec<String>>,
+    #[serde(rename = "ready")]
+    pub ready: bool,
+    /// What stops the profile from being ready: `customer_type`, `company_name`, `email`, `tax_id`, `tax_id_or_reason`, or an address key. A stored value that no longer satisfies the country's rules is listed as missing.
+    #[serde(rename = "missing_fields")]
+    pub missing_fields: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -132,6 +73,76 @@ impl<'de> serde::Deserialize<'de> for BillingProfileCustomerType {
             _ => Self::Unknown(value),
         })
     }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum BillingProfileState {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum BillingProfileCity {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct BillingAddress {
+    #[serde(
+        rename = "street_name",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub street_name: Option<String>,
+
+    #[serde(
+        rename = "street_number",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub street_number: Option<String>,
+
+    #[serde(
+        rename = "complement",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub complement: Option<String>,
+
+    #[serde(
+        rename = "neighborhood",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub neighborhood: Option<String>,
+
+    #[serde(rename = "city", default, skip_serializing_if = "Option::is_none")]
+    pub city: Option<String>,
+
+    #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    /// Stored without mask literals.
+    #[serde(
+        rename = "postal_code",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub postal_code: Option<String>,
 }
 
 pub type GetBillingProfileResponse = BillingProfile;
@@ -951,47 +962,93 @@ pub type ListTransactionsResponse = TransactionListResponse;
 pub type ListTransactionsItem = Transaction;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct BillingProfileInput {
+pub struct BillingProfileUpdateInput {
     #[serde(
         rename = "customer_type",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub customer_type: Option<BillingProfileInputCustomerType>,
-    /// Full legal name of the individual or company.
+    pub customer_type: Option<BillingProfileUpdateInputCustomerType>,
+
     #[serde(
         rename = "company_name",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub company_name: Option<String>,
-    /// ISO 3166-1 alpha-2 country code.
-    #[serde(rename = "country", default, skip_serializing_if = "Option::is_none")]
-    pub country: Option<String>,
-    /// CPF for a Brazilian individual or CNPJ for a Brazilian company. Check digits are validated.
+    /// Separators and case are ignored; the identifier is checked against the country's rules, including check digits where one is named.
     #[serde(rename = "tax_id", default, skip_serializing_if = "Option::is_none")]
     pub tax_id: Option<String>,
-    /// Foreign identifier; not validated as a Brazilian document.
+    /// Needed only when a customer type accepts more than one kind; otherwise the matching kind is chosen.
     #[serde(
-        rename = "foreign_tax_id",
+        rename = "tax_id_kind",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub foreign_tax_id: Option<String>,
-    /// Required for a foreign recipient without a tax identifier.
+    pub tax_id_kind: Option<String>,
+
     #[serde(
         rename = "no_tax_id_reason",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub no_tax_id_reason: Option<String>,
-    /// Billing email for fiscal invoice delivery. The onboarding form prefills this from the signed-in user's email.
+
     #[serde(rename = "email", default, skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
-
+    /// Phone with its country calling code. Spaces, dots, dashes and parentheses are ignored; stored as E.164.
     #[serde(rename = "phone", default, skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
+    /// Country UUID, CRN, or ISO alpha-2 or alpha-3 code. Defaults to Brazil.
+    #[serde(rename = "country", default, skip_serializing_if = "Option::is_none")]
+    pub country: Option<String>,
+    /// State UUID, CRN, or code, where the country lists states. Omit when a city is given; the city implies it.
+    #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    /// City UUID or CRN, where the country lists cities.
+    #[serde(rename = "city", default, skip_serializing_if = "Option::is_none")]
+    pub city: Option<String>,
 
+    #[serde(rename = "address", default, skip_serializing_if = "Option::is_none")]
+    pub address: Option<BillingAddressInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum BillingProfileUpdateInputCustomerType {
+    Value,
+    Individual,
+    Company,
+    Unknown(String),
+}
+impl BillingProfileUpdateInputCustomerType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Value => "",
+            Self::Individual => "individual",
+            Self::Company => "company",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for BillingProfileUpdateInputCustomerType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for BillingProfileUpdateInputCustomerType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "" => Self::Value,
+            "individual" => Self::Individual,
+            "company" => Self::Company,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct BillingAddressInput {
     #[serde(
         rename = "street_name",
         default,
@@ -1022,17 +1079,10 @@ pub struct BillingProfileInput {
 
     #[serde(rename = "city", default, skip_serializing_if = "Option::is_none")]
     pub city: Option<String>,
-    /// Seven-digit IBGE municipality code, required for a Brazilian recipient.
-    #[serde(
-        rename = "municipality_code",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub municipality_code: Option<String>,
-    /// Two-letter UF for Brazil; free-form state/province abroad.
+
     #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
     pub state: Option<String>,
-    /// Eight-digit CEP for Brazil; optional international postal code abroad.
+    /// Stored without mask literals.
     #[serde(
         rename = "postal_code",
         default,
@@ -1041,40 +1091,6 @@ pub struct BillingProfileInput {
     pub postal_code: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum BillingProfileInputCustomerType {
-    Value,
-    Individual,
-    Company,
-    Unknown(String),
-}
-impl BillingProfileInputCustomerType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Value => "",
-            Self::Individual => "individual",
-            Self::Company => "company",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for BillingProfileInputCustomerType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for BillingProfileInputCustomerType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "" => Self::Value,
-            "individual" => Self::Individual,
-            "company" => Self::Company,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type UpdateBillingProfileBody = BillingProfileInput;
+pub type UpdateBillingProfileBody = BillingProfileUpdateInput;
 
 pub type UpdateBillingProfileResponse = BillingProfile;

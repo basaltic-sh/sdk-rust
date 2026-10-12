@@ -142,6 +142,16 @@ Save organization billing details
 pub fn update_billing_profile(&self, body: &m::UpdateBillingProfileBody) -> Request<m::UpdateBillingProfileResponse>
 ```
 
+## `catalog.get_country`
+
+Get a country and its address rules
+
+`GET /v1/countries/{country}`
+
+```rust
+pub fn get_country(&self, country: &str) -> Request<m::GetCountryResponse>
+```
+
 ## `catalog.get_region`
 
 Get a region
@@ -152,6 +162,26 @@ Get a region
 pub fn get_region(&self, code: &str) -> Request<m::GetRegionResponse>
 ```
 
+## `catalog.list_cities`
+
+List cities
+
+`GET /v1/cities`
+
+```rust
+pub fn list_cities(&self, query: &m::ListCitiesQuery) -> PagedRequest<m::ListCitiesResponse, m::ListCitiesItem>
+```
+
+## `catalog.list_countries`
+
+List countries
+
+`GET /v1/countries`
+
+```rust
+pub fn list_countries(&self) -> PagedRequest<m::ListCountriesResponse, m::ListCountriesItem>
+```
+
 ## `catalog.list_regions`
 
 List regions
@@ -160,6 +190,26 @@ List regions
 
 ```rust
 pub fn list_regions(&self, query: &m::ListRegionsQuery) -> PagedRequest<m::ListRegionsResponse, m::ListRegionsItem>
+```
+
+## `catalog.list_states`
+
+List a country's states
+
+`GET /v1/states`
+
+```rust
+pub fn list_states(&self, query: &m::ListStatesQuery) -> PagedRequest<m::ListStatesResponse, m::ListStatesItem>
+```
+
+## `catalog.lookup_postal_code`
+
+Look up a postal code
+
+`GET /v1/postal-codes/{code}`
+
+```rust
+pub fn lookup_postal_code(&self, code: &str, query: &m::LookupPostalCodeQuery) -> Request<m::LookupPostalCodeResponse>
 ```
 
 ## `certificate.create_certificate`
@@ -1442,6 +1492,46 @@ Get a KMS key
 pub fn get_key(&self, key_id: &str) -> Request<m::GetKeyResponse>
 ```
 
+## `kms.get_key_rotation`
+
+Get a key rotation
+
+`GET /v1/keys/{key_id}/rotations/{rotation_id}`
+
+```rust
+pub fn get_key_rotation(&self, key_id: &str, rotation_id: &str) -> Request<m::GetKeyRotationResponse>
+```
+
+## `kms.get_key_rotation_status`
+
+Get key rotation status
+
+`GET /v1/keys/{key_id}/rotation`
+
+```rust
+pub fn get_key_rotation_status(&self, key_id: &str) -> Request<m::GetKeyRotationStatusResponse>
+```
+
+## `kms.get_public_key`
+
+Get a versioned public key
+
+`GET /v1/keys/{key_id}/public-key`
+
+```rust
+pub fn get_public_key(&self, key_id: &str, query: &m::GetPublicKeyQuery) -> Request<m::GetPublicKeyResponse>
+```
+
+## `kms.list_key_rotations`
+
+List key rotation history
+
+`GET /v1/keys/{key_id}/rotations`
+
+```rust
+pub fn list_key_rotations(&self, key_id: &str, query: &m::ListKeyRotationsQuery) -> PagedRequest<m::ListKeyRotationsResponse, m::ListKeyRotationsItem>
+```
+
 ## `kms.list_keys`
 
 List KMS keys
@@ -1452,6 +1542,26 @@ List KMS keys
 pub fn list_keys(&self, query: &m::ListKeysQuery) -> PagedRequest<m::ListKeysResponse, m::ListKeysItem>
 ```
 
+## `kms.rewrap`
+
+Rewrap ciphertext with current key material
+
+`POST /v1/keys/{key_id}/rewrap`
+
+```rust
+pub fn rewrap(&self, key_id: &str, body: &m::RewrapBody) -> Request<m::RewrapResponse>
+```
+
+## `kms.rotate_key_on_demand`
+
+Rotate key material now
+
+`POST /v1/keys/{key_id}/rotate`
+
+```rust
+pub fn rotate_key_on_demand(&self, key_id: &str) -> Request<m::RotateKeyOnDemandResponse>
+```
+
 ## `kms.schedule_key_deletion`
 
 Schedule key for deletion
@@ -1460,6 +1570,16 @@ Schedule key for deletion
 
 ```rust
 pub fn schedule_key_deletion(&self, key_id: &str, body: Option<&m::ScheduleKeyDeletionBody>) -> Request<m::ScheduleKeyDeletionResponse>
+```
+
+## `kms.set_key_rotation`
+
+Configure automatic key rotation
+
+`PUT /v1/keys/{key_id}/rotation`
+
+```rust
+pub fn set_key_rotation(&self, key_id: &str, body: &m::SetKeyRotationBody) -> Request<m::SetKeyRotationResponse>
 ```
 
 ## `kms.sign`
