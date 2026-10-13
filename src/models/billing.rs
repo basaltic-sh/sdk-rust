@@ -1,5 +1,11 @@
 //! Generated typed wire models. Unknown string enum values are retained.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct BillingProfileResponse {
+    #[serde(rename = "billing_profile")]
+    pub billing_profile: BillingProfile,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BillingProfile {
     #[serde(rename = "customer_type")]
     pub customer_type: BillingProfileCustomerType,
@@ -9,7 +15,7 @@ pub struct BillingProfile {
     /// The recipient's tax identifier in the country — CPF or CNPJ in Brazil, an EIN, a VAT number. Stored without separators and upper-cased.
     #[serde(rename = "tax_id")]
     pub tax_id: String,
-    /// The country rule the identifier satisfied, from `CountryRules.tax_ids`. Empty when there is no identifier.
+    /// The country rule the identifier satisfied, such as `br_cpf`, `br_cnpj`, `us_ein` or `other`. Empty when there is no identifier.
     #[serde(rename = "tax_id_kind")]
     pub tax_id_kind: String,
     /// Why there is no identifier, where the country's rule does not require one.
@@ -145,7 +151,7 @@ pub struct BillingAddress {
     pub postal_code: Option<String>,
 }
 
-pub type GetBillingProfileResponse = BillingProfile;
+pub type GetBillingProfileResponse = BillingProfileResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct CurrentUsage {
@@ -179,6 +185,12 @@ pub struct UsageLine {
 }
 
 pub type GetCurrentUsageResponse = CurrentUsage;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InvoiceResponse {
+    #[serde(rename = "invoice")]
+    pub invoice: Invoice,
+}
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Invoice {
@@ -358,9 +370,9 @@ impl<'de> serde::Deserialize<'de> for InvoiceItemKind {
     }
 }
 
-pub type GetInvoiceResponse = Invoice;
+pub type GetInvoiceResponse = InvoiceResponse;
 
-pub type GetInvoiceResource = GetInvoiceResponse;
+pub type GetInvoiceResource = Invoice;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct GetInvoiceScope {
@@ -485,152 +497,66 @@ pub type ListCreditsItem = Credit;
 pub struct ListFiscalInvoicesParameters {
     #[serde(rename = "invoice", default, skip_serializing_if = "Option::is_none")]
     pub invoice: Option<String>,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
 }
 
 pub type ListFiscalInvoicesQuery = ListFiscalInvoicesParameters;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ListFiscalInvoicesResult {
-    #[serde(rename = "fiscal_documents")]
-    pub fiscal_documents: Vec<FiscalInvoice>,
+pub struct FiscalInvoiceListResponse {
+    #[serde(rename = "fiscal_invoices")]
+    pub fiscal_invoices: Vec<FiscalInvoice>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct FiscalInvoice {
     #[serde(rename = "id")]
     pub id: String,
-
-    #[serde(rename = "organization_id")]
-    pub organization_id: String,
-
-    #[serde(rename = "payment_id")]
-    pub payment_id: String,
-
-    #[serde(
-        rename = "invoice_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub invoice_id: Option<crate::Nullable<String>>,
     /// Actual amount received in BRL, not the billing invoice total.
     #[serde(rename = "amount")]
     pub amount: String,
 
-    #[serde(rename = "status")]
-    pub status: FiscalInvoiceStatus,
-    /// Separate delivery state. Queued means durably accepted by the internal email service; it does not assert recipient delivery.
-    #[serde(rename = "email_status")]
-    pub email_status: FiscalInvoiceEmailStatus,
-    /// Sanitized operational error or municipal rejection codes.
-    #[serde(
-        rename = "last_error",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub last_error: Option<String>,
+    #[serde(rename = "number")]
+    pub number: String,
 
-    #[serde(rename = "attempts")]
-    pub attempts: i64,
-
-    #[serde(rename = "number", default, skip_serializing_if = "Option::is_none")]
-    pub number: Option<String>,
-
-    #[serde(
-        rename = "verification_code",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub verification_code: Option<String>,
+    #[serde(rename = "verification_code")]
+    pub verification_code: String,
     /// Municipal view/print link available after issuance.
-    #[serde(rename = "url", default, skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
+    #[serde(rename = "url")]
+    pub url: String,
 
-    #[serde(rename = "issued_at", default, skip_serializing_if = "Option::is_none")]
-    pub issued_at: Option<String>,
-    /// Refunds preserve the fiscal document and require operator review; cancellation is never inferred automatically.
-    #[serde(rename = "requires_review")]
-    pub requires_review: bool,
+    #[serde(rename = "issued_at")]
+    pub issued_at: crate::Nullable<String>,
 
     #[serde(rename = "created_at")]
     pub created_at: String,
+    /// Global organization-scoped fiscal invoice identity.
+    #[serde(rename = "crn")]
+    pub crn: String,
+
+    #[serde(rename = "payment")]
+    pub payment: ResourceRef,
+    /// Related billing invoice, or null for a payment without an invoice. Deleted invoices retain their identity without a name.
+    #[serde(rename = "invoice")]
+    pub invoice: FiscalInvoiceInvoice,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FiscalInvoiceStatus {
-    Queued,
-    WaitingDetails,
-    Retrying,
-    Rejected,
-    Issued,
-    ReviewRequired,
-    Unknown(String),
-}
-impl FiscalInvoiceStatus {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Queued => "queued",
-            Self::WaitingDetails => "waiting_details",
-            Self::Retrying => "retrying",
-            Self::Rejected => "rejected",
-            Self::Issued => "issued",
-            Self::ReviewRequired => "review_required",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FiscalInvoiceStatus {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FiscalInvoiceStatus {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "queued" => Self::Queued,
-            "waiting_details" => Self::WaitingDetails,
-            "retrying" => Self::Retrying,
-            "rejected" => Self::Rejected,
-            "issued" => Self::Issued,
-            "review_required" => Self::ReviewRequired,
-            _ => Self::Unknown(value),
-        })
-    }
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FiscalInvoiceInvoice {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FiscalInvoiceEmailStatus {
-    Pending,
-    Queued,
-    Unknown(String),
-}
-impl FiscalInvoiceEmailStatus {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Pending => "pending",
-            Self::Queued => "queued",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FiscalInvoiceEmailStatus {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FiscalInvoiceEmailStatus {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "pending" => Self::Pending,
-            "queued" => Self::Queued,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type ListFiscalInvoicesResponse = ListFiscalInvoicesResult;
+pub type ListFiscalInvoicesResponse = FiscalInvoiceListResponse;
 
 pub type ListFiscalInvoicesItem = FiscalInvoice;
 
@@ -692,7 +618,7 @@ pub struct Payment {
 
     #[serde(rename = "id")]
     pub id: String,
-    /// Current invoice list shape, without items; null when the invoice has been deleted.
+    /// Related invoice. Null only when the payment has no invoice; a deleted invoice retains id and crn without name.
     #[serde(rename = "invoice")]
     pub invoice: PaymentInvoice,
 
@@ -729,7 +655,7 @@ pub struct Payment {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum PaymentInvoice {
-    Variant1(Box<Invoice>),
+    Variant1(Box<ResourceRef>),
     Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
@@ -895,14 +821,9 @@ pub struct Transaction {
         deserialize_with = "crate::response::present_nullable"
     )]
     pub description: Option<crate::Nullable<String>>,
-    /// Organization-scoped reference to the ledger entry's target: crn:billing:::invoice/&lt;id&gt;, crn:billing:::payment/&lt;id&gt;, or crn:billing:::credit/&lt;id&gt; for a credit grant. Pass this CRN to the corresponding collection's crn filter within the authenticated organization. Null for manual entries, unsupported reference types, or missing references.
-    #[serde(
-        rename = "reference",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub reference: Option<crate::Nullable<String>>,
+    /// Organization-scoped invoice, payment, or credit related to this ledger entry. Null for manual entries, unsupported types, or absent identities. Deleted targets retain id and crn without name.
+    #[serde(rename = "reference")]
+    pub reference: TransactionReference,
 
     #[serde(rename = "created_at")]
     pub created_at: String,
@@ -955,6 +876,13 @@ impl<'de> serde::Deserialize<'de> for TransactionType {
             _ => Self::Unknown(value),
         })
     }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum TransactionReference {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type ListTransactionsResponse = TransactionListResponse;
@@ -1093,4 +1021,4 @@ pub struct BillingAddressInput {
 
 pub type UpdateBillingProfileBody = BillingProfileUpdateInput;
 
-pub type UpdateBillingProfileResponse = BillingProfile;
+pub type UpdateBillingProfileResponse = BillingProfileResponse;

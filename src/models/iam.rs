@@ -245,15 +245,12 @@ pub type AssumeRoleResponse = AssumeRoleResponse2;
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct AssumeRoleWithWebIdentityRequestInput {
-    /// The identity token to exchange, as a signed JWT. It is verified before any role is read: the signature must chain to a key the trusted provider publishes, the audience must be the one this platform was configured to accept, and `exp` must be in the future.
+    /// Signed OIDC JWT. The issuer must be registered in the role account; signature, expiry and an allowed audience are verified before evaluating role trust.
     #[serde(rename = "web_identity_token")]
     pub web_identity_token: String,
-
+    /// Full account-scoped role CRN. Bare UUIDs and names are not accepted.
     #[serde(rename = "role")]
-    pub role: RoleReferenceInput,
-
-    #[serde(rename = "account")]
-    pub account: AccountReferenceInput,
+    pub role: String,
     /// A label recorded on the session and in the audit trail. Defaults to the token's `sub` claim, so an unnamed session still records which identity it came from.
     #[serde(
         rename = "session_name",
@@ -274,7 +271,6 @@ impl std::fmt::Debug for AssumeRoleWithWebIdentityRequestInput {
         let mut d = f.debug_struct("AssumeRoleWithWebIdentityRequestInput");
         d.field("web_identity_token", &"[REDACTED]");
         d.field("role", &self.role);
-        d.field("account", &self.account);
         d.field("session_name", &self.session_name);
         d.field("duration_seconds", &self.duration_seconds);
         d.finish()
@@ -283,22 +279,15 @@ impl std::fmt::Debug for AssumeRoleWithWebIdentityRequestInput {
 impl AssumeRoleWithWebIdentityRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        web_identity_token: String,
-        role: RoleReferenceInput,
-        account: AccountReferenceInput,
-    ) -> Self {
+    pub fn new(web_identity_token: String, role: String) -> Self {
         Self {
             web_identity_token,
             role,
-            account,
             session_name: None,
             duration_seconds: None,
         }
     }
 }
-
-pub type AccountReferenceInput = String;
 
 pub type AssumeRoleWithWebIdentityBody = AssumeRoleWithWebIdentityRequestInput;
 
@@ -428,6 +417,88 @@ pub struct OAuthAuthorizeResponse {
 }
 
 pub type AuthorizeOAuthClientResponse = OAuthAuthorizeResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct OIDCProviderCreateRequestInput {
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// Immutable HTTPS issuer URL. Public discovery and JWKS endpoints are required for customer providers.
+    #[serde(rename = "issuer")]
+    pub issuer: String,
+
+    #[serde(rename = "audiences")]
+    pub audiences: Vec<String>,
+
+    #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<std::collections::BTreeMap<String, String>>,
+}
+impl OIDCProviderCreateRequestInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(name: String, issuer: String, audiences: Vec<String>) -> Self {
+        Self {
+            name,
+            description: None,
+            issuer,
+            audiences,
+            tags: None,
+        }
+    }
+}
+
+pub type CreateOIDCProviderBody = OIDCProviderCreateRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct OIDCProviderResponse {
+    #[serde(rename = "oidc_provider")]
+    pub oidc_provider: OIDCProvider,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct OIDCProvider {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// Immutable HTTPS issuer URL. Public discovery and JWKS endpoints are required for customer providers.
+    #[serde(rename = "issuer")]
+    pub issuer: String,
+
+    #[serde(rename = "audiences")]
+    pub audiences: Vec<String>,
+    /// Platform-managed providers cannot be edited or deleted.
+    #[serde(rename = "is_system")]
+    pub is_system: bool,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+pub type CreateOIDCProviderResponse = OIDCProviderResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SSHKeyCreateRequestInput {
@@ -842,20 +913,6 @@ pub struct Policy {
         skip_serializing_if = "Option::is_none"
     )]
     pub updated_at: Option<String>,
-    /// Owning account UUID; absent for shared system policies.
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
-    /// Immutable handle of the owning account.
-    #[serde(
-        rename = "account_handle",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_handle: Option<String>,
 }
 
 pub type Tags = std::collections::BTreeMap<String, String>;
@@ -1126,7 +1183,7 @@ impl RoleCreateRequestInput {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct TrustPolicyInput {
-    /// Qualified CRN patterns identifying who may assume this account role. Same-organization membership alone does not establish trust. The caller also needs iam:AssumeRole permission for the target role. Account roles and service accounts use crn:iam::&lt;account-handle&gt;:role/&lt;name&gt; and crn:iam::&lt;account-handle&gt;:service-account/&lt;name&gt;. Human users use crn:workspace:::user/&lt;username&gt; or crn:workspace:::user/* in the selected organization. An instance presents its compute CRN through IMDS. A federated caller names the trusted provider as crn:iam:::oidc-provider/&lt;provider&gt; and uses conditions to restrict token claims.
+    /// Qualified CRN patterns identifying who may assume this account role. Same-organization membership alone does not establish trust. The caller also needs iam:AssumeRole permission for the target role. Account roles and service accounts use crn:iam::&lt;account-handle&gt;:role/&lt;name&gt; and crn:iam::&lt;account-handle&gt;:service-account/&lt;name&gt;. Human users use crn:workspace:::user/&lt;username&gt; or crn:workspace:::user/* in the selected organization. An instance presents its compute CRN through IMDS. A federated caller names the trusted provider as crn:iam::&lt;account&gt;:oidc-provider/&lt;provider&gt; and uses conditions to restrict token claims.
     #[serde(
         rename = "principals",
         default,
@@ -1191,35 +1248,14 @@ pub struct Role {
         skip_serializing_if = "Option::is_none"
     )]
     pub updated_at: Option<String>,
-    /// Owning account UUID.
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
-    /// Immutable handle of the owning account.
-    #[serde(
-        rename = "account_handle",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_handle: Option<String>,
     /// System roles cannot be changed or deleted.
     #[serde(rename = "is_system", default, skip_serializing_if = "Option::is_none")]
     pub is_system: Option<bool>,
-    /// Present on the account's built-in Administrator and ReadOnly roles. These assignable roles are created with the account, do not consume custom-role quota, and do not block account deletion.
-    #[serde(
-        rename = "builtin_kind",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub builtin_kind: Option<RoleBuiltinKind>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct TrustPolicy {
-    /// Qualified CRN patterns identifying who may assume this account role. Same-organization membership alone does not establish trust. The caller also needs iam:AssumeRole permission for the target role. Account roles and service accounts use crn:iam::&lt;account-handle&gt;:role/&lt;name&gt; and crn:iam::&lt;account-handle&gt;:service-account/&lt;name&gt;. Human users use crn:workspace:::user/&lt;username&gt; or crn:workspace:::user/* in the selected organization. An instance presents its compute CRN through IMDS. A federated caller names the trusted provider as crn:iam:::oidc-provider/&lt;provider&gt; and uses conditions to restrict token claims.
+    /// Qualified CRN patterns identifying who may assume this account role. Same-organization membership alone does not establish trust. The caller also needs iam:AssumeRole permission for the target role. Account roles and service accounts use crn:iam::&lt;account-handle&gt;:role/&lt;name&gt; and crn:iam::&lt;account-handle&gt;:service-account/&lt;name&gt;. Human users use crn:workspace:::user/&lt;username&gt; or crn:workspace:::user/* in the selected organization. An instance presents its compute CRN through IMDS. A federated caller names the trusted provider as crn:iam::&lt;account&gt;:oidc-provider/&lt;provider&gt; and uses conditions to restrict token claims.
     #[serde(
         rename = "principals",
         default,
@@ -1233,37 +1269,6 @@ pub struct TrustPolicy {
         skip_serializing_if = "Option::is_none"
     )]
     pub conditions: Option<Vec<PolicyCondition>>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RoleBuiltinKind {
-    Administrator,
-    Readonly,
-    Unknown(String),
-}
-impl RoleBuiltinKind {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Administrator => "administrator",
-            Self::Readonly => "readonly",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for RoleBuiltinKind {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for RoleBuiltinKind {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "administrator" => Self::Administrator,
-            "readonly" => Self::Readonly,
-            _ => Self::Unknown(value),
-        })
-    }
 }
 
 pub type CreateRoleResponse = CreateRoleResult;
@@ -1322,13 +1327,6 @@ pub struct ServiceAccount {
     /// Cloud Resource Name
     #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
     pub crn: Option<String>,
-    /// Owning account UUID.
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -1359,13 +1357,6 @@ pub struct ServiceAccount {
         skip_serializing_if = "Option::is_none"
     )]
     pub updated_at: Option<String>,
-    /// Immutable handle of the owning account.
-    #[serde(
-        rename = "account_handle",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_handle: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -1664,6 +1655,16 @@ impl<'de> serde::Deserialize<'de> for OAuthTokenResponseTokenType {
 
 pub type GetOAuthTokenResponse = OAuthTokenResponse;
 
+pub type GetOIDCProviderResponse = OIDCProviderResponse;
+
+pub type GetOIDCProviderResource = OIDCProvider;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct GetOIDCProviderScope {
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+}
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct GetPersonalLinuxIdentityResult {
     #[serde(rename = "linux_identity")]
@@ -1722,20 +1723,6 @@ pub struct InlinePolicy {
 
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-
-    #[serde(
-        rename = "principal_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_id: Option<String>,
-
-    #[serde(
-        rename = "principal_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_type: Option<InlinePolicyPrincipalType>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -1758,37 +1745,6 @@ pub struct InlinePolicy {
     pub updated_at: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum InlinePolicyPrincipalType {
-    ServiceAccount,
-    Role,
-    Unknown(String),
-}
-impl InlinePolicyPrincipalType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::ServiceAccount => "service_account",
-            Self::Role => "role",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for InlinePolicyPrincipalType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for InlinePolicyPrincipalType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "service_account" => Self::ServiceAccount,
-            "role" => Self::Role,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
 pub type GetRoleInlinePolicyResponse = InlinePolicyResponse;
 
 pub type GetRoleInlinePolicyResource = InlinePolicy;
@@ -1796,114 +1752,24 @@ pub type GetRoleInlinePolicyResource = InlinePolicy;
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct GetRoleInlinePolicyScope {}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PermissionBoundaryResponse {
-    #[serde(
-        rename = "permission_boundary",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub permission_boundary: Option<PermissionBoundary>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PermissionBoundary {
-    #[serde(
-        rename = "principal_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_id: Option<String>,
-
-    #[serde(
-        rename = "principal_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_type: Option<PermissionBoundaryPrincipalType>,
-
-    #[serde(rename = "policy_id", default, skip_serializing_if = "Option::is_none")]
-    pub policy_id: Option<String>,
-
-    #[serde(
-        rename = "policy_name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub policy_name: Option<String>,
-
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum PermissionBoundaryPrincipalType {
-    ServiceAccount,
-    Role,
-    Unknown(String),
-}
-impl PermissionBoundaryPrincipalType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::ServiceAccount => "service_account",
-            Self::Role => "role",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for PermissionBoundaryPrincipalType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for PermissionBoundaryPrincipalType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "service_account" => Self::ServiceAccount,
-            "role" => Self::Role,
-            _ => Self::Unknown(value),
-        })
-    }
+    #[serde(rename = "policy")]
+    pub policy: Policy,
 }
 
 pub type GetRolePermissionBoundaryResponse = PermissionBoundaryResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct STSSessionResponse {
-    #[serde(
-        rename = "sts_session",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub sts_session: Option<STSSession>,
+    #[serde(rename = "sts_session")]
+    pub sts_session: STSSession,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct STSSession {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    /// The assumed role UUID; absent on service-account OAuth sessions that do not assume a role.
-    #[serde(rename = "role_id", default, skip_serializing_if = "Option::is_none")]
-    pub role_id: Option<String>,
-    /// ID of the principal assuming the role (the source identity)
-    #[serde(
-        rename = "principal_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_id: Option<String>,
-
-    #[serde(
-        rename = "principal_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_type: Option<STSSessionPrincipalType>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Optional session identifier
     #[serde(
         rename = "session_name",
@@ -1913,19 +1779,11 @@ pub struct STSSession {
     )]
     pub session_name: Option<crate::Nullable<String>>,
 
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
 
-    #[serde(
-        rename = "expires_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub expires_at: Option<String>,
+    #[serde(rename = "expires_at")]
+    pub expires_at: String,
 
     #[serde(
         rename = "last_used_at",
@@ -1935,8 +1793,8 @@ pub struct STSSession {
     )]
     pub last_used_at: Option<crate::Nullable<String>>,
     /// Whether the session has been revoked
-    #[serde(rename = "revoked", default, skip_serializing_if = "Option::is_none")]
-    pub revoked: Option<bool>,
+    #[serde(rename = "revoked")]
+    pub revoked: bool,
 
     #[serde(
         rename = "revoked_at",
@@ -1971,94 +1829,60 @@ pub struct STSSession {
     pub user_agent: Option<crate::Nullable<String>>,
 
     #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
-
-    #[serde(
-        rename = "account_handle",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_handle: Option<String>,
-
-    #[serde(
-        rename = "source_account_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub source_account_id: Option<crate::Nullable<String>>,
-
-    #[serde(
-        rename = "source_principal_type",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub source_principal_type: Option<crate::Nullable<String>>,
-
-    #[serde(
-        rename = "source_principal_crn",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub source_principal_crn: Option<crate::Nullable<String>>,
-
-    #[serde(
-        rename = "parent_session_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub parent_session_id: Option<crate::Nullable<String>>,
-
-    #[serde(
         rename = "grant_type",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub grant_type: Option<String>,
 
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Assumed role. Absent for service-account OAuth sessions that do not assume a role.
+    #[serde(rename = "role", default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<ResourceRef>,
+    /// Source user, service account, role or instance. Absent for web identity; use identity_provider and subject instead.
+    #[serde(
+        rename = "source_principal",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub source_principal: Option<ResourceRef>,
+    /// Account of the source resource, when applicable.
+    #[serde(
+        rename = "source_account",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub source_account: Option<ResourceRef>,
+    /// Session used to assume this role, when the session is chained.
+    #[serde(
+        rename = "parent_session",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub parent_session: Option<ResourceRef>,
+    /// Account-owned OIDC provider that verified the web-identity token.
+    #[serde(
+        rename = "identity_provider",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub identity_provider: Option<ResourceRef>,
+    /// Verified subject (sub) from the web-identity token, independent of the session name.
+    #[serde(rename = "subject", default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum STSSessionPrincipalType {
-    User,
-    ServiceAccount,
-    AssumedRole,
-    Unknown(String),
-}
-impl STSSessionPrincipalType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::User => "user",
-            Self::ServiceAccount => "service_account",
-            Self::AssumedRole => "assumed_role",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for STSSessionPrincipalType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for STSSessionPrincipalType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "user" => Self::User,
-            "service_account" => Self::ServiceAccount,
-            "assumed_role" => Self::AssumedRole,
-            _ => Self::Unknown(value),
-        })
-    }
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 pub type GetSTSSessionResponse = STSSessionResponse;
@@ -2165,6 +1989,52 @@ pub type GetServiceAccountLinuxIdentityResponse = GetServiceAccountLinuxIdentity
 
 pub type GetServiceAccountPermissionBoundaryResponse = PermissionBoundaryResponse;
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct ListOIDCProvidersParameters {
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
+    pub crn: Option<String>,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+}
+
+pub type ListOIDCProvidersQuery = ListOIDCProvidersParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct OIDCProviderListResponse {
+    #[serde(rename = "oidc_providers")]
+    pub oidc_providers: Vec<OIDCProvider>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct PaginationMeta {
+    /// Total number of items
+    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+    /// Number of items per page
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+    /// Whether there are more items
+    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
+    pub has_more: Option<bool>,
+}
+
+pub type ListOIDCProvidersResponse = OIDCProviderListResponse;
+
+pub type ListOIDCProvidersItem = OIDCProvider;
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ListPersonalSSHKeysResult {
     #[serde(rename = "ssh_keys")]
@@ -2201,22 +2071,6 @@ pub struct PolicyListResponse {
     pub meta: Option<PaginationMeta>,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PaginationMeta {
-    /// Total number of items
-    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
-    pub total: Option<i64>,
-    /// Number of items per page
-    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
-    pub limit: Option<i64>,
-    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
-    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
-    pub marker: Option<String>,
-    /// Whether there are more items
-    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
-    pub has_more: Option<bool>,
-}
-
 pub type ListPoliciesResponse = PolicyListResponse;
 
 pub type ListPoliciesItem = Policy;
@@ -2238,13 +2092,13 @@ pub struct ListPolicyRolesParameters {
 
 pub type ListPolicyRolesQuery = ListPolicyRolesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PolicyRolesListResponse {
-    #[serde(rename = "roles", default, skip_serializing_if = "Option::is_none")]
-    pub roles: Option<Vec<Role>>,
+    #[serde(rename = "roles")]
+    pub roles: Vec<Role>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListPolicyRolesResponse = PolicyRolesListResponse;
@@ -2268,72 +2122,18 @@ pub struct ListPolicyServiceAccountsParameters {
 
 pub type ListPolicyServiceAccountsQuery = ListPolicyServiceAccountsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PolicyServiceAccountsListResponse {
-    #[serde(
-        rename = "service_accounts",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub service_accounts: Option<Vec<ServiceAccount>>,
+    #[serde(rename = "service_accounts")]
+    pub service_accounts: Vec<ServiceAccount>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListPolicyServiceAccountsResponse = PolicyServiceAccountsListResponse;
 
 pub type ListPolicyServiceAccountsItem = ServiceAccount;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListRegionsParameters {
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
-}
-
-pub type ListRegionsQuery = ListRegionsParameters;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ListRegionsResult {
-    /// List of available regions
-    #[serde(rename = "regions")]
-    pub regions: Vec<Region>,
-    /// The default region code
-    #[serde(rename = "default")]
-    pub default: String,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Region {
-    /// Platform-owned global region identity, using the immutable region code.
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// Unique region code used in API calls and CRNs
-    #[serde(rename = "code")]
-    pub code: String,
-    /// Human-readable region name
-    #[serde(rename = "name")]
-    pub name: String,
-    /// Geographic location of the region
-    #[serde(rename = "location")]
-    pub location: String,
-    /// ISO 3166-1 alpha-2 country code (used to display flag in UI)
-    #[serde(rename = "country_code")]
-    pub country_code: String,
-    /// Whether the region is currently available for use
-    #[serde(rename = "available")]
-    pub available: bool,
-    /// Whether the region is announced but not yet available
-    #[serde(rename = "coming_soon")]
-    pub coming_soon: bool,
-}
-
-pub type ListRegionsResponse = ListRegionsResult;
-
-pub type ListRegionsItem = Region;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListRoleInlinePoliciesParameters {
@@ -2485,17 +2285,13 @@ impl<'de> serde::Deserialize<'de> for ListSTSSessionsParametersPrincipalType {
 
 pub type ListSTSSessionsQuery = ListSTSSessionsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct STSSessionListResponse {
-    #[serde(
-        rename = "sts_sessions",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub sts_sessions: Option<Vec<STSSession>>,
+    #[serde(rename = "sts_sessions")]
+    pub sts_sessions: Vec<STSSession>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListSTSSessionsResponse = STSSessionListResponse;
@@ -2696,6 +2492,26 @@ impl SetBoundaryRequestInput {
 pub type SetRolePermissionBoundaryBody = SetBoundaryRequestInput;
 
 pub type SetServiceAccountPermissionBoundaryBody = SetBoundaryRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct OIDCProviderUpdateRequestInput {
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+
+    #[serde(rename = "audiences", default, skip_serializing_if = "Option::is_none")]
+    pub audiences: Option<Vec<String>>,
+
+    #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<std::collections::BTreeMap<String, String>>,
+}
+
+pub type UpdateOIDCProviderBody = OIDCProviderUpdateRequestInput;
+
+pub type UpdateOIDCProviderResponse = OIDCProviderResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct PolicyUpdateRequestInput {

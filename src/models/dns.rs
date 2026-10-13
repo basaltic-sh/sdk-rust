@@ -209,37 +209,34 @@ impl RecordValueInput {
 
 pub type CreateRecordBody = RecordCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RecordResponse {
-    #[serde(rename = "record", default, skip_serializing_if = "Option::is_none")]
-    pub record: Option<Record>,
+    #[serde(rename = "record")]
+    pub record: Record,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Record {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Cloud Resource Name.
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
-
-    #[serde(rename = "zone_id", default, skip_serializing_if = "Option::is_none")]
-    pub zone_id: Option<String>,
+    #[serde(rename = "crn")]
+    pub crn: String,
     /// Record name (FQDN).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "name")]
+    pub name: String,
     /// Record type. Customer records use one of the creatable RecordType values; reads also surface the platform-managed apex/DNSSEC types (SOA, NS, DNSKEY, DS, NSEC, RRSIG).
-    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
-    pub type_: Option<String>,
+    #[serde(rename = "type")]
+    pub type_: String,
 
-    #[serde(rename = "ttl", default, skip_serializing_if = "Option::is_none")]
-    pub ttl: Option<i64>,
+    #[serde(rename = "ttl")]
+    pub ttl: i64,
     /// True for platform-managed records (SOA, apex NS, and the DNSSEC set). Managed records are read-only — they cannot be updated or deleted through the API.
     #[serde(rename = "managed", default, skip_serializing_if = "Option::is_none")]
     pub managed: Option<bool>,
 
-    #[serde(rename = "values", default, skip_serializing_if = "Option::is_none")]
-    pub values: Option<Vec<RecordValue>>,
+    #[serde(rename = "values")]
+    pub values: Vec<RecordValue>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -770,13 +767,13 @@ pub struct ListRecordsParameters {
 
 pub type ListRecordsQuery = ListRecordsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RecordListResponse {
-    #[serde(rename = "records", default, skip_serializing_if = "Option::is_none")]
-    pub records: Option<Vec<Record>>,
+    #[serde(rename = "records")]
+    pub records: Vec<Record>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
@@ -812,13 +809,55 @@ pub type ListZoneVPCAssociationsQuery = ListZoneVPCAssociationsParameters;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct VPCAssociationsResponse {
-    #[serde(rename = "vpc_ids")]
-    pub vpc_ids: Vec<String>,
+    #[serde(rename = "vpcs")]
+    pub vpcs: Vec<Vpc>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Vpc {
+    #[serde(rename = "id")]
+    pub id: String,
+    /// Cloud Resource Name (name-based, region+account-scoped).
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// 1-63 chars, lowercase alphanumeric + hyphen Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// IPv4 CIDR block carved up by subnets. Must be private (RFC 1918): within 10.0.0.0/8, 172.16.0.0/12 or 192.168.0.0/16. Immutable after create.
+    #[serde(rename = "cidr_ipv4")]
+    pub cidr_ipv4: String,
+    /// Associated regional GUA or private ULA prefix.
+    #[serde(
+        rename = "cidr_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub cidr_ipv6: Option<crate::Nullable<String>>,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
 }
 
 pub type ListZoneVPCAssociationsResponse = VPCAssociationsResponse;
 
-pub type ListZoneVPCAssociationsItem = String;
+pub type ListZoneVPCAssociationsItem = Vpc;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListZonesParameters {

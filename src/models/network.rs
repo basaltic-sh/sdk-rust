@@ -21,23 +21,25 @@ impl AttachFloatingIpRequest {
 
 pub type AttachFloatingIpBody = AttachFloatingIpRequest;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct AttachFloatingIpResult {
-    #[serde(
-        rename = "floating_ip",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub floating_ip: Option<FloatingIp>,
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct FloatingIpInterfaceResponse {
+    #[serde(rename = "interface")]
+    pub interface: FloatingIpInterface,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIp {
+pub struct FloatingIpInterface {
     #[serde(rename = "id")]
     pub id: String,
 
     #[serde(rename = "crn")]
     pub crn: String,
+    /// Subnet containing this interface.
+    #[serde(rename = "subnet")]
+    pub subnet: ResourceRef,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
 
     #[serde(
         rename = "description",
@@ -46,136 +48,62 @@ pub struct FloatingIp {
     )]
     pub description: Option<String>,
 
-    #[serde(rename = "family")]
-    pub family: IpFamily,
-    /// Canonical CRN of the bound interface, instance pool, or load balancer; null when unattached. A pool-owned address names its pool even when the pool has zero members. Only pool-owned addresses may have multiple NIC members. Manage their bindings through the instance pool floating IP endpoints; direct attach and detach are refused.
+    #[serde(rename = "mac")]
+    pub mac: String,
+    /// Instance holding this interface, including a stopped instance. Null when unbound. Floating IP attachments are tracked separately.
     #[serde(rename = "attached_to")]
-    pub attached_to: crate::Nullable<String>,
-    /// The floating IP's bindings. A floating IP fronts 0 members (allocated, unattached), 1 member (the everyday case), or N members for an instance pool — an anycast floating IP, where one public IP is delivered to N VM NICs across hosts (each advertised as a /32 from the host holding it). Members may share a hypervisor. Two of them on one host used to mean one served and the other was silently dark; a member's forwarding rule now names the member, and the host splits connections across the members it holds, so where the members sit is a capacity decision rather than a correctness one. An instance pool's address takes its members from the pool's live replicas — every one of them — so a scale-out joins and a scale-in leaves without a per-replica attach. With more than one member ONE member serves each connection, chosen by hashing the flow's addresses and ports, and every packet of that connection goes to the same one. The members are separate instances that share nothing, so this spreads connections and survives the loss of a host — it is not a load balancer: nothing checks whether the service inside the instance is up, and connections in progress to a member that goes away are not moved, they end. A POOL's address is the exception, and only for booting. A replica joins the address as soon as it is placed, but does not receive traffic until it has reached the instance metadata service — evidence that the guest booted, rather than that its virtual machine was started. Until then it is a member with `health` `unhealthy`. A replica whose image never contacts the metadata service is admitted anyway after a few minutes, so an unusual image delays traffic rather than never getting it.
-    #[serde(rename = "members")]
-    pub members: Vec<FloatingIpMember>,
+    pub attached_to: FloatingIpInterfaceAttachedTo,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
-    /// The readiness check applied to this address's members. Absent when none is configured. See `FloatingIpHealthCheck`.
-    #[serde(
-        rename = "health_check",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub health_check: Option<FloatingIpHealthCheck>,
 
     #[serde(rename = "created_at")]
     pub created_at: String,
 
     #[serde(rename = "updated_at")]
     pub updated_at: String,
-    /// Allocated public or private address.
-    #[serde(rename = "address")]
-    pub address: String,
-
-    #[serde(rename = "visibility")]
-    pub visibility: FloatingIpVisibility,
-    /// Allocation subnet for private floating IPs.
-    #[serde(
-        rename = "subnet_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub subnet_id: Option<crate::Nullable<String>>,
-    /// Allocation VPC for private floating IPs.
-    #[serde(rename = "vpc_id", default, skip_serializing_if = "Option::is_none")]
-    pub vpc_id: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum IpFamily {
-    Ipv4,
-    Ipv6,
-    Unknown(String),
-}
-impl IpFamily {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Ipv4 => "ipv4",
-            Self::Ipv6 => "ipv6",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for IpFamily {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for IpFamily {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "ipv4" => Self::Ipv4,
-            "ipv6" => Self::Ipv6,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMember {
-    /// Bound NIC summary; null for a load balancer binding named by attached_to.
-    #[serde(rename = "interface")]
-    pub interface: crate::Nullable<FloatingIpMemberInterfaceValue>,
     /// What the platform knows about this member. `unknown` — nobody is checking. A member you attached yourself with no health check on the address reads this: you chose the moment of attach, and the platform has no signal about what runs inside the instance. It is advertised. `healthy` — the platform has evidence this member is up (and, if a health check is configured on the address, that the check is passing). `unhealthy` — the platform is waiting for that evidence and has not seen it, or a configured check is failing. The member keeps its place on the address and receives no traffic until it recovers. Without a health check this is liveness only — `healthy` means the guest came up, not that your service is listening. Configure `health_check` on the floating IP to add readiness on top of that.
     #[serde(rename = "health")]
-    pub health: FloatingIpMemberHealth,
+    pub health: FloatingIpInterfaceHealth,
     /// Why the member reads the `health` it does — so you can tell "your service is not answering" from "the guest has not booted yet". `unprobed` — nobody is checking (no health check, hand-attached). `booting` — the platform has not yet seen the guest come up. `probe_failed` — the configured health check is failing. `passing` — the guest is up and, if a check is configured, it passes.
     #[serde(rename = "reason")]
-    pub reason: FloatingIpMemberReason,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
+    pub reason: FloatingIpInterfaceReason,
     /// Target child address on the member interface.
     #[serde(
         rename = "address_id",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub address_id: Option<crate::Nullable<String>>,
+    pub address_id: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMemberInterfaceValue {
+pub struct ResourceRef {
     #[serde(rename = "id")]
     pub id: String,
 
     #[serde(rename = "crn")]
     pub crn: String,
-    /// Owning instance; null when the interface has no owning instance.
-    #[serde(rename = "instance")]
-    pub instance: crate::Nullable<FloatingIpMemberInterfaceValueInstanceValue>,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMemberInterfaceValueInstanceValue {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-
-    #[serde(rename = "name")]
-    pub name: String,
+#[serde(untagged)]
+pub enum FloatingIpInterfaceAttachedTo {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpMemberHealth {
+pub enum FloatingIpInterfaceHealth {
     Unknown1,
     Healthy,
     Unhealthy,
     Unknown(String),
 }
-impl FloatingIpMemberHealth {
+impl FloatingIpInterfaceHealth {
     pub fn as_str(&self) -> &str {
         match self {
             Self::Unknown1 => "unknown",
@@ -185,12 +113,12 @@ impl FloatingIpMemberHealth {
         }
     }
 }
-impl serde::Serialize for FloatingIpMemberHealth {
+impl serde::Serialize for FloatingIpInterfaceHealth {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
-impl<'de> serde::Deserialize<'de> for FloatingIpMemberHealth {
+impl<'de> serde::Deserialize<'de> for FloatingIpInterfaceHealth {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <String as serde::Deserialize>::deserialize(deserializer)?;
         Ok(match value.as_str() {
@@ -203,14 +131,14 @@ impl<'de> serde::Deserialize<'de> for FloatingIpMemberHealth {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpMemberReason {
+pub enum FloatingIpInterfaceReason {
     Unprobed,
     Booting,
     ProbeFailed,
     Passing,
     Unknown(String),
 }
-impl FloatingIpMemberReason {
+impl FloatingIpInterfaceReason {
     pub fn as_str(&self) -> &str {
         match self {
             Self::Unprobed => "unprobed",
@@ -221,12 +149,12 @@ impl FloatingIpMemberReason {
         }
     }
 }
-impl serde::Serialize for FloatingIpMemberReason {
+impl serde::Serialize for FloatingIpInterfaceReason {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
-impl<'de> serde::Deserialize<'de> for FloatingIpMemberReason {
+impl<'de> serde::Deserialize<'de> for FloatingIpInterfaceReason {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <String as serde::Deserialize>::deserialize(deserializer)?;
         Ok(match value.as_str() {
@@ -239,129 +167,36 @@ impl<'de> serde::Deserialize<'de> for FloatingIpMemberReason {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpHealthCheck {
-    /// `tcp` opens a connection; `http`/`https` issue a GET and match the status against `matcher`. There is no `udp`: a readiness probe needs an answer — check a udp service on a tcp health port instead.
-    #[serde(rename = "protocol")]
-    pub protocol: FloatingIpHealthCheckProtocol,
-    /// HTTP path probed; ignored for tcp.
-    #[serde(rename = "path", default, skip_serializing_if = "Option::is_none")]
-    pub path: Option<String>,
-    /// Port probed on the member.
-    #[serde(rename = "port")]
-    pub port: i64,
-
-    #[serde(rename = "interval_sec")]
-    pub interval_sec: i64,
-    /// Per-probe timeout; must be less than interval_sec.
-    #[serde(rename = "timeout_sec")]
-    pub timeout_sec: i64,
-    /// Consecutive passes before a member flips healthy.
-    #[serde(rename = "healthy_threshold")]
-    pub healthy_threshold: i64,
-    /// Consecutive failures before a member flips unhealthy.
-    #[serde(rename = "unhealthy_threshold")]
-    pub unhealthy_threshold: i64,
-    /// HTTP status or range that counts as passing; ignored for tcp.
-    #[serde(rename = "matcher", default, skip_serializing_if = "Option::is_none")]
-    pub matcher: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpHealthCheckProtocol {
-    Tcp,
-    Http,
-    Https,
-    Unknown(String),
-}
-impl FloatingIpHealthCheckProtocol {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Tcp => "tcp",
-            Self::Http => "http",
-            Self::Https => "https",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FloatingIpHealthCheckProtocol {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FloatingIpHealthCheckProtocol {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "tcp" => Self::Tcp,
-            "http" => Self::Http,
-            "https" => Self::Https,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpVisibility {
-    Public,
-    Private,
-    Unknown(String),
-}
-impl FloatingIpVisibility {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Public => "public",
-            Self::Private => "private",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FloatingIpVisibility {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FloatingIpVisibility {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "public" => Self::Public,
-            "private" => Self::Private,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type AttachFloatingIpResponse = AttachFloatingIpResult;
+pub type AttachFloatingIpResponse = FloatingIpInterfaceResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InternetGatewayAttachRequestInput {
-    /// VPC UUID, CRN or exact name in the caller account.
-    #[serde(rename = "vpc")]
-    pub vpc: String,
+pub struct InterfaceSecurityGroupRequestInput {
+    /// Security group UUID, CRN, or account-scoped name.
+    #[serde(rename = "security_group")]
+    pub security_group: String,
 }
-impl InternetGatewayAttachRequestInput {
+impl InterfaceSecurityGroupRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(vpc: String) -> Self {
-        Self { vpc }
+    pub fn new(security_group: String) -> Self {
+        Self { security_group }
     }
 }
 
-pub type AttachInternetGatewayBody = InternetGatewayAttachRequestInput;
+pub type AttachInterfaceSecurityGroupBody = InterfaceSecurityGroupRequestInput;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct InternetGatewayResponse {
+pub struct SecurityGroupResponse {
     #[serde(
-        rename = "internet_gateway",
+        rename = "security_group",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub internet_gateway: Option<InternetGateway>,
+    pub security_group: Option<SecurityGroup>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InternetGateway {
+pub struct SecurityGroup {
     #[serde(rename = "id")]
     pub id: String,
 
@@ -377,14 +212,6 @@ pub struct InternetGateway {
         skip_serializing_if = "Option::is_none"
     )]
     pub description: Option<String>,
-    /// VPC the IGW is currently attached to (null when detached).
-    #[serde(
-        rename = "attached_vpc_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub attached_vpc_id: Option<crate::Nullable<String>>,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -396,7 +223,7 @@ pub struct InternetGateway {
     pub updated_at: String,
 }
 
-pub type AttachInternetGatewayResponse = InternetGatewayResponse;
+pub type AttachInterfaceSecurityGroupResponse = SecurityGroupResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EgressOnlyGatewayCreateRequestInput {
@@ -461,46 +288,7 @@ pub struct EgressOnlyGateway {
     pub description: Option<String>,
 
     #[serde(rename = "vpc")]
-    pub vpc: Vpc,
-
-    #[serde(rename = "tags")]
-    pub tags: std::collections::BTreeMap<String, String>,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-
-    #[serde(rename = "updated_at")]
-    pub updated_at: String,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Vpc {
-    #[serde(rename = "id")]
-    pub id: String,
-    /// Cloud Resource Name (name-based, region+account-scoped).
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// 1-63 chars, lowercase alphanumeric + hyphen Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-    /// IPv4 CIDR block carved up by subnets. Must be private (RFC 1918): within 10.0.0.0/8, 172.16.0.0/12 or 192.168.0.0/16. Immutable after create.
-    #[serde(rename = "cidr_ipv4")]
-    pub cidr_ipv4: String,
-    /// Associated regional GUA or private ULA prefix.
-    #[serde(
-        rename = "cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub cidr_ipv6: Option<crate::Nullable<String>>,
+    pub vpc: ResourceRef,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -696,14 +484,205 @@ impl<'de> serde::Deserialize<'de> for FloatingIpCreateRequestInputVisibility {
 
 pub type CreateFloatingIpBody = FloatingIpCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct FloatingIpResponse {
+    #[serde(rename = "floating_ip")]
+    pub floating_ip: FloatingIp,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct FloatingIp {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+
     #[serde(
-        rename = "floating_ip",
+        rename = "description",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub floating_ip: Option<FloatingIp>,
+    pub description: Option<String>,
+
+    #[serde(rename = "family")]
+    pub family: IpFamily,
+    /// Instance pool or load balancer that owns the address. Null for direct interface attachments and unattached addresses. An empty pool retains ownership.
+    #[serde(rename = "attached_to")]
+    pub attached_to: FloatingIpAttachedTo,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+    /// The readiness check applied to this address's members. Absent when none is configured. See `FloatingIpHealthCheck`.
+    #[serde(
+        rename = "health_check",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub health_check: Option<FloatingIpHealthCheck>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+    /// Allocated public or private address.
+    #[serde(rename = "address")]
+    pub address: String,
+
+    #[serde(rename = "visibility")]
+    pub visibility: FloatingIpVisibility,
+    /// Allocation subnet for a private floating IP; null for public addresses.
+    #[serde(rename = "subnet")]
+    pub subnet: FloatingIpSubnet,
+    /// Allocation VPC for a private floating IP; null for public addresses.
+    #[serde(rename = "vpc")]
+    pub vpc: FloatingIpVpc,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IpFamily {
+    Ipv4,
+    Ipv6,
+    Unknown(String),
+}
+impl IpFamily {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ipv4 => "ipv4",
+            Self::Ipv6 => "ipv6",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for IpFamily {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for IpFamily {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ipv4" => Self::Ipv4,
+            "ipv6" => Self::Ipv6,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpAttachedTo {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct FloatingIpHealthCheck {
+    /// `tcp` opens a connection; `http`/`https` issue a GET and match the status against `matcher`. There is no `udp`: a readiness probe needs an answer — check a udp service on a tcp health port instead.
+    #[serde(rename = "protocol")]
+    pub protocol: FloatingIpHealthCheckProtocol,
+    /// HTTP path probed; ignored for tcp.
+    #[serde(rename = "path", default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    /// Port probed on the member.
+    #[serde(rename = "port")]
+    pub port: i64,
+
+    #[serde(rename = "interval_sec")]
+    pub interval_sec: i64,
+    /// Per-probe timeout; must be less than interval_sec.
+    #[serde(rename = "timeout_sec")]
+    pub timeout_sec: i64,
+    /// Consecutive passes before a member flips healthy.
+    #[serde(rename = "healthy_threshold")]
+    pub healthy_threshold: i64,
+    /// Consecutive failures before a member flips unhealthy.
+    #[serde(rename = "unhealthy_threshold")]
+    pub unhealthy_threshold: i64,
+    /// HTTP status or range that counts as passing; ignored for tcp.
+    #[serde(rename = "matcher", default, skip_serializing_if = "Option::is_none")]
+    pub matcher: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FloatingIpHealthCheckProtocol {
+    Tcp,
+    Http,
+    Https,
+    Unknown(String),
+}
+impl FloatingIpHealthCheckProtocol {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Tcp => "tcp",
+            Self::Http => "http",
+            Self::Https => "https",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FloatingIpHealthCheckProtocol {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FloatingIpHealthCheckProtocol {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "tcp" => Self::Tcp,
+            "http" => Self::Http,
+            "https" => Self::Https,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FloatingIpVisibility {
+    Public,
+    Private,
+    Unknown(String),
+}
+impl FloatingIpVisibility {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Public => "public",
+            Self::Private => "private",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FloatingIpVisibility {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FloatingIpVisibility {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "public" => Self::Public,
+            "private" => Self::Private,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpSubnet {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpVpc {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type CreateFloatingIpResponse = FloatingIpResponse;
@@ -805,10 +784,10 @@ impl<'de> serde::Deserialize<'de> for AddressRequestInputFamily {
 
 pub type CreateInterfaceBody = InterfaceCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InterfaceResponse {
-    #[serde(rename = "interface", default, skip_serializing_if = "Option::is_none")]
-    pub interface: Option<Interface>,
+    #[serde(rename = "interface")]
+    pub interface: Interface,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -818,9 +797,9 @@ pub struct Interface {
 
     #[serde(rename = "crn")]
     pub crn: String,
-
+    /// Subnet containing this interface.
     #[serde(rename = "subnet")]
-    pub subnet: Subnet,
+    pub subnet: ResourceRef,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
@@ -834,76 +813,9 @@ pub struct Interface {
 
     #[serde(rename = "mac")]
     pub mac: String,
-    /// UUID of the instance holding this interface, including stopped instances. Null when no instance NIC binding exists. Deletion is refused while bound; floating IP attachment is tracked separately.
-    #[serde(
-        rename = "attached_to",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub attached_to: Option<crate::Nullable<String>>,
-
-    #[serde(rename = "tags")]
-    pub tags: std::collections::BTreeMap<String, String>,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-
-    #[serde(rename = "updated_at")]
-    pub updated_at: String,
-
-    #[serde(rename = "addresses")]
-    pub addresses: Vec<InterfaceAddress>,
-
-    #[serde(rename = "routed_prefixes")]
-    pub routed_prefixes: Vec<RoutedPrefix>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Subnet {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-
-    #[serde(rename = "vpc")]
-    pub vpc: Vpc,
-
-    #[serde(rename = "route_table")]
-    pub route_table: RouteTableSummary,
-    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-
-    #[serde(rename = "cidr_ipv4")]
-    pub cidr_ipv4: String,
-
-    #[serde(rename = "gateway_ipv4")]
-    pub gateway_ipv4: String,
-    /// The dual-stack IPv6 /64, if the subnet is v6-enabled. Its presence (vs the v4 cidr_ipv4) is how a client tells the subnet's families apart.
-    #[serde(
-        rename = "cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub cidr_ipv6: Option<crate::Nullable<String>>,
-
-    #[serde(
-        rename = "gateway_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub gateway_ipv6: Option<crate::Nullable<String>>,
+    /// Instance holding this interface, including a stopped instance. Null when unbound. Floating IP attachments are tracked separately.
+    #[serde(rename = "attached_to")]
+    pub attached_to: InterfaceAttachedTo,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -915,18 +827,21 @@ pub struct Subnet {
     pub updated_at: String,
 }
 
-pub type RouteTableSummary = crate::Nullable<RouteTableSummaryValue>;
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct RouteTableSummaryValue {
-    #[serde(rename = "id")]
-    pub id: String,
+#[serde(untagged)]
+pub enum InterfaceAttachedTo {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
 
-    #[serde(rename = "crn")]
-    pub crn: String,
+pub type CreateInterfaceResponse = InterfaceResponse;
 
-    #[serde(rename = "name")]
-    pub name: String,
+pub type CreateInterfaceAddressBody = AddressRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct CreateInterfaceAddressResult {
+    #[serde(rename = "address", default, skip_serializing_if = "Option::is_none")]
+    pub address: Option<InterfaceAddress>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -947,7 +862,7 @@ pub struct InterfaceAddress {
     pub primary: bool,
 
     #[serde(rename = "floating_ips")]
-    pub floating_ips: Vec<AddressFloatingIp>,
+    pub floating_ips: Vec<FloatingIPRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -982,7 +897,7 @@ impl<'de> serde::Deserialize<'de> for InterfaceAddressFamily {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct AddressFloatingIp {
+pub struct FloatingIPRef {
     #[serde(rename = "id")]
     pub id: String,
 
@@ -990,19 +905,19 @@ pub struct AddressFloatingIp {
     pub crn: String,
 
     #[serde(rename = "visibility")]
-    pub visibility: AddressFloatingIpVisibility,
+    pub visibility: FloatingIPRefVisibility,
 
     #[serde(rename = "address")]
     pub address: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AddressFloatingIpVisibility {
+pub enum FloatingIPRefVisibility {
     Public,
     Private,
     Unknown(String),
 }
-impl AddressFloatingIpVisibility {
+impl FloatingIPRefVisibility {
     pub fn as_str(&self) -> &str {
         match self {
             Self::Public => "public",
@@ -1011,12 +926,12 @@ impl AddressFloatingIpVisibility {
         }
     }
 }
-impl serde::Serialize for AddressFloatingIpVisibility {
+impl serde::Serialize for FloatingIPRefVisibility {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
-impl<'de> serde::Deserialize<'de> for AddressFloatingIpVisibility {
+impl<'de> serde::Deserialize<'de> for FloatingIPRefVisibility {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <String as serde::Deserialize>::deserialize(deserializer)?;
         Ok(match value.as_str() {
@@ -1027,13 +942,37 @@ impl<'de> serde::Deserialize<'de> for AddressFloatingIpVisibility {
     }
 }
 
+pub type CreateInterfaceAddressResponse = CreateInterfaceAddressResult;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct CreateInterfacePrefixRequest {
+    /// Pool UUID or CRN in the interface VPC.
+    #[serde(rename = "pool")]
+    pub pool: String,
+}
+impl CreateInterfacePrefixRequest {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(pool: String) -> Self {
+        Self { pool }
+    }
+}
+
+pub type CreateInterfacePrefixBody = CreateInterfacePrefixRequest;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct CreateInterfacePrefixResult {
+    #[serde(rename = "prefix")]
+    pub prefix: RoutedPrefix,
+}
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RoutedPrefix {
     #[serde(rename = "id")]
     pub id: String,
 
-    #[serde(rename = "pool_id")]
-    pub pool_id: String,
+    #[serde(rename = "pool")]
+    pub pool: ResourceRef,
 
     #[serde(rename = "family")]
     pub family: RoutedPrefixFamily,
@@ -1070,47 +1009,13 @@ impl<'de> serde::Deserialize<'de> for RoutedPrefixFamily {
     }
 }
 
-pub type CreateInterfaceResponse = InterfaceResponse;
-
-pub type CreateInterfaceAddressBody = AddressRequestInput;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct CreateInterfaceAddressResult {
-    #[serde(rename = "address", default, skip_serializing_if = "Option::is_none")]
-    pub address: Option<InterfaceAddress>,
-}
-
-pub type CreateInterfaceAddressResponse = CreateInterfaceAddressResult;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct CreateInterfacePrefixRequest {
-    #[serde(rename = "pool_id")]
-    pub pool_id: String,
-}
-impl CreateInterfacePrefixRequest {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(pool_id: String) -> Self {
-        Self { pool_id }
-    }
-}
-
-pub type CreateInterfacePrefixBody = CreateInterfacePrefixRequest;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct CreateInterfacePrefixResult {
-    #[serde(
-        rename = "routed_prefixes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub routed_prefixes: Option<Vec<RoutedPrefix>>,
-}
-
 pub type CreateInterfacePrefixResponse = CreateInterfacePrefixResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InternetGatewayCreateRequestInput {
+    /// VPC UUID, CRN or exact name in the caller account. The binding is permanent.
+    #[serde(rename = "vpc")]
+    pub vpc: String,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
@@ -1128,8 +1033,9 @@ pub struct InternetGatewayCreateRequestInput {
 impl InternetGatewayCreateRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(name: String) -> Self {
+    pub fn new(vpc: String, name: String) -> Self {
         Self {
+            vpc,
             name,
             description: None,
             tags: None,
@@ -1138,6 +1044,54 @@ impl InternetGatewayCreateRequestInput {
 }
 
 pub type CreateInternetGatewayBody = InternetGatewayCreateRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InternetGatewayResponse {
+    #[serde(rename = "internet_gateway")]
+    pub internet_gateway: InternetGateway,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InternetGateway {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// VPC the internet gateway is attached to.
+    #[serde(
+        rename = "attached_vpc",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub attached_vpc: Option<InternetGatewayAttachedVpc>,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum InternetGatewayAttachedVpc {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
 
 pub type CreateInternetGatewayResponse = InternetGatewayResponse;
 
@@ -1204,7 +1158,7 @@ pub struct NATGateway {
     pub description: Option<String>,
 
     #[serde(rename = "subnet")]
-    pub subnet: Subnet,
+    pub subnet: ResourceRef,
     /// Public IPv4 allocated from the regional pool at creation. Stable until gateway deletion.
     #[serde(rename = "public_ipv4")]
     pub public_ipv4: String,
@@ -1243,18 +1197,17 @@ impl CreatePrefixPoolRequest {
 
 pub type CreatePrefixPoolBody = CreatePrefixPoolRequest;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct CreatePrefixPoolResult {
-    #[serde(
-        rename = "prefix_pools",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub prefix_pools: Option<Vec<PrefixPool>>,
+    #[serde(rename = "prefix_pool")]
+    pub prefix_pool: PrefixPool,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PrefixPool {
+    #[serde(rename = "crn")]
+    pub crn: String,
+
     #[serde(rename = "id")]
     pub id: String,
     /// VPC IPv4 range disjoint from all subnets and other prefix pools.
@@ -1340,9 +1293,6 @@ pub struct Route {
     #[serde(rename = "crn")]
     pub crn: String,
 
-    #[serde(rename = "route_table_id")]
-    pub route_table_id: String,
-
     #[serde(
         rename = "description",
         default,
@@ -1355,7 +1305,7 @@ pub struct Route {
 
     #[serde(rename = "target_type")]
     pub target_type: RouteTargetType,
-    /// Set when target_type=ip. Mutex with the target_*_id fields. Must be a unicast address inside this VPC's CIDR (same IP family as destination_cidr); internet egress uses target_internet_gateway_id / target_nat_gateway_id.
+    /// Set when target_type=ip. Mutex with the target_* fields. Must be a unicast address inside this VPC's CIDR (same IP family as destination_cidr); internet egress uses target_internet_gateway / target_nat_gateway.
     #[serde(
         rename = "next_hop_ip",
         default,
@@ -1365,28 +1315,25 @@ pub struct Route {
     pub next_hop_ip: Option<crate::Nullable<String>>,
     /// Set when target_type=internet_gateway.
     #[serde(
-        rename = "target_internet_gateway_id",
+        rename = "target_internet_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_internet_gateway_id: Option<crate::Nullable<String>>,
+    pub target_internet_gateway: Option<ResourceRef>,
     /// Set when target_type=nat_gateway. Supports IPv4 and IPv6; IPv6 requires an IPv6-enabled hosting subnet.
     #[serde(
-        rename = "target_nat_gateway_id",
+        rename = "target_nat_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_nat_gateway_id: Option<crate::Nullable<String>>,
-    /// Set when target_type=egress_only_gateway (IPv6 only). Gives the subnet outbound v6 with the internet unable to initiate inbound.
+    pub target_nat_gateway: Option<ResourceRef>,
+    /// Set when target_type=egress_only_gateway (IPv6 only). Gives the subnet outbound IPv6 and replies only.
     #[serde(
-        rename = "target_egress_only_gateway_id",
+        rename = "target_egress_only_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_egress_only_gateway_id: Option<crate::Nullable<String>>,
+    pub target_egress_only_gateway: Option<ResourceRef>,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -1490,7 +1437,7 @@ pub struct RouteTable {
     pub crn: String,
 
     #[serde(rename = "vpc")]
-    pub vpc: Vpc,
+    pub vpc: ResourceRef,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
@@ -1546,44 +1493,6 @@ impl SecurityGroupCreateRequestInput {
 }
 
 pub type CreateSecurityGroupBody = SecurityGroupCreateRequestInput;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct SecurityGroupResponse {
-    #[serde(
-        rename = "security_group",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub security_group: Option<SecurityGroup>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct SecurityGroup {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-
-    #[serde(rename = "tags")]
-    pub tags: std::collections::BTreeMap<String, String>,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-
-    #[serde(rename = "updated_at")]
-    pub updated_at: String,
-}
 
 pub type CreateSecurityGroupResponse = SecurityGroupResponse;
 
@@ -1768,9 +1677,6 @@ pub struct SecurityGroupRule {
     #[serde(rename = "id")]
     pub id: String,
 
-    #[serde(rename = "security_group_id")]
-    pub security_group_id: String,
-
     #[serde(
         rename = "description",
         default,
@@ -1802,7 +1708,7 @@ pub struct SecurityGroupRule {
         deserialize_with = "crate::response::present_nullable"
     )]
     pub port_max: Option<crate::Nullable<i64>>,
-    /// Source (ingress) or destination_cidr (egress) CIDR. Must match the rule's ethertype. Mutually exclusive with source_security_group_id.
+    /// Source (ingress) or destination_cidr (egress) CIDR. Must match the rule's ethertype. Mutually exclusive with source_security_group.
     #[serde(
         rename = "remote_cidr",
         default,
@@ -1810,14 +1716,13 @@ pub struct SecurityGroupRule {
         deserialize_with = "crate::response::present_nullable"
     )]
     pub remote_cidr: Option<crate::Nullable<String>>,
-    /// Source (ingress) or destination_cidr (egress) is "any workload in this SG". Traffic is matched by membership in the named security group. Mutually exclusive with remote_cidr.
+    /// Security group supplying the source or destination members. Mutually exclusive with remote_cidr.
     #[serde(
-        rename = "source_security_group_id",
+        rename = "source_security_group",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub source_security_group_id: Option<crate::Nullable<String>>,
+    pub source_security_group: Option<ResourceRef>,
 
     #[serde(rename = "created_at")]
     pub created_at: String,
@@ -1996,10 +1901,73 @@ impl SubnetCreateRequestInput {
 
 pub type CreateSubnetBody = SubnetCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SubnetResponse {
-    #[serde(rename = "subnet", default, skip_serializing_if = "Option::is_none")]
-    pub subnet: Option<Subnet>,
+    #[serde(rename = "subnet")]
+    pub subnet: Subnet,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Subnet {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+
+    #[serde(rename = "vpc")]
+    pub vpc: ResourceRef,
+    /// Route table associated with this subnet; null when the table is unavailable.
+    #[serde(rename = "route_table")]
+    pub route_table: SubnetRouteTable,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+
+    #[serde(rename = "cidr_ipv4")]
+    pub cidr_ipv4: String,
+
+    #[serde(rename = "gateway_ipv4")]
+    pub gateway_ipv4: String,
+    /// The dual-stack IPv6 /64, if the subnet is v6-enabled. Its presence (vs the v4 cidr_ipv4) is how a client tells the subnet's families apart.
+    #[serde(
+        rename = "cidr_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub cidr_ipv6: Option<crate::Nullable<String>>,
+
+    #[serde(
+        rename = "gateway_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub gateway_ipv6: Option<crate::Nullable<String>>,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum SubnetRouteTable {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type CreateSubnetResponse = SubnetResponse;
@@ -2050,36 +2018,274 @@ impl VpcCreateRequestInput {
 
 pub type CreateVpcBody = VpcCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct VpcResponse {
-    #[serde(rename = "vpc", default, skip_serializing_if = "Option::is_none")]
-    pub vpc: Option<Vpc>,
+    #[serde(rename = "vpc")]
+    pub vpc: Vpc,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Vpc {
+    #[serde(rename = "id")]
+    pub id: String,
+    /// Cloud Resource Name (name-based, region+account-scoped).
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// 1-63 chars, lowercase alphanumeric + hyphen Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// IPv4 CIDR block carved up by subnets. Must be private (RFC 1918): within 10.0.0.0/8, 172.16.0.0/12 or 192.168.0.0/16. Immutable after create.
+    #[serde(rename = "cidr_ipv4")]
+    pub cidr_ipv4: String,
+    /// Associated regional GUA or private ULA prefix.
+    #[serde(
+        rename = "cidr_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub cidr_ipv6: Option<crate::Nullable<String>>,
+
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
 }
 
 pub type CreateVpcResponse = VpcResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct DetachFloatingIpRequest {
-    /// Interface UUID or nested CRN; bare names, null and empty references are rejected. Omitting the field clears the binding. Naming a NIC that is not a member is a no-op.
-    #[serde(rename = "interface", default, skip_serializing_if = "Option::is_none")]
-    pub interface: Option<String>,
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum SubnetIPv6RequestInput {
+    Variant1(Box<SubnetIPv6RequestInputVariant1>),
+    Variant2(Box<SubnetIPv6RequestInputVariant2>),
 }
 
-pub type DetachFloatingIpBody = DetachFloatingIpRequest;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct DetachFloatingIpResult {
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SubnetIPv6RequestInputVariant1 {
+    /// Allocate a free /64 from the VPC IPv6 range. Can be enabled after creation. Every existing and new interface receives an IPv6 /96 and its first /128 automatically. NAT gateways hosted here also receive a public IPv6 address from the regional pool. Updating hosted gateways requires UpdateNATGateway permission and public IPv6 quota.
+    #[serde(rename = "allocate_cidr_ipv6")]
+    pub allocate_cidr_ipv6: bool,
+    /// An aligned /64 inside the VPC IPv6 range. Can be added later; cannot replace an existing range. Mutually exclusive with allocate_cidr_ipv6.
+    #[serde(rename = "cidr_ipv6", default, skip_serializing_if = "Option::is_none")]
+    pub cidr_ipv6: Option<String>,
+    /// When enabling IPv6, copy equivalent rules in security groups used by this subnet's interfaces. Copies 0.0.0.0/0 to ::/0 and security-group references, preserving protocol, ports and direction. Restricted IPv4 CIDRs are not widened. Existing IPv6 equivalents are not duplicated. Changes affect every interface sharing these groups. Requires CreateSecurityGroupRule permission and available rule quota. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
     #[serde(
-        rename = "floating_ip",
+        rename = "copy_ipv4_security_rules",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub floating_ip: Option<FloatingIp>,
+    pub copy_ipv4_security_rules: Option<bool>,
+    /// When enabling IPv6, optionally add ::/0 to the subnet's route table. match_ipv4 follows an IPv4 internet-gateway or NAT-gateway default route, using the same target. A NAT gateway must already have IPv6 enabled on its hosting subnet, or be hosted in the subnet being enabled. No IPv4 default route leaves IPv6 routing unchanged. Existing IPv6 default routes are always preserved. Egress-only gateways cannot provide ULA internet access; use a NAT gateway, or a public IPv6 floating IP with an internet-gateway route. Changes affect every subnet sharing the route table and require CreateRoute permission; creating an egress-only gateway also requires CreateEgressOnlyGateway permission. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
+    #[serde(
+        rename = "ipv6_routing",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub ipv6_routing: Option<SubnetIPv6RequestInputVariant1Ipv6Routing>,
+}
+impl SubnetIPv6RequestInputVariant1 {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(allocate_cidr_ipv6: bool) -> Self {
+        Self {
+            allocate_cidr_ipv6,
+            cidr_ipv6: None,
+            copy_ipv4_security_rules: None,
+            ipv6_routing: None,
+        }
+    }
 }
 
-pub type DetachFloatingIpResponse = DetachFloatingIpResult;
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SubnetIPv6RequestInputVariant1Ipv6Routing {
+    MatchIpv4,
+    Unchanged,
+    InternetGateway,
+    NatGateway,
+    EgressOnlyGateway,
+    Unknown(String),
+}
+impl SubnetIPv6RequestInputVariant1Ipv6Routing {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::MatchIpv4 => "match_ipv4",
+            Self::Unchanged => "unchanged",
+            Self::InternetGateway => "internet_gateway",
+            Self::NatGateway => "nat_gateway",
+            Self::EgressOnlyGateway => "egress_only_gateway",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SubnetIPv6RequestInputVariant1Ipv6Routing {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SubnetIPv6RequestInputVariant1Ipv6Routing {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "match_ipv4" => Self::MatchIpv4,
+            "unchanged" => Self::Unchanged,
+            "internet_gateway" => Self::InternetGateway,
+            "nat_gateway" => Self::NatGateway,
+            "egress_only_gateway" => Self::EgressOnlyGateway,
+            _ => Self::Unknown(value),
+        })
+    }
+}
 
-pub type DetachInternetGatewayResponse = InternetGatewayResponse;
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SubnetIPv6RequestInputVariant2 {
+    /// Allocate a free /64 from the VPC IPv6 range. Can be enabled after creation. Every existing and new interface receives an IPv6 /96 and its first /128 automatically. NAT gateways hosted here also receive a public IPv6 address from the regional pool. Updating hosted gateways requires UpdateNATGateway permission and public IPv6 quota.
+    #[serde(
+        rename = "allocate_cidr_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub allocate_cidr_ipv6: Option<bool>,
+    /// An aligned /64 inside the VPC IPv6 range. Can be added later; cannot replace an existing range. Mutually exclusive with allocate_cidr_ipv6.
+    #[serde(rename = "cidr_ipv6")]
+    pub cidr_ipv6: String,
+    /// When enabling IPv6, copy equivalent rules in security groups used by this subnet's interfaces. Copies 0.0.0.0/0 to ::/0 and security-group references, preserving protocol, ports and direction. Restricted IPv4 CIDRs are not widened. Existing IPv6 equivalents are not duplicated. Changes affect every interface sharing these groups. Requires CreateSecurityGroupRule permission and available rule quota. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
+    #[serde(
+        rename = "copy_ipv4_security_rules",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub copy_ipv4_security_rules: Option<bool>,
+    /// When enabling IPv6, optionally add ::/0 to the subnet's route table. match_ipv4 follows an IPv4 internet-gateway or NAT-gateway default route, using the same target. A NAT gateway must already have IPv6 enabled on its hosting subnet, or be hosted in the subnet being enabled. No IPv4 default route leaves IPv6 routing unchanged. Existing IPv6 default routes are always preserved. Egress-only gateways cannot provide ULA internet access; use a NAT gateway, or a public IPv6 floating IP with an internet-gateway route. Changes affect every subnet sharing the route table and require CreateRoute permission; creating an egress-only gateway also requires CreateEgressOnlyGateway permission. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
+    #[serde(
+        rename = "ipv6_routing",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub ipv6_routing: Option<SubnetIPv6RequestInputVariant2Ipv6Routing>,
+}
+impl SubnetIPv6RequestInputVariant2 {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(cidr_ipv6: String) -> Self {
+        Self {
+            allocate_cidr_ipv6: None,
+            cidr_ipv6,
+            copy_ipv4_security_rules: None,
+            ipv6_routing: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SubnetIPv6RequestInputVariant2Ipv6Routing {
+    MatchIpv4,
+    Unchanged,
+    InternetGateway,
+    NatGateway,
+    EgressOnlyGateway,
+    Unknown(String),
+}
+impl SubnetIPv6RequestInputVariant2Ipv6Routing {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::MatchIpv4 => "match_ipv4",
+            Self::Unchanged => "unchanged",
+            Self::InternetGateway => "internet_gateway",
+            Self::NatGateway => "nat_gateway",
+            Self::EgressOnlyGateway => "egress_only_gateway",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SubnetIPv6RequestInputVariant2Ipv6Routing {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SubnetIPv6RequestInputVariant2Ipv6Routing {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "match_ipv4" => Self::MatchIpv4,
+            "unchanged" => Self::Unchanged,
+            "internet_gateway" => Self::InternetGateway,
+            "nat_gateway" => Self::NatGateway,
+            "egress_only_gateway" => Self::EgressOnlyGateway,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type EnableSubnetIPv6Body = SubnetIPv6RequestInput;
+
+pub type EnableSubnetIPv6Response = SubnetResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum VpcIPv6RequestInput {
+    Variant1(Box<VpcIPv6RequestInputVariant1>),
+    Variant2(Box<VpcIPv6RequestInputVariant2>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct VpcIPv6RequestInputVariant1 {
+    /// Allocate a regional GUA /60. Mutually exclusive with cidr_ipv6. Existing IPv6 ranges cannot be replaced.
+    #[serde(rename = "allocate_cidr_ipv6")]
+    pub allocate_cidr_ipv6: bool,
+    /// Optional aligned locally assigned ULA (fd00::/8), /48 through /60. May be added after VPC creation.
+    #[serde(rename = "cidr_ipv6", default, skip_serializing_if = "Option::is_none")]
+    pub cidr_ipv6: Option<String>,
+}
+impl VpcIPv6RequestInputVariant1 {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(allocate_cidr_ipv6: bool) -> Self {
+        Self {
+            allocate_cidr_ipv6,
+            cidr_ipv6: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct VpcIPv6RequestInputVariant2 {
+    /// Allocate a regional GUA /60. Mutually exclusive with cidr_ipv6. Existing IPv6 ranges cannot be replaced.
+    #[serde(
+        rename = "allocate_cidr_ipv6",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub allocate_cidr_ipv6: Option<bool>,
+    /// Optional aligned locally assigned ULA (fd00::/8), /48 through /60. May be added after VPC creation.
+    #[serde(rename = "cidr_ipv6")]
+    pub cidr_ipv6: String,
+}
+impl VpcIPv6RequestInputVariant2 {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(cidr_ipv6: String) -> Self {
+        Self {
+            allocate_cidr_ipv6: None,
+            cidr_ipv6,
+        }
+    }
+}
+
+pub type EnableVPCIPv6Body = VpcIPv6RequestInput;
+
+pub type EnableVPCIPv6Response = VpcResponse;
 
 pub type GetEgressOnlyGatewayResponse = EgressOnlyGatewayResponse;
 
@@ -2258,9 +2464,6 @@ pub struct GatewayRoute {
     #[serde(rename = "crn")]
     pub crn: String,
 
-    #[serde(rename = "route_table_id")]
-    pub route_table_id: String,
-
     #[serde(
         rename = "description",
         default,
@@ -2273,7 +2476,7 @@ pub struct GatewayRoute {
 
     #[serde(rename = "target_type")]
     pub target_type: RouteTargetType,
-    /// Set when target_type=ip. Mutex with the target_*_id fields. Must be a unicast address inside this VPC's CIDR (same IP family as destination_cidr); internet egress uses target_internet_gateway_id / target_nat_gateway_id.
+    /// Set when target_type=ip. Mutex with the target_* fields. Must be a unicast address inside this VPC's CIDR (same IP family as destination_cidr); internet egress uses target_internet_gateway / target_nat_gateway.
     #[serde(
         rename = "next_hop_ip",
         default,
@@ -2283,28 +2486,25 @@ pub struct GatewayRoute {
     pub next_hop_ip: Option<crate::Nullable<String>>,
     /// Set when target_type=internet_gateway.
     #[serde(
-        rename = "target_internet_gateway_id",
+        rename = "target_internet_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_internet_gateway_id: Option<crate::Nullable<String>>,
+    pub target_internet_gateway: Option<ResourceRef>,
     /// Set when target_type=nat_gateway. Supports IPv4 and IPv6; IPv6 requires an IPv6-enabled hosting subnet.
     #[serde(
-        rename = "target_nat_gateway_id",
+        rename = "target_nat_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_nat_gateway_id: Option<crate::Nullable<String>>,
-    /// Set when target_type=egress_only_gateway (IPv6 only). Gives the subnet outbound v6 with the internet unable to initiate inbound.
+    pub target_nat_gateway: Option<ResourceRef>,
+    /// Set when target_type=egress_only_gateway (IPv6 only). Gives the subnet outbound IPv6 and replies only.
     #[serde(
-        rename = "target_egress_only_gateway_id",
+        rename = "target_egress_only_gateway",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub target_egress_only_gateway_id: Option<crate::Nullable<String>>,
+    pub target_egress_only_gateway: Option<ResourceRef>,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -2316,7 +2516,7 @@ pub struct GatewayRoute {
     pub updated_at: String,
 
     #[serde(rename = "route_table")]
-    pub route_table: RouteTableSummary,
+    pub route_table: ResourceRef,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
@@ -2370,6 +2570,36 @@ pub type ListEgressOnlyGatewaysResponse = EgressOnlyGatewayListResponse;
 pub type ListEgressOnlyGatewaysItem = EgressOnlyGateway;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct ListFloatingIpInterfacesParameters {
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+
+    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
+    pub crn: Option<String>,
+
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+pub type ListFloatingIpInterfacesQuery = ListFloatingIpInterfacesParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct FloatingIpInterfaceListResponse {
+    #[serde(rename = "interfaces")]
+    pub interfaces: Vec<FloatingIpInterface>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+pub type ListFloatingIpInterfacesResponse = FloatingIpInterfaceListResponse;
+
+pub type ListFloatingIpInterfacesItem = FloatingIpInterface;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListFloatingIpsParameters {
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -2416,14 +2646,13 @@ pub type ListInterfaceAddressesResponse = ListInterfaceAddressesResult;
 
 pub type ListInterfaceAddressesItem = InterfaceAddress;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ListInterfacePrefixesResult {
-    #[serde(
-        rename = "routed_prefixes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub routed_prefixes: Option<Vec<RoutedPrefix>>,
+    #[serde(rename = "prefixes")]
+    pub prefixes: Vec<RoutedPrefix>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListInterfacePrefixesResponse = ListInterfacePrefixesResult;
@@ -2437,19 +2666,28 @@ pub struct ListInterfaceSecurityGroupsParameters {
 
     #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
     pub crn: Option<String>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
 }
 
 pub type ListInterfaceSecurityGroupsQuery = ListInterfaceSecurityGroupsParameters;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InterfaceSecurityGroupsResponse {
-    #[serde(rename = "security_group_ids")]
-    pub security_group_ids: Vec<String>,
+pub struct SecurityGroupListResponse {
+    #[serde(rename = "security_groups")]
+    pub security_groups: Vec<SecurityGroup>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
-pub type ListInterfaceSecurityGroupsResponse = InterfaceSecurityGroupsResponse;
+pub type ListInterfaceSecurityGroupsResponse = SecurityGroupListResponse;
 
-pub type ListInterfaceSecurityGroupsItem = String;
+pub type ListInterfaceSecurityGroupsItem = SecurityGroup;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListInterfacesParameters {
@@ -2595,14 +2833,13 @@ pub type ListNATGatewaysResponse = NATGatewayListResponse;
 
 pub type ListNATGatewaysItem = NATGateway;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ListPrefixPoolsResult {
-    #[serde(
-        rename = "prefix_pools",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub prefix_pools: Option<Vec<PrefixPool>>,
+    #[serde(rename = "prefix_pools")]
+    pub prefix_pools: Vec<PrefixPool>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListPrefixPoolsResponse = ListPrefixPoolsResult;
@@ -2719,15 +2956,6 @@ pub struct ListSecurityGroupsParameters {
 
 pub type ListSecurityGroupsQuery = ListSecurityGroupsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct SecurityGroupListResponse {
-    #[serde(rename = "security_groups")]
-    pub security_groups: Vec<SecurityGroup>,
-
-    #[serde(rename = "meta")]
-    pub meta: PaginationMeta,
-}
-
 pub type ListSecurityGroupsResponse = SecurityGroupListResponse;
 
 pub type ListSecurityGroupsItem = SecurityGroup;
@@ -2795,24 +3023,6 @@ pub type ListVpcsResponse = VpcListResponse;
 
 pub type ListVpcsItem = Vpc;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InterfaceSecurityGroupsRequestInput {
-    /// Security-group UUIDs, CRNs or account-scoped names. All entries resolve before replacement; duplicate canonical IDs collapse to one membership. An empty array removes all groups.
-    #[serde(rename = "security_groups")]
-    pub security_groups: Vec<String>,
-}
-impl InterfaceSecurityGroupsRequestInput {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(security_groups: Vec<String>) -> Self {
-        Self { security_groups }
-    }
-}
-
-pub type SetInterfaceSecurityGroupsBody = InterfaceSecurityGroupsRequestInput;
-
-pub type SetInterfaceSecurityGroupsResponse = InterfaceSecurityGroupsResponse;
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct EgressOnlyGatewayUpdateRequestInput {
     #[serde(
@@ -2847,10 +3057,16 @@ pub struct FloatingIpUpdateRequestInput {
     #[serde(
         rename = "health_check",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub health_check: Option<crate::Nullable<FloatingIpHealthCheckInput>>,
+    pub health_check: Option<FloatingIpUpdateRequestInputHealthCheck>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpUpdateRequestInputHealthCheck {
+    Variant1(Box<FloatingIpHealthCheckInput>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type UpdateFloatingIpBody = FloatingIpUpdateRequestInput;
@@ -2984,75 +3200,6 @@ pub struct SubnetUpdateRequestInput {
 
     #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<std::collections::BTreeMap<String, String>>,
-    /// Allocate a free /64 from the VPC IPv6 range. Can be enabled after creation. Every existing and new interface receives an IPv6 /96 and its first /128 automatically. NAT gateways hosted here also receive a public IPv6 address from the regional pool. Updating hosted gateways requires UpdateNATGateway permission and public IPv6 quota.
-    #[serde(
-        rename = "allocate_cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub allocate_cidr_ipv6: Option<bool>,
-    /// An aligned /64 inside the VPC IPv6 range. Can be added later; cannot replace an existing range. Mutually exclusive with allocate_cidr_ipv6.
-    #[serde(
-        rename = "cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub cidr_ipv6: Option<crate::Nullable<String>>,
-    /// When enabling IPv6, copy equivalent rules in security groups used by this subnet's interfaces. Copies 0.0.0.0/0 to ::/0 and security-group references, preserving protocol, ports and direction. Restricted IPv4 CIDRs are not widened. Existing IPv6 equivalents are not duplicated. Changes affect every interface sharing these groups. Requires CreateSecurityGroupRule permission and available rule quota. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
-    #[serde(
-        rename = "copy_ipv4_security_rules",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub copy_ipv4_security_rules: Option<bool>,
-    /// When enabling IPv6, optionally add ::/0 to the subnet's route table. match_ipv4 follows an IPv4 internet-gateway or NAT-gateway default route, using the same target. A NAT gateway must already have IPv6 enabled on its hosting subnet, or be hosted in the subnet being enabled. No IPv4 default route leaves IPv6 routing unchanged. Existing IPv6 default routes are always preserved. Egress-only gateways cannot provide ULA internet access; use a NAT gateway, or a public IPv6 floating IP with an internet-gateway route. Changes affect every subnet sharing the route table and require CreateRoute permission; creating an egress-only gateway also requires CreateEgressOnlyGateway permission. Only accepted with allocate_cidr_ipv6 or cidr_ipv6.
-    #[serde(
-        rename = "ipv6_routing",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub ipv6_routing: Option<SubnetUpdateRequestInputIpv6Routing>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SubnetUpdateRequestInputIpv6Routing {
-    MatchIpv4,
-    Unchanged,
-    InternetGateway,
-    NatGateway,
-    EgressOnlyGateway,
-    Unknown(String),
-}
-impl SubnetUpdateRequestInputIpv6Routing {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::MatchIpv4 => "match_ipv4",
-            Self::Unchanged => "unchanged",
-            Self::InternetGateway => "internet_gateway",
-            Self::NatGateway => "nat_gateway",
-            Self::EgressOnlyGateway => "egress_only_gateway",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for SubnetUpdateRequestInputIpv6Routing {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for SubnetUpdateRequestInputIpv6Routing {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "match_ipv4" => Self::MatchIpv4,
-            "unchanged" => Self::Unchanged,
-            "internet_gateway" => Self::InternetGateway,
-            "nat_gateway" => Self::NatGateway,
-            "egress_only_gateway" => Self::EgressOnlyGateway,
-            _ => Self::Unknown(value),
-        })
-    }
 }
 
 pub type UpdateSubnetBody = SubnetUpdateRequestInput;
@@ -3071,16 +3218,6 @@ pub struct VpcUpdateRequestInput {
 
     #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<std::collections::BTreeMap<String, String>>,
-    /// Allocate a regional GUA /60. Mutually exclusive with cidr_ipv6. Existing IPv6 ranges cannot be replaced.
-    #[serde(
-        rename = "allocate_cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub allocate_cidr_ipv6: Option<bool>,
-    /// Optional aligned locally assigned ULA (fd00::/8), /48 through /60. May be added after VPC creation.
-    #[serde(rename = "cidr_ipv6", default, skip_serializing_if = "Option::is_none")]
-    pub cidr_ipv6: Option<String>,
 }
 
 pub type UpdateVpcBody = VpcUpdateRequestInput;

@@ -7,7 +7,7 @@ const ENDPOINT: &str = "https://network.{region}.basaltic.sh";
 static OP_0: Operation = Operation {
     id: "attachFloatingIp",
     method: "POST",
-    path: "/v1/floating-ips/{floating_ip_id}/attach",
+    path: "/v1/floating-ips/{floating_ip_id}/interfaces",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -16,9 +16,9 @@ static OP_0: Operation = Operation {
     query_encoding: &[],
 };
 static OP_1: Operation = Operation {
-    id: "attachInternetGateway",
+    id: "attachInterfaceSecurityGroup",
     method: "POST",
-    path: "/v1/internet-gateways/{internet_gateway_id}/attach",
+    path: "/v1/interfaces/{interface_id}/security-groups",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -336,19 +336,19 @@ static OP_29: Operation = Operation {
 };
 static OP_30: Operation = Operation {
     id: "detachFloatingIp",
-    method: "POST",
-    path: "/v1/floating-ips/{floating_ip_id}/detach",
+    method: "DELETE",
+    path: "/v1/floating-ips/{floating_ip_id}/interfaces",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/json",
+    content_type: "",
     accept: "application/json",
     query_encoding: &[],
 };
 static OP_31: Operation = Operation {
-    id: "detachInternetGateway",
-    method: "POST",
-    path: "/v1/internet-gateways/{internet_gateway_id}/detach",
+    id: "detachFloatingIpInterface",
+    method: "DELETE",
+    path: "/v1/floating-ips/{floating_ip_id}/interfaces/{interface_id}",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -357,6 +357,39 @@ static OP_31: Operation = Operation {
     query_encoding: &[],
 };
 static OP_32: Operation = Operation {
+    id: "detachInterfaceSecurityGroup",
+    method: "DELETE",
+    path: "/v1/interfaces/{interface_id}/security-groups/{security_group_id}",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_33: Operation = Operation {
+    id: "enableSubnetIPv6",
+    method: "POST",
+    path: "/v1/subnets/{subnet_id}/ipv6",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_34: Operation = Operation {
+    id: "enableVPCIPv6",
+    method: "POST",
+    path: "/v1/vpcs/{vpc_id}/ipv6",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_35: Operation = Operation {
     id: "getEgressOnlyGateway",
     method: "GET",
     path: "/v1/egress-only-gateways/{egress_only_gateway_id}",
@@ -367,7 +400,7 @@ static OP_32: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_33: Operation = Operation {
+static OP_36: Operation = Operation {
     id: "getFloatingIp",
     method: "GET",
     path: "/v1/floating-ips/{floating_ip_id}",
@@ -378,7 +411,7 @@ static OP_33: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_34: Operation = Operation {
+static OP_37: Operation = Operation {
     id: "getInterface",
     method: "GET",
     path: "/v1/interfaces/{interface_id}",
@@ -389,7 +422,7 @@ static OP_34: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_35: Operation = Operation {
+static OP_38: Operation = Operation {
     id: "getInterfaceAddress",
     method: "GET",
     path: "/v1/interfaces/{interface_id}/addresses/{address_id}",
@@ -400,7 +433,7 @@ static OP_35: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_36: Operation = Operation {
+static OP_39: Operation = Operation {
     id: "getInternetGateway",
     method: "GET",
     path: "/v1/internet-gateways/{internet_gateway_id}",
@@ -411,7 +444,7 @@ static OP_36: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_37: Operation = Operation {
+static OP_40: Operation = Operation {
     id: "getNATGateway",
     method: "GET",
     path: "/v1/nat-gateways/{nat_gateway_id}",
@@ -422,7 +455,7 @@ static OP_37: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_38: Operation = Operation {
+static OP_41: Operation = Operation {
     id: "getRoute",
     method: "GET",
     path: "/v1/route-tables/{route_table_id}/routes/{route_id}",
@@ -433,7 +466,7 @@ static OP_38: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_39: Operation = Operation {
+static OP_42: Operation = Operation {
     id: "getRouteTable",
     method: "GET",
     path: "/v1/route-tables/{route_table_id}",
@@ -444,7 +477,7 @@ static OP_39: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_40: Operation = Operation {
+static OP_43: Operation = Operation {
     id: "getSecurityGroup",
     method: "GET",
     path: "/v1/security-groups/{security_group_id}",
@@ -455,7 +488,7 @@ static OP_40: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_41: Operation = Operation {
+static OP_44: Operation = Operation {
     id: "getSecurityGroupRule",
     method: "GET",
     path: "/v1/security-groups/{security_group_id}/rules/{rule_id}",
@@ -466,7 +499,7 @@ static OP_41: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_42: Operation = Operation {
+static OP_45: Operation = Operation {
     id: "getSubnet",
     method: "GET",
     path: "/v1/subnets/{subnet_id}",
@@ -477,7 +510,7 @@ static OP_42: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_43: Operation = Operation {
+static OP_46: Operation = Operation {
     id: "getVpc",
     method: "GET",
     path: "/v1/vpcs/{vpc_id}",
@@ -488,7 +521,7 @@ static OP_43: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_44: Operation = Operation {
+static OP_47: Operation = Operation {
     id: "listEgressOnlyGatewayRoutes",
     method: "GET",
     path: "/v1/egress-only-gateways/{egress_only_gateway_id}/routes",
@@ -520,7 +553,7 @@ static OP_44: Operation = Operation {
         },
     ],
 };
-static OP_45: Operation = Operation {
+static OP_48: Operation = Operation {
     id: "listEgressOnlyGateways",
     method: "GET",
     path: "/v1/egress-only-gateways",
@@ -552,7 +585,39 @@ static OP_45: Operation = Operation {
         },
     ],
 };
-static OP_46: Operation = Operation {
+static OP_49: Operation = Operation {
+    id: "listFloatingIpInterfaces",
+    method: "GET",
+    path: "/v1/floating-ips/{floating_ip_id}/interfaces",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "crn",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "name",
+            style: "form",
+            explode: true,
+        },
+    ],
+};
+static OP_50: Operation = Operation {
     id: "listFloatingIps",
     method: "GET",
     path: "/v1/floating-ips",
@@ -589,7 +654,7 @@ static OP_46: Operation = Operation {
         },
     ],
 };
-static OP_47: Operation = Operation {
+static OP_51: Operation = Operation {
     id: "listInterfaceAddresses",
     method: "GET",
     path: "/v1/interfaces/{interface_id}/addresses",
@@ -600,7 +665,7 @@ static OP_47: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_48: Operation = Operation {
+static OP_52: Operation = Operation {
     id: "listInterfacePrefixes",
     method: "GET",
     path: "/v1/interfaces/{interface_id}/prefixes",
@@ -611,7 +676,7 @@ static OP_48: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_49: Operation = Operation {
+static OP_53: Operation = Operation {
     id: "listInterfaceSecurityGroups",
     method: "GET",
     path: "/v1/interfaces/{interface_id}/security-groups",
@@ -631,9 +696,19 @@ static OP_49: Operation = Operation {
             style: "form",
             explode: true,
         },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
     ],
 };
-static OP_50: Operation = Operation {
+static OP_54: Operation = Operation {
     id: "listInterfaces",
     method: "GET",
     path: "/v1/interfaces",
@@ -675,7 +750,7 @@ static OP_50: Operation = Operation {
         },
     ],
 };
-static OP_51: Operation = Operation {
+static OP_55: Operation = Operation {
     id: "listInternetGatewayRoutes",
     method: "GET",
     path: "/v1/internet-gateways/{internet_gateway_id}/routes",
@@ -707,7 +782,7 @@ static OP_51: Operation = Operation {
         },
     ],
 };
-static OP_52: Operation = Operation {
+static OP_56: Operation = Operation {
     id: "listInternetGateways",
     method: "GET",
     path: "/v1/internet-gateways",
@@ -739,7 +814,7 @@ static OP_52: Operation = Operation {
         },
     ],
 };
-static OP_53: Operation = Operation {
+static OP_57: Operation = Operation {
     id: "listNATGatewayRoutes",
     method: "GET",
     path: "/v1/nat-gateways/{nat_gateway_id}/routes",
@@ -771,7 +846,7 @@ static OP_53: Operation = Operation {
         },
     ],
 };
-static OP_54: Operation = Operation {
+static OP_58: Operation = Operation {
     id: "listNATGateways",
     method: "GET",
     path: "/v1/nat-gateways",
@@ -813,7 +888,7 @@ static OP_54: Operation = Operation {
         },
     ],
 };
-static OP_55: Operation = Operation {
+static OP_59: Operation = Operation {
     id: "listPrefixPools",
     method: "GET",
     path: "/v1/vpcs/{vpc_id}/prefix-pools",
@@ -824,7 +899,7 @@ static OP_55: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_56: Operation = Operation {
+static OP_60: Operation = Operation {
     id: "listRouteTables",
     method: "GET",
     path: "/v1/route-tables",
@@ -861,7 +936,7 @@ static OP_56: Operation = Operation {
         },
     ],
 };
-static OP_57: Operation = Operation {
+static OP_61: Operation = Operation {
     id: "listRoutes",
     method: "GET",
     path: "/v1/route-tables/{route_table_id}/routes",
@@ -893,7 +968,7 @@ static OP_57: Operation = Operation {
         },
     ],
 };
-static OP_58: Operation = Operation {
+static OP_62: Operation = Operation {
     id: "listSecurityGroupRules",
     method: "GET",
     path: "/v1/security-groups/{security_group_id}/rules",
@@ -925,7 +1000,7 @@ static OP_58: Operation = Operation {
         },
     ],
 };
-static OP_59: Operation = Operation {
+static OP_63: Operation = Operation {
     id: "listSecurityGroups",
     method: "GET",
     path: "/v1/security-groups",
@@ -957,7 +1032,7 @@ static OP_59: Operation = Operation {
         },
     ],
 };
-static OP_60: Operation = Operation {
+static OP_64: Operation = Operation {
     id: "listSubnets",
     method: "GET",
     path: "/v1/subnets",
@@ -994,7 +1069,7 @@ static OP_60: Operation = Operation {
         },
     ],
 };
-static OP_61: Operation = Operation {
+static OP_65: Operation = Operation {
     id: "listVpcs",
     method: "GET",
     path: "/v1/vpcs",
@@ -1026,18 +1101,7 @@ static OP_61: Operation = Operation {
         },
     ],
 };
-static OP_62: Operation = Operation {
-    id: "setInterfaceSecurityGroups",
-    method: "PUT",
-    path: "/v1/interfaces/{interface_id}/security-groups",
-    authenticated: true,
-    required_query: &[],
-    required_headers: &[],
-    content_type: "application/json",
-    accept: "application/json",
-    query_encoding: &[],
-};
-static OP_63: Operation = Operation {
+static OP_66: Operation = Operation {
     id: "updateEgressOnlyGateway",
     method: "PATCH",
     path: "/v1/egress-only-gateways/{egress_only_gateway_id}",
@@ -1048,7 +1112,7 @@ static OP_63: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_64: Operation = Operation {
+static OP_67: Operation = Operation {
     id: "updateFloatingIp",
     method: "PATCH",
     path: "/v1/floating-ips/{floating_ip_id}",
@@ -1059,7 +1123,7 @@ static OP_64: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_65: Operation = Operation {
+static OP_68: Operation = Operation {
     id: "updateInterface",
     method: "PATCH",
     path: "/v1/interfaces/{interface_id}",
@@ -1070,7 +1134,7 @@ static OP_65: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_66: Operation = Operation {
+static OP_69: Operation = Operation {
     id: "updateInternetGateway",
     method: "PATCH",
     path: "/v1/internet-gateways/{internet_gateway_id}",
@@ -1081,7 +1145,7 @@ static OP_66: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_67: Operation = Operation {
+static OP_70: Operation = Operation {
     id: "updateNATGateway",
     method: "PATCH",
     path: "/v1/nat-gateways/{nat_gateway_id}",
@@ -1092,7 +1156,7 @@ static OP_67: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_68: Operation = Operation {
+static OP_71: Operation = Operation {
     id: "updateRoute",
     method: "PATCH",
     path: "/v1/route-tables/{route_table_id}/routes/{route_id}",
@@ -1103,7 +1167,7 @@ static OP_68: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_69: Operation = Operation {
+static OP_72: Operation = Operation {
     id: "updateRouteTable",
     method: "PATCH",
     path: "/v1/route-tables/{route_table_id}",
@@ -1114,7 +1178,7 @@ static OP_69: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_70: Operation = Operation {
+static OP_73: Operation = Operation {
     id: "updateSecurityGroup",
     method: "PATCH",
     path: "/v1/security-groups/{security_group_id}",
@@ -1125,7 +1189,7 @@ static OP_70: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_71: Operation = Operation {
+static OP_74: Operation = Operation {
     id: "updateSubnet",
     method: "PATCH",
     path: "/v1/subnets/{subnet_id}",
@@ -1136,7 +1200,7 @@ static OP_71: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_72: Operation = Operation {
+static OP_75: Operation = Operation {
     id: "updateVpc",
     method: "PATCH",
     path: "/v1/vpcs/{vpc_id}",
@@ -1152,7 +1216,7 @@ pub struct NetworkService {
     pub(crate) client: Client,
 }
 impl NetworkService {
-    /// Attach a floating IP to an interface
+    /// Attach an interface to a floating IP
     pub fn attach_floating_ip(
         &self,
         floating_ip_id: &str,
@@ -1168,18 +1232,18 @@ impl NetworkService {
             Ok(serde_json::json!({})),
         ))
     }
-    /// Attach internet gateway to a VPC
-    pub fn attach_internet_gateway(
+    /// Attach a security group to an interface
+    pub fn attach_interface_security_group(
         &self,
-        internet_gateway_id: &str,
-        body: &m::AttachInternetGatewayBody,
-    ) -> Request<m::AttachInternetGatewayResponse> {
+        interface_id: &str,
+        body: &m::AttachInterfaceSecurityGroupBody,
+    ) -> Request<m::AttachInterfaceSecurityGroupResponse> {
         Request::new(Core::new(
             self.client.clone(),
             "network",
             ENDPOINT,
             &OP_1,
-            &[("internet_gateway_id", internet_gateway_id)],
+            &[("interface_id", interface_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
         ))
@@ -1568,34 +1632,85 @@ impl NetworkService {
             Ok(serde_json::json!({})),
         ))
     }
-    /// Detach a floating IP
-    pub fn detach_floating_ip(
-        &self,
-        floating_ip_id: &str,
-        body: Option<&m::DetachFloatingIpBody>,
-    ) -> Request<m::DetachFloatingIpResponse> {
-        Request::new(Core::new(
+    /// Detach all direct interfaces from a floating IP
+    pub fn detach_floating_ip(&self, floating_ip_id: &str) -> EmptyRequest {
+        EmptyRequest::new(Core::new(
             self.client.clone(),
             "network",
             ENDPOINT,
             &OP_30,
             &[("floating_ip_id", floating_ip_id)],
-            body.map(Payload::json).unwrap_or(Ok(Payload::Empty)),
+            Ok(Payload::Empty),
             Ok(serde_json::json!({})),
         ))
     }
-    /// Detach internet gateway from its VPC
-    pub fn detach_internet_gateway(
+    /// Detach an interface from a floating IP
+    pub fn detach_floating_ip_interface(
         &self,
-        internet_gateway_id: &str,
-    ) -> Request<m::DetachInternetGatewayResponse> {
-        Request::new(Core::new(
+        floating_ip_id: &str,
+        interface_id: &str,
+    ) -> EmptyRequest {
+        EmptyRequest::new(Core::new(
             self.client.clone(),
             "network",
             ENDPOINT,
             &OP_31,
-            &[("internet_gateway_id", internet_gateway_id)],
+            &[
+                ("floating_ip_id", floating_ip_id),
+                ("interface_id", interface_id),
+            ],
             Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Detach a security group from an interface
+    pub fn detach_interface_security_group(
+        &self,
+        interface_id: &str,
+        security_group_id: &str,
+    ) -> EmptyRequest {
+        EmptyRequest::new(Core::new(
+            self.client.clone(),
+            "network",
+            ENDPOINT,
+            &OP_32,
+            &[
+                ("interface_id", interface_id),
+                ("security_group_id", security_group_id),
+            ],
+            Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Enable IPv6 on a subnet
+    pub fn enable_subnet_i_pv6(
+        &self,
+        subnet_id: &str,
+        body: &m::EnableSubnetIPv6Body,
+    ) -> Request<m::EnableSubnetIPv6Response> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "network",
+            ENDPOINT,
+            &OP_33,
+            &[("subnet_id", subnet_id)],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Enable IPv6 on a vpc
+    pub fn enable_vpci_pv6(
+        &self,
+        vpc_id: &str,
+        body: &m::EnableVPCIPv6Body,
+    ) -> Request<m::EnableVPCIPv6Response> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "network",
+            ENDPOINT,
+            &OP_34,
+            &[("vpc_id", vpc_id)],
+            Payload::json(body),
             Ok(serde_json::json!({})),
         ))
     }
@@ -1608,7 +1723,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_32,
+            &OP_35,
             &[("egress_only_gateway_id", egress_only_gateway_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1625,7 +1740,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_32,
+                &OP_35,
                 &[("egress_only_gateway_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1634,7 +1749,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_45,
+                &OP_48,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1652,7 +1767,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_33,
+            &OP_36,
             &[("floating_ip_id", floating_ip_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1669,7 +1784,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_33,
+                &OP_36,
                 &[("floating_ip_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1678,7 +1793,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_46,
+                &OP_50,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1696,7 +1811,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_34,
+            &OP_37,
             &[("interface_id", interface_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1713,7 +1828,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_34,
+                &OP_37,
                 &[("interface_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1722,7 +1837,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_50,
+                &OP_54,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1744,7 +1859,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_35,
+            &OP_38,
             &[("interface_id", interface_id), ("address_id", address_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1759,7 +1874,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_36,
+            &OP_39,
             &[("internet_gateway_id", internet_gateway_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1776,7 +1891,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_36,
+                &OP_39,
                 &[("internet_gateway_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1785,7 +1900,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_52,
+                &OP_56,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1803,7 +1918,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_37,
+            &OP_40,
             &[("nat_gateway_id", nat_gateway_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1820,7 +1935,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_37,
+                &OP_40,
                 &[("nat_gateway_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1829,7 +1944,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_54,
+                &OP_58,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1847,7 +1962,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_38,
+            &OP_41,
             &[("route_table_id", route_table_id), ("route_id", route_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1865,7 +1980,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_38,
+                &OP_41,
                 &[("route_table_id", route_table_id), ("route_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1874,7 +1989,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_57,
+                &OP_61,
                 &[("route_table_id", route_table_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1892,7 +2007,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_39,
+            &OP_42,
             &[("route_table_id", route_table_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1909,7 +2024,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_39,
+                &OP_42,
                 &[("route_table_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1918,7 +2033,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_56,
+                &OP_60,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1939,7 +2054,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_40,
+            &OP_43,
             &[("security_group_id", security_group_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1956,7 +2071,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_40,
+                &OP_43,
                 &[("security_group_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1965,7 +2080,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_59,
+                &OP_63,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1987,7 +2102,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_41,
+            &OP_44,
             &[
                 ("security_group_id", security_group_id),
                 ("rule_id", rule_id),
@@ -2008,7 +2123,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_41,
+                &OP_44,
                 &[
                     ("security_group_id", security_group_id),
                     ("rule_id", reference),
@@ -2020,7 +2135,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_58,
+                &OP_62,
                 &[("security_group_id", security_group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -2038,7 +2153,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_42,
+            &OP_45,
             &[("subnet_id", subnet_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -2055,7 +2170,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_42,
+                &OP_45,
                 &[("subnet_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -2064,7 +2179,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_60,
+                &OP_64,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -2082,7 +2197,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_43,
+            &OP_46,
             &[("vpc_id", vpc_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -2099,7 +2214,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_43,
+                &OP_46,
                 &[("vpc_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -2108,7 +2223,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_61,
+                &OP_65,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -2132,7 +2247,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_44,
+                &OP_47,
                 &[("egress_only_gateway_id", egress_only_gateway_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2150,12 +2265,31 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_45,
+                &OP_48,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
             "egress_only_gateways",
+        )
+    }
+    /// List a floating IP’s interfaces
+    pub fn list_floating_ip_interfaces(
+        &self,
+        floating_ip_id: &str,
+        query: &m::ListFloatingIpInterfacesQuery,
+    ) -> PagedRequest<m::ListFloatingIpInterfacesResponse, m::ListFloatingIpInterfacesItem> {
+        PagedRequest::new(
+            Core::new(
+                self.client.clone(),
+                "network",
+                ENDPOINT,
+                &OP_49,
+                &[("floating_ip_id", floating_ip_id)],
+                Ok(Payload::Empty),
+                serde_json::to_value(query).map_err(crate::Error::from),
+            ),
+            "interfaces",
         )
     }
     /// List floating IPs
@@ -2168,7 +2302,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_46,
+                &OP_50,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2186,7 +2320,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_47,
+                &OP_51,
                 &[("interface_id", interface_id)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -2204,15 +2338,15 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_48,
+                &OP_52,
                 &[("interface_id", interface_id)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
             ),
-            "routed_prefixes",
+            "prefixes",
         )
     }
-    /// List interface security-group membership
+    /// List an interface’s security groups
     pub fn list_interface_security_groups(
         &self,
         interface_id: &str,
@@ -2224,12 +2358,12 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_49,
+                &OP_53,
                 &[("interface_id", interface_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "security_group_ids",
+            "security_groups",
         )
     }
     /// List interfaces
@@ -2242,7 +2376,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_50,
+                &OP_54,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2261,7 +2395,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_51,
+                &OP_55,
                 &[("internet_gateway_id", internet_gateway_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2279,7 +2413,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_52,
+                &OP_56,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2298,7 +2432,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_53,
+                &OP_57,
                 &[("nat_gateway_id", nat_gateway_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2316,7 +2450,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_54,
+                &OP_58,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2334,7 +2468,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_55,
+                &OP_59,
                 &[("vpc_id", vpc_id)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -2352,7 +2486,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_56,
+                &OP_60,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2371,7 +2505,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_57,
+                &OP_61,
                 &[("route_table_id", route_table_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2390,7 +2524,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_58,
+                &OP_62,
                 &[("security_group_id", security_group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2408,7 +2542,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_59,
+                &OP_63,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2426,7 +2560,7 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_60,
+                &OP_64,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2444,29 +2578,13 @@ impl NetworkService {
                 self.client.clone(),
                 "network",
                 ENDPOINT,
-                &OP_61,
+                &OP_65,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
             "vpcs",
         )
-    }
-    /// Set interface security-group membership
-    pub fn set_interface_security_groups(
-        &self,
-        interface_id: &str,
-        body: &m::SetInterfaceSecurityGroupsBody,
-    ) -> Request<m::SetInterfaceSecurityGroupsResponse> {
-        Request::new(Core::new(
-            self.client.clone(),
-            "network",
-            ENDPOINT,
-            &OP_62,
-            &[("interface_id", interface_id)],
-            Payload::json(body),
-            Ok(serde_json::json!({})),
-        ))
     }
     /// Update egress-only gateway
     pub fn update_egress_only_gateway(
@@ -2478,7 +2596,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_63,
+            &OP_66,
             &[("egress_only_gateway_id", egress_only_gateway_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2494,7 +2612,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_64,
+            &OP_67,
             &[("floating_ip_id", floating_ip_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2510,7 +2628,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_65,
+            &OP_68,
             &[("interface_id", interface_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2526,7 +2644,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_66,
+            &OP_69,
             &[("internet_gateway_id", internet_gateway_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2542,7 +2660,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_67,
+            &OP_70,
             &[("nat_gateway_id", nat_gateway_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2559,7 +2677,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_68,
+            &OP_71,
             &[("route_table_id", route_table_id), ("route_id", route_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2575,7 +2693,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_69,
+            &OP_72,
             &[("route_table_id", route_table_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2591,7 +2709,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_70,
+            &OP_73,
             &[("security_group_id", security_group_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2607,7 +2725,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_71,
+            &OP_74,
             &[("subnet_id", subnet_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2623,7 +2741,7 @@ impl NetworkService {
             self.client.clone(),
             "network",
             ENDPOINT,
-            &OP_72,
+            &OP_75,
             &[("vpc_id", vpc_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),

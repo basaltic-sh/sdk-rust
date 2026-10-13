@@ -11,7 +11,7 @@ pub struct CreateLogGroupRequestInput {
         skip_serializing_if = "Option::is_none"
     )]
     pub description: Option<String>,
-    /// 1..3650, or omit for never expire
+    /// Retention in days. Omit or use null for no expiry.
     #[serde(
         rename = "retention_days",
         default,
@@ -42,29 +42,25 @@ impl CreateLogGroupRequestInput {
 
 pub type CreateLogGroupBody = CreateLogGroupRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogGroupResponse {
-    #[serde(rename = "log_group", default, skip_serializing_if = "Option::is_none")]
-    pub log_group: Option<LogGroup>,
+    #[serde(rename = "log_group")]
+    pub log_group: LogGroup,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogGroup {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "kms_key", default, skip_serializing_if = "Option::is_none")]
+    pub kms_key: Option<ResourceRef>,
+
+    #[serde(rename = "id")]
+    pub id: String,
     /// CRN of the log group (used as the IAM resource ARN)
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
-    /// Owning account — the tenant fence for this group
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
+    #[serde(rename = "crn")]
+    pub crn: String,
     /// 1..512 chars, \[A-Za-z0-9_./#-\]. Leading "/" not allowed. Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "name")]
+    pub name: String,
 
     #[serde(
         rename = "description",
@@ -72,106 +68,62 @@ pub struct LogGroup {
         skip_serializing_if = "Option::is_none"
     )]
     pub description: Option<String>,
-    /// 1..3650 days, or null for never expire
-    #[serde(
-        rename = "retention_days",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub retention_days: Option<crate::Nullable<i64>>,
-    /// True when the bound key has been deleted. The CRN is omitted, but the binding remains encrypted under its original key identity; this does not select platform encryption or plaintext.
-    #[serde(
-        rename = "kms_key_unavailable",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub kms_key_unavailable: Option<bool>,
-    /// KMS key CRN. Omitted for plaintext or when kms_key_unavailable is true.
-    #[serde(
-        rename = "kms_key_crn",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub kms_key_crn: Option<String>,
+    /// Retention in days, or null for no expiry.
+    #[serde(rename = "retention_days")]
+    pub retention_days: crate::Nullable<i64>,
 
-    #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
-    pub tags: Option<std::collections::BTreeMap<String, String>>,
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
 
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
 
-    #[serde(
-        rename = "updated_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub updated_at: Option<String>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 pub type CreateLogGroupResponse = LogGroupResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogResponse {
-    #[serde(rename = "log", default, skip_serializing_if = "Option::is_none")]
-    pub log: Option<LogRecord>,
+    #[serde(rename = "log")]
+    pub log: LogRecord,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogRecord {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Producer-stamped event time
-    #[serde(rename = "timestamp", default, skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<String>,
+    #[serde(rename = "timestamp")]
+    pub timestamp: String,
 
-    #[serde(
-        rename = "organization_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub organization_id: Option<String>,
-    /// Owning account, empty for org-scoped events
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
-
-    #[serde(
-        rename = "log_group_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub log_group_id: Option<String>,
-    /// Name of the parent log group
-    #[serde(rename = "log_group", default, skip_serializing_if = "Option::is_none")]
-    pub log_group: Option<String>,
+    #[serde(rename = "log_group")]
+    pub log_group: ResourceRef,
     /// Within-group stream name (typically the producer host)
-    #[serde(
-        rename = "log_stream",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub log_stream: Option<String>,
+    #[serde(rename = "log_stream")]
+    pub log_stream: String,
 
-    #[serde(rename = "severity", default, skip_serializing_if = "Option::is_none")]
-    pub severity: Option<LogRecordSeverity>,
+    #[serde(rename = "severity")]
+    pub severity: LogRecordSeverity,
     /// OTel numeric severity band (1..24)
-    #[serde(
-        rename = "severity_number",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub severity_number: Option<i64>,
+    #[serde(rename = "severity_number")]
+    pub severity_number: i64,
 
-    #[serde(rename = "body", default, skip_serializing_if = "Option::is_none")]
-    pub body: Option<String>,
+    #[serde(rename = "body")]
+    pub body: String,
 
     #[serde(
         rename = "attributes",
@@ -246,239 +198,68 @@ pub struct GetLogGroupScope {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct GetRetainedTelemetryPresenceResult {
-    #[serde(rename = "has_resources")]
-    pub has_resources: bool,
+pub struct RetainedDataResponse {
+    #[serde(rename = "retained_data")]
+    pub retained_data: RetainedDataResponseRetainedData,
 }
 
-pub type GetRetainedTelemetryPresenceResponse = GetRetainedTelemetryPresenceResult;
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct RetainedDataResponseRetainedData {
+    #[serde(rename = "has_data")]
+    pub has_data: bool,
+}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub type GetRetainedTelemetryPresenceResponse = RetainedDataResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TraceResponse {
-    #[serde(rename = "trace_id", default, skip_serializing_if = "Option::is_none")]
-    pub trace_id: Option<String>,
-
-    #[serde(rename = "spans", default, skip_serializing_if = "Option::is_none")]
-    pub spans: Option<Vec<Span>>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct Span {
-    #[serde(rename = "trace_id", default, skip_serializing_if = "Option::is_none")]
-    pub trace_id: Option<String>,
-
-    #[serde(rename = "span_id", default, skip_serializing_if = "Option::is_none")]
-    pub span_id: Option<String>,
-
-    #[serde(
-        rename = "parent_span_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub parent_span_id: Option<String>,
-
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(rename = "kind", default, skip_serializing_if = "Option::is_none")]
-    pub kind: Option<SpanKind>,
-
-    #[serde(
-        rename = "service_name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub service_name: Option<String>,
-
-    #[serde(
-        rename = "start_time",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub start_time: Option<String>,
-
-    #[serde(rename = "end_time", default, skip_serializing_if = "Option::is_none")]
-    pub end_time: Option<String>,
-
-    #[serde(
-        rename = "duration_ms",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub duration_ms: Option<f64>,
-
-    #[serde(
-        rename = "status_code",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub status_code: Option<SpanStatusCode>,
-
-    #[serde(
-        rename = "status_message",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub status_message: Option<String>,
-
-    #[serde(
-        rename = "attributes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub attributes: Option<std::collections::BTreeMap<String, String>>,
-
-    #[serde(rename = "resource", default, skip_serializing_if = "Option::is_none")]
-    pub resource: Option<std::collections::BTreeMap<String, String>>,
-
-    #[serde(rename = "events", default, skip_serializing_if = "Option::is_none")]
-    pub events: Option<Vec<SpanEvent>>,
-
-    #[serde(rename = "links", default, skip_serializing_if = "Option::is_none")]
-    pub links: Option<Vec<SpanLink>>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SpanKind {
-    INTERNAL,
-    SERVER,
-    CLIENT,
-    PRODUCER,
-    CONSUMER,
-    Unknown(String),
-}
-impl SpanKind {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::INTERNAL => "INTERNAL",
-            Self::SERVER => "SERVER",
-            Self::CLIENT => "CLIENT",
-            Self::PRODUCER => "PRODUCER",
-            Self::CONSUMER => "CONSUMER",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for SpanKind {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for SpanKind {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "INTERNAL" => Self::INTERNAL,
-            "SERVER" => Self::SERVER,
-            "CLIENT" => Self::CLIENT,
-            "PRODUCER" => Self::PRODUCER,
-            "CONSUMER" => Self::CONSUMER,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SpanStatusCode {
-    UNSET,
-    OK,
-    ERROR,
-    Unknown(String),
-}
-impl SpanStatusCode {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::UNSET => "UNSET",
-            Self::OK => "OK",
-            Self::ERROR => "ERROR",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for SpanStatusCode {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for SpanStatusCode {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "UNSET" => Self::UNSET,
-            "OK" => Self::OK,
-            "ERROR" => Self::ERROR,
-            _ => Self::Unknown(value),
-        })
-    }
+    #[serde(rename = "trace")]
+    pub trace: TraceSummary,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct SpanEvent {
-    #[serde(rename = "timestamp", default, skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<String>,
-
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "attributes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub attributes: Option<std::collections::BTreeMap<String, String>>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct SpanLink {
+pub struct TraceSummary {
     #[serde(rename = "trace_id")]
     pub trace_id: String,
 
-    #[serde(rename = "span_id")]
-    pub span_id: String,
+    #[serde(rename = "root_span_id")]
+    pub root_span_id: String,
+
+    #[serde(rename = "root_name")]
+    pub root_name: String,
+
+    #[serde(rename = "root_service")]
+    pub root_service: String,
+
+    #[serde(rename = "start_time")]
+    pub start_time: String,
+
+    #[serde(rename = "duration_ms")]
+    pub duration_ms: f64,
+
+    #[serde(rename = "span_count")]
+    pub span_count: i64,
+
+    #[serde(rename = "error_count")]
+    pub error_count: i64,
+
+    #[serde(rename = "service_count")]
+    pub service_count: i64,
 }
 
 pub type GetTraceResponse = TraceResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TraceSettingsResponse {
-    #[serde(
-        rename = "trace_settings",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub trace_settings: Option<TraceSettings>,
+    #[serde(rename = "trace_settings")]
+    pub trace_settings: TraceSettings,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TraceSettings {
-    #[serde(
-        rename = "account_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub account_id: Option<String>,
-    /// 1..3650, or null for never-expire
-    #[serde(
-        rename = "retention_days",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub retention_days: Option<crate::Nullable<i64>>,
-    /// True when the bound key has been deleted. The CRN is omitted, but the binding remains encrypted under its original key identity; this does not select platform encryption or plaintext.
-    #[serde(
-        rename = "kms_key_unavailable",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub kms_key_unavailable: Option<bool>,
-    /// KMS key CRN. Omitted for plaintext or when kms_key_unavailable is true.
-    #[serde(
-        rename = "kms_key_crn",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub kms_key_crn: Option<String>,
+    /// Effective retention in days. Defaults to 30; traces always expire.
+    #[serde(rename = "retention_days")]
+    pub retention_days: i64,
 
     #[serde(
         rename = "created_at",
@@ -493,6 +274,9 @@ pub struct TraceSettings {
         skip_serializing_if = "Option::is_none"
     )]
     pub updated_at: Option<String>,
+
+    #[serde(rename = "kms_key", default, skip_serializing_if = "Option::is_none")]
+    pub kms_key: Option<ResourceRef>,
 }
 
 pub type GetTraceSettingsResponse = TraceSettingsResponse;
@@ -564,19 +348,38 @@ impl IngestRecordInput {
 
 pub type IngestLogsBody = IngestRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct IngestResult {
-    #[serde(rename = "accepted", default, skip_serializing_if = "Option::is_none")]
-    pub accepted: Option<i64>,
-
-    #[serde(rename = "rejected", default, skip_serializing_if = "Option::is_none")]
-    pub rejected: Option<i64>,
-
-    #[serde(rename = "errors", default, skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<String>>,
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IngestResponse {
+    #[serde(rename = "ingestion")]
+    pub ingestion: IngestResult,
 }
 
-pub type IngestLogsResponse = IngestResult;
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IngestResult {
+    #[serde(rename = "accepted")]
+    pub accepted: i64,
+
+    #[serde(rename = "rejected")]
+    pub rejected: i64,
+
+    #[serde(rename = "errors", default, skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<IngestError>>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IngestError {
+    /// Zero-based input record index.
+    #[serde(rename = "index")]
+    pub index: i64,
+
+    #[serde(rename = "code")]
+    pub code: String,
+
+    #[serde(rename = "message")]
+    pub message: String,
+}
+
+pub type IngestLogsResponse = IngestResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct IngestSpansRequestInput {
@@ -804,7 +607,7 @@ impl SpanLinkInput {
 
 pub type IngestSpansBody = IngestSpansRequestInput;
 
-pub type IngestSpansResponse = IngestResult;
+pub type IngestSpansResponse = IngestResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListLogGroupsParameters {
@@ -823,17 +626,13 @@ pub struct ListLogGroupsParameters {
 
 pub type ListLogGroupsQuery = ListLogGroupsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogGroupListResponse {
-    #[serde(
-        rename = "log_groups",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub log_groups: Option<Vec<LogGroup>>,
+    #[serde(rename = "log_groups")]
+    pub log_groups: Vec<LogGroup>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
@@ -863,27 +662,38 @@ pub struct ListMetricNamesParameters {
 
     #[serde(rename = "end")]
     pub end: String,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
 }
 impl ListMetricNamesParameters {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(start: String, end: String) -> Self {
-        Self { start, end }
+        Self {
+            start,
+            end,
+            limit: None,
+            marker: None,
+        }
     }
 }
 
 pub type ListMetricNamesQuery = ListMetricNamesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListMetricNamesResult {
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricNamesResponse {
+    #[serde(rename = "metric_names")]
+    pub metric_names: Vec<String>,
 
-    #[serde(rename = "data", default, skip_serializing_if = "Option::is_none")]
-    pub data: Option<Vec<String>>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
-pub type ListMetricNamesResponse = ListMetricNamesResult;
+pub type ListMetricNamesResponse = MetricNamesResponse;
 
 pub type ListMetricNamesItem = String;
 
@@ -894,27 +704,29 @@ pub struct ListMetricNamesPostRequest {
 
     #[serde(rename = "end")]
     pub end: String,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
 }
 impl ListMetricNamesPostRequest {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(start: String, end: String) -> Self {
-        Self { start, end }
+        Self {
+            start,
+            end,
+            limit: None,
+            marker: None,
+        }
     }
 }
 
 pub type ListMetricNamesPostBody = ListMetricNamesPostRequest;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListMetricNamesPostResult {
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-
-    #[serde(rename = "data", default, skip_serializing_if = "Option::is_none")]
-    pub data: Option<Vec<String>>,
-}
-
-pub type ListMetricNamesPostResponse = ListMetricNamesPostResult;
+pub type ListMetricNamesPostResponse = MetricNamesResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ListMetricSeriesParameters {
@@ -926,18 +738,41 @@ pub struct ListMetricSeriesParameters {
 
     #[serde(rename = "end")]
     pub end: String,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
 }
 impl ListMetricSeriesParameters {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(metric: String, start: String, end: String) -> Self {
-        Self { metric, start, end }
+        Self {
+            metric,
+            start,
+            end,
+            limit: None,
+            marker: None,
+        }
     }
 }
 
 pub type ListMetricSeriesQuery = ListMetricSeriesParameters;
 
-pub type ListMetricSeriesResponse = std::collections::BTreeMap<String, serde_json::Value>;
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricSeriesResponse {
+    #[serde(rename = "series")]
+    pub series: Vec<std::collections::BTreeMap<String, String>>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+pub type ListMetricSeriesResponse = MetricSeriesResponse;
+
+pub type ListMetricSeriesItem = std::collections::BTreeMap<String, String>;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ListMetricSeriesPostRequest {
@@ -949,57 +784,221 @@ pub struct ListMetricSeriesPostRequest {
 
     #[serde(rename = "end")]
     pub end: String,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
 }
 impl ListMetricSeriesPostRequest {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(metric: String, start: String, end: String) -> Self {
-        Self { metric, start, end }
+        Self {
+            metric,
+            start,
+            end,
+            limit: None,
+            marker: None,
+        }
     }
 }
 
 pub type ListMetricSeriesPostBody = ListMetricSeriesPostRequest;
 
-pub type ListMetricSeriesPostResponse = std::collections::BTreeMap<String, serde_json::Value>;
+pub type ListMetricSeriesPostResponse = MetricSeriesResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct UpdateTraceSettingsRequestInput {
-    /// 1..3650; pass clear_retention=true to switch to never-expire
+pub struct ListTraceSpansParameters {
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+}
+
+pub type ListTraceSpansQuery = ListTraceSpansParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SpanListResponse {
+    #[serde(rename = "spans")]
+    pub spans: Vec<Span>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Span {
+    #[serde(rename = "trace_id")]
+    pub trace_id: String,
+
+    #[serde(rename = "span_id")]
+    pub span_id: String,
+
     #[serde(
-        rename = "retention_days",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub retention_days: Option<crate::Nullable<i64>>,
-    /// When true, sets retention to never-expire (ignores retention_days)
-    #[serde(
-        rename = "clear_retention",
+        rename = "parent_span_id",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub clear_retention: Option<bool>,
-    /// KMS key UUID, CRN or exact name in the authenticated account and serving region. PUT replaces settings; omission or an empty string selects plaintext for future spans. Historical ciphertext retains its original key UUID.
+    pub parent_span_id: Option<String>,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "kind")]
+    pub kind: SpanKind,
+
+    #[serde(rename = "service_name")]
+    pub service_name: String,
+
+    #[serde(rename = "start_time")]
+    pub start_time: String,
+
+    #[serde(rename = "end_time")]
+    pub end_time: String,
+
+    #[serde(rename = "duration_ms")]
+    pub duration_ms: f64,
+
+    #[serde(rename = "status_code")]
+    pub status_code: SpanStatusCode,
+
     #[serde(
-        rename = "kms_key",
+        rename = "status_message",
         default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
+        skip_serializing_if = "Option::is_none"
     )]
-    pub kms_key: Option<crate::Nullable<String>>,
+    pub status_message: Option<String>,
+
+    #[serde(
+        rename = "attributes",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub attributes: Option<std::collections::BTreeMap<String, String>>,
+
+    #[serde(rename = "resource", default, skip_serializing_if = "Option::is_none")]
+    pub resource: Option<std::collections::BTreeMap<String, String>>,
+
+    #[serde(rename = "events", default, skip_serializing_if = "Option::is_none")]
+    pub events: Option<Vec<SpanEvent>>,
+
+    #[serde(rename = "links", default, skip_serializing_if = "Option::is_none")]
+    pub links: Option<Vec<SpanLink>>,
 }
 
-pub type PutTraceSettingsBody = UpdateTraceSettingsRequestInput;
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SpanKind {
+    INTERNAL,
+    SERVER,
+    CLIENT,
+    PRODUCER,
+    CONSUMER,
+    Unknown(String),
+}
+impl SpanKind {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::INTERNAL => "INTERNAL",
+            Self::SERVER => "SERVER",
+            Self::CLIENT => "CLIENT",
+            Self::PRODUCER => "PRODUCER",
+            Self::CONSUMER => "CONSUMER",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SpanKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SpanKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "INTERNAL" => Self::INTERNAL,
+            "SERVER" => Self::SERVER,
+            "CLIENT" => Self::CLIENT,
+            "PRODUCER" => Self::PRODUCER,
+            "CONSUMER" => Self::CONSUMER,
+            _ => Self::Unknown(value),
+        })
+    }
+}
 
-pub type PutTraceSettingsResponse = TraceSettingsResponse;
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SpanStatusCode {
+    UNSET,
+    OK,
+    ERROR,
+    Unknown(String),
+}
+impl SpanStatusCode {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::UNSET => "UNSET",
+            Self::OK => "OK",
+            Self::ERROR => "ERROR",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SpanStatusCode {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SpanStatusCode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "UNSET" => Self::UNSET,
+            "OK" => Self::OK,
+            "ERROR" => Self::ERROR,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SpanEvent {
+    #[serde(rename = "timestamp", default, skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "attributes",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub attributes: Option<std::collections::BTreeMap<String, String>>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SpanLink {
+    #[serde(rename = "trace_id")]
+    pub trace_id: String,
+
+    #[serde(rename = "span_id")]
+    pub span_id: String,
+}
+
+pub type ListTraceSpansResponse = SpanListResponse;
+
+pub type ListTraceSpansItem = Span;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct QueryMetricsInstantParameters {
     #[serde(rename = "metric")]
     pub metric: String,
 
-    #[serde(rename = "agg")]
-    pub agg: QueryMetricsInstantParametersAgg,
+    #[serde(rename = "agg", default, skip_serializing_if = "Option::is_none")]
+    pub agg: Option<QueryMetricsInstantParametersAgg>,
 
     #[serde(rename = "match[]", default, skip_serializing_if = "Option::is_none")]
     pub match__: Option<Vec<String>>,
@@ -1016,10 +1015,10 @@ pub struct QueryMetricsInstantParameters {
 impl QueryMetricsInstantParameters {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(metric: String, agg: QueryMetricsInstantParametersAgg) -> Self {
+    pub fn new(metric: String) -> Self {
         Self {
             metric,
-            agg,
+            agg: None,
             match__: None,
             by__: None,
             step: None,
@@ -1079,39 +1078,73 @@ impl<'de> serde::Deserialize<'de> for QueryMetricsInstantParametersAgg {
 
 pub type QueryMetricsInstantQuery = QueryMetricsInstantParameters;
 
-pub type QueryMetricsInstantResponse = std::collections::BTreeMap<String, serde_json::Value>;
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricQueryResponse {
+    #[serde(rename = "query_result")]
+    pub query_result: MetricQueryResult,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricQueryResult {
+    #[serde(rename = "metric")]
+    pub metric: String,
+
+    #[serde(rename = "series")]
+    pub series: Vec<MetricQuerySeries>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricQuerySeries {
+    #[serde(rename = "labels")]
+    pub labels: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "points")]
+    pub points: Vec<MetricPoint>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MetricPoint {
+    /// Unix timestamp in seconds, including fractional seconds.
+    #[serde(rename = "timestamp")]
+    pub timestamp: f64,
+    /// Float value as text, including NaN and infinities.
+    #[serde(rename = "value")]
+    pub value: String,
+}
+
+pub type QueryMetricsInstantResponse = MetricQueryResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct QueryMetricsInstantPostRequest {
     #[serde(rename = "metric")]
     pub metric: String,
 
-    #[serde(rename = "agg")]
-    pub agg: QueryMetricsInstantPostRequestAgg,
-
-    #[serde(rename = "match[]", default, skip_serializing_if = "Option::is_none")]
-    pub match__: Option<Vec<String>>,
-
-    #[serde(rename = "by[]", default, skip_serializing_if = "Option::is_none")]
-    pub by__: Option<Vec<String>>,
+    #[serde(rename = "agg", default, skip_serializing_if = "Option::is_none")]
+    pub agg: Option<QueryMetricsInstantPostRequestAgg>,
 
     #[serde(rename = "step", default, skip_serializing_if = "Option::is_none")]
     pub step: Option<String>,
 
     #[serde(rename = "time", default, skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
+
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
 }
 impl QueryMetricsInstantPostRequest {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(metric: String, agg: QueryMetricsInstantPostRequestAgg) -> Self {
+    pub fn new(metric: String) -> Self {
         Self {
             metric,
-            agg,
-            match__: None,
-            by__: None,
+            agg: None,
             step: None,
             time: None,
+            match_: None,
+            by: None,
         }
     }
 }
@@ -1167,15 +1200,15 @@ impl<'de> serde::Deserialize<'de> for QueryMetricsInstantPostRequestAgg {
 
 pub type QueryMetricsInstantPostBody = QueryMetricsInstantPostRequest;
 
-pub type QueryMetricsInstantPostResponse = std::collections::BTreeMap<String, serde_json::Value>;
+pub type QueryMetricsInstantPostResponse = MetricQueryResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct QueryMetricsRangeParameters {
     #[serde(rename = "metric")]
     pub metric: String,
 
-    #[serde(rename = "agg")]
-    pub agg: QueryMetricsRangeParametersAgg,
+    #[serde(rename = "agg", default, skip_serializing_if = "Option::is_none")]
+    pub agg: Option<QueryMetricsRangeParametersAgg>,
 
     #[serde(rename = "match[]", default, skip_serializing_if = "Option::is_none")]
     pub match__: Option<Vec<String>>,
@@ -1195,15 +1228,10 @@ pub struct QueryMetricsRangeParameters {
 impl QueryMetricsRangeParameters {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        metric: String,
-        agg: QueryMetricsRangeParametersAgg,
-        start: String,
-        end: String,
-    ) -> Self {
+    pub fn new(metric: String, start: String, end: String) -> Self {
         Self {
             metric,
-            agg,
+            agg: None,
             match__: None,
             by__: None,
             start,
@@ -1264,21 +1292,15 @@ impl<'de> serde::Deserialize<'de> for QueryMetricsRangeParametersAgg {
 
 pub type QueryMetricsRangeQuery = QueryMetricsRangeParameters;
 
-pub type QueryMetricsRangeResponse = std::collections::BTreeMap<String, serde_json::Value>;
+pub type QueryMetricsRangeResponse = MetricQueryResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct QueryMetricsRangePostRequest {
     #[serde(rename = "metric")]
     pub metric: String,
 
-    #[serde(rename = "agg")]
-    pub agg: QueryMetricsRangePostRequestAgg,
-
-    #[serde(rename = "match[]", default, skip_serializing_if = "Option::is_none")]
-    pub match__: Option<Vec<String>>,
-
-    #[serde(rename = "by[]", default, skip_serializing_if = "Option::is_none")]
-    pub by__: Option<Vec<String>>,
+    #[serde(rename = "agg", default, skip_serializing_if = "Option::is_none")]
+    pub agg: Option<QueryMetricsRangePostRequestAgg>,
 
     #[serde(rename = "start")]
     pub start: String,
@@ -1288,24 +1310,25 @@ pub struct QueryMetricsRangePostRequest {
 
     #[serde(rename = "step", default, skip_serializing_if = "Option::is_none")]
     pub step: Option<String>,
+
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
 }
 impl QueryMetricsRangePostRequest {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        metric: String,
-        agg: QueryMetricsRangePostRequestAgg,
-        start: String,
-        end: String,
-    ) -> Self {
+    pub fn new(metric: String, start: String, end: String) -> Self {
         Self {
             metric,
-            agg,
-            match__: None,
-            by__: None,
+            agg: None,
             start,
             end,
             step: None,
+            match_: None,
+            by: None,
         }
     }
 }
@@ -1361,7 +1384,7 @@ impl<'de> serde::Deserialize<'de> for QueryMetricsRangePostRequestAgg {
 
 pub type QueryMetricsRangePostBody = QueryMetricsRangePostRequest;
 
-pub type QueryMetricsRangePostResponse = std::collections::BTreeMap<String, serde_json::Value>;
+pub type QueryMetricsRangePostResponse = MetricQueryResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SearchLogsParameters {
@@ -1467,13 +1490,13 @@ impl<'de> serde::Deserialize<'de> for SearchLogsParametersMinSeverity {
 
 pub type SearchLogsQuery = SearchLogsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogListResponse {
-    #[serde(rename = "logs", default, skip_serializing_if = "Option::is_none")]
-    pub logs: Option<Vec<LogRecord>>,
+    #[serde(rename = "logs")]
+    pub logs: Vec<LogRecord>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type SearchLogsResponse = LogListResponse;
@@ -1565,71 +1588,13 @@ impl<'de> serde::Deserialize<'de> for SearchTracesParametersStatusCode {
 
 pub type SearchTracesQuery = SearchTracesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TraceListResponse {
-    #[serde(rename = "traces", default, skip_serializing_if = "Option::is_none")]
-    pub traces: Option<Vec<TraceSummary>>,
+    #[serde(rename = "traces")]
+    pub traces: Vec<TraceSummary>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct TraceSummary {
-    #[serde(rename = "trace_id", default, skip_serializing_if = "Option::is_none")]
-    pub trace_id: Option<String>,
-
-    #[serde(
-        rename = "root_span_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub root_span_id: Option<String>,
-
-    #[serde(rename = "root_name", default, skip_serializing_if = "Option::is_none")]
-    pub root_name: Option<String>,
-
-    #[serde(
-        rename = "root_service",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub root_service: Option<String>,
-
-    #[serde(
-        rename = "start_time",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub start_time: Option<String>,
-
-    #[serde(
-        rename = "duration_ms",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub duration_ms: Option<f64>,
-
-    #[serde(
-        rename = "span_count",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub span_count: Option<i64>,
-
-    #[serde(
-        rename = "error_count",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub error_count: Option<i64>,
-
-    #[serde(
-        rename = "service_count",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub service_count: Option<i64>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type SearchTracesResponse = TraceListResponse;
@@ -1643,21 +1608,15 @@ pub struct UpdateLogGroupRequestInput {
         deserialize_with = "crate::response::present_nullable"
     )]
     pub description: Option<crate::Nullable<String>>,
-    /// 1..3650; pass clear_retention to switch to never expire
+    /// Omit to preserve retention. Null selects no expiry.
     #[serde(
         rename = "retention_days",
         default,
-        skip_serializing_if = "Option::is_none"
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
     )]
-    pub retention_days: Option<i64>,
-    /// When true, sets retention to never-expire (ignores retention_days)
-    #[serde(
-        rename = "clear_retention",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub clear_retention: Option<bool>,
-    /// KMS key UUID, CRN or exact name in the authenticated account and serving region. Omission preserves the pinned UUID; an empty string clears encryption for future records. Unavailable key metadata does not clear the binding.
+    pub retention_days: Option<crate::Nullable<i64>>,
+    /// KMS key UUID, CRN or exact name in this account and region. Omit to preserve the binding; null clears encryption for future records.
     #[serde(
         rename = "kms_key",
         default,
@@ -1673,3 +1632,27 @@ pub struct UpdateLogGroupRequestInput {
 pub type UpdateLogGroupBody = UpdateLogGroupRequestInput;
 
 pub type UpdateLogGroupResponse = LogGroupResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct UpdateTraceSettingsRequestInput {
+    /// Omit to preserve retention. Null restores the default 30 days; traces always expire.
+    #[serde(
+        rename = "retention_days",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub retention_days: Option<crate::Nullable<i64>>,
+    /// KMS key UUID, CRN or exact name in this account and region. Omit to preserve the binding; null clears encryption for future records.
+    #[serde(
+        rename = "kms_key",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub kms_key: Option<crate::Nullable<String>>,
+}
+
+pub type UpdateTraceSettingsBody = UpdateTraceSettingsRequestInput;
+
+pub type UpdateTraceSettingsResponse = TraceSettingsResponse;

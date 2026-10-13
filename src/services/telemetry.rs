@@ -62,7 +62,7 @@ static OP_4: Operation = Operation {
 static OP_5: Operation = Operation {
     id: "getRetainedTelemetryPresence",
     method: "GET",
-    path: "/v1/trace-settings/retained-data",
+    path: "/v1/retained-data",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -166,6 +166,16 @@ static OP_11: Operation = Operation {
             style: "form",
             explode: true,
         },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
     ],
 };
 static OP_12: Operation = Operation {
@@ -175,7 +185,7 @@ static OP_12: Operation = Operation {
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/x-www-form-urlencoded",
+    content_type: "application/json",
     accept: "application/json",
     query_encoding: &[],
 };
@@ -204,6 +214,16 @@ static OP_13: Operation = Operation {
             style: "form",
             explode: true,
         },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
     ],
 };
 static OP_14: Operation = Operation {
@@ -213,27 +233,38 @@ static OP_14: Operation = Operation {
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/x-www-form-urlencoded",
+    content_type: "application/json",
     accept: "application/json",
     query_encoding: &[],
 };
 static OP_15: Operation = Operation {
-    id: "putTraceSettings",
-    method: "PUT",
-    path: "/v1/trace-settings",
+    id: "listTraceSpans",
+    method: "GET",
+    path: "/v1/traces/{trace_id}/spans",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/json",
+    content_type: "",
     accept: "application/json",
-    query_encoding: &[],
+    query_encoding: &[
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+    ],
 };
 static OP_16: Operation = Operation {
     id: "queryMetricsInstant",
     method: "GET",
     path: "/v1/metrics/query",
     authenticated: true,
-    required_query: &["metric", "agg"],
+    required_query: &["metric"],
     required_headers: &[],
     content_type: "",
     accept: "application/json",
@@ -277,16 +308,16 @@ static OP_17: Operation = Operation {
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/x-www-form-urlencoded",
+    content_type: "application/json",
     accept: "application/json",
     query_encoding: &[],
 };
 static OP_18: Operation = Operation {
     id: "queryMetricsRange",
     method: "GET",
-    path: "/v1/metrics/query_range",
+    path: "/v1/metrics/query-range",
     authenticated: true,
-    required_query: &["metric", "agg", "start", "end"],
+    required_query: &["metric", "start", "end"],
     required_headers: &[],
     content_type: "",
     accept: "application/json",
@@ -331,11 +362,11 @@ static OP_18: Operation = Operation {
 static OP_19: Operation = Operation {
     id: "queryMetricsRangePost",
     method: "POST",
-    path: "/v1/metrics/query_range",
+    path: "/v1/metrics/query-range",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
-    content_type: "application/x-www-form-urlencoded",
+    content_type: "application/json",
     accept: "application/json",
     query_encoding: &[],
 };
@@ -465,6 +496,17 @@ static OP_22: Operation = Operation {
     query_encoding: &[],
 };
 static OP_23: Operation = Operation {
+    id: "updateTraceSettings",
+    method: "PATCH",
+    path: "/v1/trace-settings",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_24: Operation = Operation {
     id: "writeMetrics",
     method: "POST",
     path: "/v1/metrics/write",
@@ -589,7 +631,7 @@ impl TelemetryService {
             Ok(serde_json::json!({})),
         ))
     }
-    /// Get all spans for a trace
+    /// Get a trace
     pub fn get_trace(&self, trace_id: &str) -> Request<m::GetTraceResponse> {
         Request::new(Core::new(
             self.client.clone(),
@@ -655,7 +697,7 @@ impl TelemetryService {
             "log_groups",
         )
     }
-    /// List the distinct metric names emitted in a time window
+    /// List metric names
     pub fn list_metric_names(
         &self,
         query: &m::ListMetricNamesQuery,
@@ -670,13 +712,13 @@ impl TelemetryService {
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "data",
+            "metric_names",
         )
     }
-    /// List the distinct metric names emitted in a time window (form body)
+    /// List metric names (JSON)
     pub fn list_metric_names_post(
         &self,
-        body: Option<&m::ListMetricNamesPostBody>,
+        body: &m::ListMetricNamesPostBody,
     ) -> Request<m::ListMetricNamesPostResponse> {
         Request::new(Core::new(
             self.client.clone(),
@@ -684,29 +726,32 @@ impl TelemetryService {
             ENDPOINT,
             &OP_12,
             &[],
-            body.map(Payload::form).unwrap_or(Ok(Payload::Empty)),
+            Payload::json(body),
             Ok(serde_json::json!({})),
         ))
     }
-    /// List distinct label sets for a metric
+    /// List metric series
     pub fn list_metric_series(
         &self,
         query: &m::ListMetricSeriesQuery,
-    ) -> Request<m::ListMetricSeriesResponse> {
-        Request::new(Core::new(
-            self.client.clone(),
-            "telemetry",
-            ENDPOINT,
-            &OP_13,
-            &[],
-            Ok(Payload::Empty),
-            serde_json::to_value(query).map_err(crate::Error::from),
-        ))
+    ) -> PagedRequest<m::ListMetricSeriesResponse, m::ListMetricSeriesItem> {
+        PagedRequest::new(
+            Core::new(
+                self.client.clone(),
+                "telemetry",
+                ENDPOINT,
+                &OP_13,
+                &[],
+                Ok(Payload::Empty),
+                serde_json::to_value(query).map_err(crate::Error::from),
+            ),
+            "series",
+        )
     }
-    /// List distinct label sets for a metric (form body)
+    /// List metric series (JSON)
     pub fn list_metric_series_post(
         &self,
-        body: Option<&m::ListMetricSeriesPostBody>,
+        body: &m::ListMetricSeriesPostBody,
     ) -> Request<m::ListMetricSeriesPostResponse> {
         Request::new(Core::new(
             self.client.clone(),
@@ -714,26 +759,30 @@ impl TelemetryService {
             ENDPOINT,
             &OP_14,
             &[],
-            body.map(Payload::form).unwrap_or(Ok(Payload::Empty)),
-            Ok(serde_json::json!({})),
-        ))
-    }
-    /// Update the caller account's trace settings
-    pub fn put_trace_settings(
-        &self,
-        body: &m::PutTraceSettingsBody,
-    ) -> Request<m::PutTraceSettingsResponse> {
-        Request::new(Core::new(
-            self.client.clone(),
-            "telemetry",
-            ENDPOINT,
-            &OP_15,
-            &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
         ))
     }
-    /// Instant structured metric query
+    /// List spans in a trace
+    pub fn list_trace_spans(
+        &self,
+        trace_id: &str,
+        query: &m::ListTraceSpansQuery,
+    ) -> PagedRequest<m::ListTraceSpansResponse, m::ListTraceSpansItem> {
+        PagedRequest::new(
+            Core::new(
+                self.client.clone(),
+                "telemetry",
+                ENDPOINT,
+                &OP_15,
+                &[("trace_id", trace_id)],
+                Ok(Payload::Empty),
+                serde_json::to_value(query).map_err(crate::Error::from),
+            ),
+            "spans",
+        )
+    }
+    /// Run an instant metric query
     pub fn query_metrics_instant(
         &self,
         query: &m::QueryMetricsInstantQuery,
@@ -748,10 +797,10 @@ impl TelemetryService {
             serde_json::to_value(query).map_err(crate::Error::from),
         ))
     }
-    /// Instant structured metric query (form body)
+    /// Run an instant metric query (JSON)
     pub fn query_metrics_instant_post(
         &self,
-        body: Option<&m::QueryMetricsInstantPostBody>,
+        body: &m::QueryMetricsInstantPostBody,
     ) -> Request<m::QueryMetricsInstantPostResponse> {
         Request::new(Core::new(
             self.client.clone(),
@@ -759,11 +808,11 @@ impl TelemetryService {
             ENDPOINT,
             &OP_17,
             &[],
-            body.map(Payload::form).unwrap_or(Ok(Payload::Empty)),
+            Payload::json(body),
             Ok(serde_json::json!({})),
         ))
     }
-    /// Range structured metric query
+    /// Run a range metric query
     pub fn query_metrics_range(
         &self,
         query: &m::QueryMetricsRangeQuery,
@@ -778,10 +827,10 @@ impl TelemetryService {
             serde_json::to_value(query).map_err(crate::Error::from),
         ))
     }
-    /// Range structured metric query (form body)
+    /// Run a range metric query (JSON)
     pub fn query_metrics_range_post(
         &self,
-        body: Option<&m::QueryMetricsRangePostBody>,
+        body: &m::QueryMetricsRangePostBody,
     ) -> Request<m::QueryMetricsRangePostResponse> {
         Request::new(Core::new(
             self.client.clone(),
@@ -789,7 +838,7 @@ impl TelemetryService {
             ENDPOINT,
             &OP_19,
             &[],
-            body.map(Payload::form).unwrap_or(Ok(Payload::Empty)),
+            Payload::json(body),
             Ok(serde_json::json!({})),
         ))
     }
@@ -833,13 +882,28 @@ impl TelemetryService {
             Ok(serde_json::json!({})),
         ))
     }
+    /// Update the caller account's trace settings
+    pub fn update_trace_settings(
+        &self,
+        body: &m::UpdateTraceSettingsBody,
+    ) -> Request<m::UpdateTraceSettingsResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "telemetry",
+            ENDPOINT,
+            &OP_23,
+            &[],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
+        ))
+    }
     /// Prometheus remote_write ingest
     pub fn write_metrics(&self, body: reqwest::Body) -> EmptyRequest {
         EmptyRequest::new(Core::new(
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_23,
+            &OP_24,
             &[],
             Ok(Payload::binary(body)),
             Ok(serde_json::json!({})),

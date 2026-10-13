@@ -526,7 +526,7 @@ impl DnsService {
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "vpc_ids",
+            "vpcs",
         )
     }
     /// List zones

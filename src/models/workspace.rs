@@ -1237,20 +1237,6 @@ pub struct InlinePolicy {
 
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-
-    #[serde(
-        rename = "principal_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_id: Option<String>,
-
-    #[serde(
-        rename = "principal_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_type: Option<InlinePolicyPrincipalType>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -1271,37 +1257,6 @@ pub struct InlinePolicy {
         skip_serializing_if = "Option::is_none"
     )]
     pub updated_at: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum InlinePolicyPrincipalType {
-    User,
-    Group,
-    Unknown(String),
-}
-impl InlinePolicyPrincipalType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::User => "user",
-            Self::Group => "group",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for InlinePolicyPrincipalType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for InlinePolicyPrincipalType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "user" => Self::User,
-            "group" => Self::Group,
-            _ => Self::Unknown(value),
-        })
-    }
 }
 
 pub type GetGroupInlinePolicyResponse = InlinePolicyResponse;
@@ -1593,76 +1548,10 @@ pub type GetUserInlinePolicyResource = InlinePolicy;
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct GetUserInlinePolicyScope {}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PermissionBoundaryResponse {
-    #[serde(
-        rename = "permission_boundary",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub permission_boundary: Option<PermissionBoundary>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PermissionBoundary {
-    #[serde(
-        rename = "principal_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_id: Option<String>,
-
-    #[serde(
-        rename = "principal_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub principal_type: Option<PermissionBoundaryPrincipalType>,
-
-    #[serde(rename = "policy_id", default, skip_serializing_if = "Option::is_none")]
-    pub policy_id: Option<String>,
-
-    #[serde(
-        rename = "policy_name",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub policy_name: Option<String>,
-
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum PermissionBoundaryPrincipalType {
-    User,
-    Unknown(String),
-}
-impl PermissionBoundaryPrincipalType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::User => "user",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for PermissionBoundaryPrincipalType {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for PermissionBoundaryPrincipalType {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "user" => Self::User,
-            _ => Self::Unknown(value),
-        })
-    }
+    #[serde(rename = "policy")]
+    pub policy: Policy,
 }
 
 pub type GetUserPermissionBoundaryResponse = PermissionBoundaryResponse;

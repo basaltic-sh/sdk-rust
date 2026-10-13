@@ -84,7 +84,7 @@ pub fn list_credits(&self, query: &m::ListCreditsQuery) -> PagedRequest<m::ListC
 
 ## `billing.list_fiscal_invoices`
 
-List fiscal invoice issuance and delivery status
+List issued fiscal invoices
 
 `GET /v1/fiscal-invoices`
 
@@ -142,16 +142,6 @@ Save organization billing details
 pub fn update_billing_profile(&self, body: &m::UpdateBillingProfileBody) -> Request<m::UpdateBillingProfileResponse>
 ```
 
-## `catalog.get_country`
-
-Get a country and its address rules
-
-`GET /v1/countries/{country}`
-
-```rust
-pub fn get_country(&self, country: &str) -> Request<m::GetCountryResponse>
-```
-
 ## `catalog.get_region`
 
 Get a region
@@ -162,26 +152,6 @@ Get a region
 pub fn get_region(&self, code: &str) -> Request<m::GetRegionResponse>
 ```
 
-## `catalog.list_cities`
-
-List cities
-
-`GET /v1/cities`
-
-```rust
-pub fn list_cities(&self, query: &m::ListCitiesQuery) -> PagedRequest<m::ListCitiesResponse, m::ListCitiesItem>
-```
-
-## `catalog.list_countries`
-
-List countries
-
-`GET /v1/countries`
-
-```rust
-pub fn list_countries(&self) -> PagedRequest<m::ListCountriesResponse, m::ListCountriesItem>
-```
-
 ## `catalog.list_regions`
 
 List regions
@@ -190,26 +160,6 @@ List regions
 
 ```rust
 pub fn list_regions(&self, query: &m::ListRegionsQuery) -> PagedRequest<m::ListRegionsResponse, m::ListRegionsItem>
-```
-
-## `catalog.list_states`
-
-List a country's states
-
-`GET /v1/states`
-
-```rust
-pub fn list_states(&self, query: &m::ListStatesQuery) -> PagedRequest<m::ListStatesResponse, m::ListStatesItem>
-```
-
-## `catalog.lookup_postal_code`
-
-Look up a postal code
-
-`GET /v1/postal-codes/{code}`
-
-```rust
-pub fn lookup_postal_code(&self, code: &str, query: &m::LookupPostalCodeQuery) -> Request<m::LookupPostalCodeResponse>
 ```
 
 ## `certificate.create_certificate`
@@ -272,14 +222,14 @@ Revoke certificate
 pub fn revoke_certificate(&self, certificate_id: &str) -> Request<m::RevokeCertificateResponse>
 ```
 
-## `compute.attach_instance_nic`
+## `compute.attach_instance_interface`
 
 Attach an existing NIC to an instance
 
-`POST /v1/instances/{instance_id}/nics`
+`POST /v1/instances/{instance_id}/interfaces`
 
 ```rust
-pub fn attach_instance_nic(&self, instance_id: &str, body: &m::AttachInstanceNICBody) -> Request<m::AttachInstanceNICResponse>
+pub fn attach_instance_interface(&self, instance_id: &str, body: &m::AttachInstanceInterfaceBody) -> Request<m::AttachInstanceInterfaceResponse>
 ```
 
 ## `compute.attach_instance_pool_floating_ip`
@@ -372,14 +322,14 @@ Delete an instance pool
 pub fn delete_instance_pool(&self, pool_id: &str) -> EmptyRequest
 ```
 
-## `compute.detach_instance_nic`
+## `compute.detach_instance_interface`
 
-Detach a NIC from a running instance
+Detach an interface from a running instance
 
-`DELETE /v1/instances/{instance_id}/nics/{interface_id}`
+`DELETE /v1/instances/{instance_id}/interfaces/{interface_id}`
 
 ```rust
-pub fn detach_instance_nic(&self, instance_id: &str, interface_id: &str) -> EmptyRequest
+pub fn detach_instance_interface(&self, instance_id: &str, interface_id: &str) -> EmptyRequest
 ```
 
 ## `compute.detach_instance_pool_floating_ip`
@@ -492,14 +442,14 @@ List images
 pub fn list_images(&self, query: &m::ListImagesQuery) -> PagedRequest<m::ListImagesResponse, m::ListImagesItem>
 ```
 
-## `compute.list_instance_ni_cs`
+## `compute.list_instance_interfaces`
 
 List the instance's network interfaces
 
-`GET /v1/instances/{instance_id}/nics`
+`GET /v1/instances/{instance_id}/interfaces`
 
 ```rust
-pub fn list_instance_ni_cs(&self, instance_id: &str, query: &m::ListInstanceNICsQuery) -> PagedRequest<m::ListInstanceNICsResponse, m::ListInstanceNICsItem>
+pub fn list_instance_interfaces(&self, instance_id: &str, query: &m::ListInstanceInterfacesQuery) -> PagedRequest<m::ListInstanceInterfacesResponse, m::ListInstanceInterfacesItem>
 ```
 
 ## `compute.list_instance_pool_floating_ips`
@@ -892,6 +842,16 @@ Approve a CLI login and issue an authorization code
 pub fn authorize_oauth_client(&self, body: &m::AuthorizeOAuthClientBody) -> Request<m::AuthorizeOAuthClientResponse>
 ```
 
+## `iam.create_oidc_provider`
+
+Create an OIDC provider
+
+`POST /v1/oidc-providers`
+
+```rust
+pub fn create_oidc_provider(&self, body: &m::CreateOIDCProviderBody) -> Request<m::CreateOIDCProviderResponse>
+```
+
 ## `iam.create_personal_ssh_key`
 
 Add personal SSH key
@@ -950,6 +910,16 @@ Add service-account SSH key
 
 ```rust
 pub fn create_service_account_ssh_key(&self, service_account_id: &str, body: &m::CreateServiceAccountSSHKeyBody) -> Request<m::CreateServiceAccountSSHKeyResponse>
+```
+
+## `iam.delete_oidc_provider`
+
+Delete an OIDC provider
+
+`DELETE /v1/oidc-providers/{provider_id}`
+
+```rust
+pub fn delete_oidc_provider(&self, provider_id: &str) -> EmptyRequest
 ```
 
 ## `iam.delete_personal_ssh_key`
@@ -1062,6 +1032,16 @@ Exchange an access key for a bearer token
 pub fn get_oauth_token(&self, body: &m::GetOAuthTokenBody) -> Request<m::GetOAuthTokenResponse>
 ```
 
+## `iam.get_oidc_provider`
+
+Get an OIDC provider
+
+`GET /v1/oidc-providers/{provider_id}`
+
+```rust
+pub fn get_oidc_provider(&self, provider_id: &str) -> Request<m::GetOIDCProviderResponse>
+```
+
 ## `iam.get_personal_linux_identity`
 
 Get personal Linux identity
@@ -1162,6 +1142,16 @@ Get a service account's permission boundary
 pub fn get_service_account_permission_boundary(&self, service_account_id: &str) -> Request<m::GetServiceAccountPermissionBoundaryResponse>
 ```
 
+## `iam.list_oidc_providers`
+
+List OIDC providers
+
+`GET /v1/oidc-providers`
+
+```rust
+pub fn list_oidc_providers(&self, query: &m::ListOIDCProvidersQuery) -> PagedRequest<m::ListOIDCProvidersResponse, m::ListOIDCProvidersItem>
+```
+
 ## `iam.list_personal_ssh_keys`
 
 List personal SSH keys
@@ -1200,16 +1190,6 @@ List service accounts with policy
 
 ```rust
 pub fn list_policy_service_accounts(&self, policy_id: &str, query: &m::ListPolicyServiceAccountsQuery) -> PagedRequest<m::ListPolicyServiceAccountsResponse, m::ListPolicyServiceAccountsItem>
-```
-
-## `iam.list_regions`
-
-List regions (legacy IAM)
-
-`GET /v1/regions`
-
-```rust
-pub fn list_regions(&self, query: &m::ListRegionsQuery) -> PagedRequest<m::ListRegionsResponse, m::ListRegionsItem>
 ```
 
 ## `iam.list_role_inline_policies`
@@ -1380,6 +1360,16 @@ Set a service account's permission boundary
 
 ```rust
 pub fn set_service_account_permission_boundary(&self, service_account_id: &str, body: &m::SetServiceAccountPermissionBoundaryBody) -> EmptyRequest
+```
+
+## `iam.update_oidc_provider`
+
+Update an OIDC provider
+
+`PATCH /v1/oidc-providers/{provider_id}`
+
+```rust
+pub fn update_oidc_provider(&self, provider_id: &str, body: &m::UpdateOIDCProviderBody) -> Request<m::UpdateOIDCProviderResponse>
 ```
 
 ## `iam.update_policy`
@@ -1782,6 +1772,16 @@ Get a target group
 pub fn get_target_group(&self, id: &str) -> Request<m::GetTargetGroupResponse>
 ```
 
+## `loadbalancer.list_listener_certificates`
+
+List listener certificates
+
+`GET /v1/load-balancers/{id}/listeners/{listener_id}/certificates`
+
+```rust
+pub fn list_listener_certificates(&self, id: &str, listener_id: &str) -> PagedRequest<m::ListListenerCertificatesResponse, m::ListListenerCertificatesItem>
+```
+
 ## `loadbalancer.list_listeners`
 
 List this load balancer's listeners
@@ -1792,14 +1792,14 @@ List this load balancer's listeners
 pub fn list_listeners(&self, id: &str, query: &m::ListListenersQuery) -> PagedRequest<m::ListListenersResponse, m::ListListenersItem>
 ```
 
-## `loadbalancer.list_load_balancer_replicas`
+## `loadbalancer.list_load_balancer_instances`
 
-List the LB's instance replicas with live health
+List a load balancer's instances
 
-`GET /v1/load-balancers/{id}/replicas`
+`GET /v1/load-balancers/{id}/instances`
 
 ```rust
-pub fn list_load_balancer_replicas(&self, id: &str, query: &m::ListLoadBalancerReplicasQuery) -> PagedRequest<m::ListLoadBalancerReplicasResponse, m::ListLoadBalancerReplicasItem>
+pub fn list_load_balancer_instances(&self, id: &str, query: &m::ListLoadBalancerInstancesQuery) -> PagedRequest<m::ListLoadBalancerInstancesResponse, m::ListLoadBalancerInstancesItem>
 ```
 
 ## `loadbalancer.list_load_balancers`
@@ -1844,7 +1844,7 @@ pub fn list_targets(&self, id: &str, query: &m::ListTargetsQuery) -> PagedReques
 
 ## `loadbalancer.update_listener`
 
-Patch a listener (rotate cert, change default target group)
+Update a listener
 
 `PATCH /v1/load-balancers/{id}/listeners/{listener_id}`
 
@@ -1884,22 +1884,22 @@ pub fn update_target_group(&self, id: &str, body: &m::UpdateTargetGroupBody) -> 
 
 ## `network.attach_floating_ip`
 
-Attach a floating IP to an interface
+Attach an interface to a floating IP
 
-`POST /v1/floating-ips/{floating_ip_id}/attach`
+`POST /v1/floating-ips/{floating_ip_id}/interfaces`
 
 ```rust
 pub fn attach_floating_ip(&self, floating_ip_id: &str, body: &m::AttachFloatingIpBody) -> Request<m::AttachFloatingIpResponse>
 ```
 
-## `network.attach_internet_gateway`
+## `network.attach_interface_security_group`
 
-Attach internet gateway to a VPC
+Attach a security group to an interface
 
-`POST /v1/internet-gateways/{internet_gateway_id}/attach`
+`POST /v1/interfaces/{interface_id}/security-groups`
 
 ```rust
-pub fn attach_internet_gateway(&self, internet_gateway_id: &str, body: &m::AttachInternetGatewayBody) -> Request<m::AttachInternetGatewayResponse>
+pub fn attach_interface_security_group(&self, interface_id: &str, body: &m::AttachInterfaceSecurityGroupBody) -> Request<m::AttachInterfaceSecurityGroupResponse>
 ```
 
 ## `network.create_egress_only_gateway`
@@ -2184,22 +2184,52 @@ pub fn delete_vpc(&self, vpc_id: &str) -> EmptyRequest
 
 ## `network.detach_floating_ip`
 
-Detach a floating IP
+Detach all direct interfaces from a floating IP
 
-`POST /v1/floating-ips/{floating_ip_id}/detach`
+`DELETE /v1/floating-ips/{floating_ip_id}/interfaces`
 
 ```rust
-pub fn detach_floating_ip(&self, floating_ip_id: &str, body: Option<&m::DetachFloatingIpBody>) -> Request<m::DetachFloatingIpResponse>
+pub fn detach_floating_ip(&self, floating_ip_id: &str) -> EmptyRequest
 ```
 
-## `network.detach_internet_gateway`
+## `network.detach_floating_ip_interface`
 
-Detach internet gateway from its VPC
+Detach an interface from a floating IP
 
-`POST /v1/internet-gateways/{internet_gateway_id}/detach`
+`DELETE /v1/floating-ips/{floating_ip_id}/interfaces/{interface_id}`
 
 ```rust
-pub fn detach_internet_gateway(&self, internet_gateway_id: &str) -> Request<m::DetachInternetGatewayResponse>
+pub fn detach_floating_ip_interface(&self, floating_ip_id: &str, interface_id: &str) -> EmptyRequest
+```
+
+## `network.detach_interface_security_group`
+
+Detach a security group from an interface
+
+`DELETE /v1/interfaces/{interface_id}/security-groups/{security_group_id}`
+
+```rust
+pub fn detach_interface_security_group(&self, interface_id: &str, security_group_id: &str) -> EmptyRequest
+```
+
+## `network.enable_subnet_i_pv6`
+
+Enable IPv6 on a subnet
+
+`POST /v1/subnets/{subnet_id}/ipv6`
+
+```rust
+pub fn enable_subnet_i_pv6(&self, subnet_id: &str, body: &m::EnableSubnetIPv6Body) -> Request<m::EnableSubnetIPv6Response>
+```
+
+## `network.enable_vpci_pv6`
+
+Enable IPv6 on a vpc
+
+`POST /v1/vpcs/{vpc_id}/ipv6`
+
+```rust
+pub fn enable_vpci_pv6(&self, vpc_id: &str, body: &m::EnableVPCIPv6Body) -> Request<m::EnableVPCIPv6Response>
 ```
 
 ## `network.get_egress_only_gateway`
@@ -2342,6 +2372,16 @@ List egress-only gateways
 pub fn list_egress_only_gateways(&self, query: &m::ListEgressOnlyGatewaysQuery) -> PagedRequest<m::ListEgressOnlyGatewaysResponse, m::ListEgressOnlyGatewaysItem>
 ```
 
+## `network.list_floating_ip_interfaces`
+
+List a floating IP’s interfaces
+
+`GET /v1/floating-ips/{floating_ip_id}/interfaces`
+
+```rust
+pub fn list_floating_ip_interfaces(&self, floating_ip_id: &str, query: &m::ListFloatingIpInterfacesQuery) -> PagedRequest<m::ListFloatingIpInterfacesResponse, m::ListFloatingIpInterfacesItem>
+```
+
 ## `network.list_floating_ips`
 
 List floating IPs
@@ -2374,7 +2414,7 @@ pub fn list_interface_prefixes(&self, interface_id: &str) -> PagedRequest<m::Lis
 
 ## `network.list_interface_security_groups`
 
-List interface security-group membership
+List an interface’s security groups
 
 `GET /v1/interfaces/{interface_id}/security-groups`
 
@@ -2500,16 +2540,6 @@ List VPCs
 
 ```rust
 pub fn list_vpcs(&self, query: &m::ListVpcsQuery) -> PagedRequest<m::ListVpcsResponse, m::ListVpcsItem>
-```
-
-## `network.set_interface_security_groups`
-
-Set interface security-group membership
-
-`PUT /v1/interfaces/{interface_id}/security-groups`
-
-```rust
-pub fn set_interface_security_groups(&self, interface_id: &str, body: &m::SetInterfaceSecurityGroupsBody) -> Request<m::SetInterfaceSecurityGroupsResponse>
 ```
 
 ## `network.update_egress_only_gateway`
@@ -2756,10 +2786,10 @@ pub fn create_snapshot(&self, body: &m::CreateSnapshotBody) -> Request<m::Create
 
 Create snapshot policy
 
-`POST /v1/snapshot-policies`
+`POST /v1/volumes/{volume_id}/snapshot-policies`
 
 ```rust
-pub fn create_snapshot_policy(&self, body: &m::CreateSnapshotPolicyBody) -> Request<m::CreateSnapshotPolicyResponse>
+pub fn create_snapshot_policy(&self, volume_id: &str, body: &m::CreateSnapshotPolicyBody) -> Request<m::CreateSnapshotPolicyResponse>
 ```
 
 ## `storage.create_volume`
@@ -2866,10 +2896,10 @@ pub fn delete_snapshot(&self, snapshot_id: &str) -> EmptyRequest
 
 Delete snapshot policy
 
-`DELETE /v1/snapshot-policies/{policy_id}`
+`DELETE /v1/volumes/{volume_id}/snapshot-policies/{policy_id}`
 
 ```rust
-pub fn delete_snapshot_policy(&self, policy_id: &str) -> EmptyRequest
+pub fn delete_snapshot_policy(&self, volume_id: &str, policy_id: &str) -> EmptyRequest
 ```
 
 ## `storage.delete_volume`
@@ -2986,10 +3016,10 @@ pub fn get_snapshot(&self, snapshot_id: &str) -> Request<m::GetSnapshotResponse>
 
 Get snapshot policy
 
-`GET /v1/snapshot-policies/{policy_id}`
+`GET /v1/volumes/{volume_id}/snapshot-policies/{policy_id}`
 
 ```rust
-pub fn get_snapshot_policy(&self, policy_id: &str) -> Request<m::GetSnapshotPolicyResponse>
+pub fn get_snapshot_policy(&self, volume_id: &str, policy_id: &str) -> Request<m::GetSnapshotPolicyResponse>
 ```
 
 ## `storage.get_volume`
@@ -3086,10 +3116,10 @@ pub fn list_parts(&self, bucket: &str, upload_id: &str) -> PagedRequest<m::ListP
 
 List snapshot policies
 
-`GET /v1/snapshot-policies`
+`GET /v1/volumes/{volume_id}/snapshot-policies`
 
 ```rust
-pub fn list_snapshot_policies(&self, query: &m::ListSnapshotPoliciesQuery) -> PagedRequest<m::ListSnapshotPoliciesResponse, m::ListSnapshotPoliciesItem>
+pub fn list_snapshot_policies(&self, volume_id: &str, query: &m::ListSnapshotPoliciesQuery) -> PagedRequest<m::ListSnapshotPoliciesResponse, m::ListSnapshotPoliciesItem>
 ```
 
 ## `storage.list_snapshots`
@@ -3236,10 +3266,10 @@ pub fn update_snapshot(&self, snapshot_id: &str, body: &m::UpdateSnapshotBody) -
 
 Update snapshot policy
 
-`PATCH /v1/snapshot-policies/{policy_id}`
+`PATCH /v1/volumes/{volume_id}/snapshot-policies/{policy_id}`
 
 ```rust
-pub fn update_snapshot_policy(&self, policy_id: &str, body: &m::UpdateSnapshotPolicyBody) -> Request<m::UpdateSnapshotPolicyResponse>
+pub fn update_snapshot_policy(&self, volume_id: &str, policy_id: &str, body: &m::UpdateSnapshotPolicyBody) -> Request<m::UpdateSnapshotPolicyResponse>
 ```
 
 ## `storage.update_volume`
@@ -3326,7 +3356,7 @@ pub fn get_log_group(&self, id: &str) -> Request<m::GetLogGroupResponse>
 
 Check retained telemetry presence
 
-`GET /v1/trace-settings/retained-data`
+`GET /v1/retained-data`
 
 ```rust
 pub fn get_retained_telemetry_presence(&self) -> Request<m::GetRetainedTelemetryPresenceResponse>
@@ -3334,7 +3364,7 @@ pub fn get_retained_telemetry_presence(&self) -> Request<m::GetRetainedTelemetry
 
 ## `telemetry.get_trace`
 
-Get all spans for a trace
+Get a trace
 
 `GET /v1/traces/{trace_id}`
 
@@ -3384,7 +3414,7 @@ pub fn list_log_groups(&self, query: &m::ListLogGroupsQuery) -> PagedRequest<m::
 
 ## `telemetry.list_metric_names`
 
-List the distinct metric names emitted in a time window
+List metric names
 
 `GET /v1/metrics/names`
 
@@ -3394,47 +3424,47 @@ pub fn list_metric_names(&self, query: &m::ListMetricNamesQuery) -> PagedRequest
 
 ## `telemetry.list_metric_names_post`
 
-List the distinct metric names emitted in a time window (form body)
+List metric names (JSON)
 
 `POST /v1/metrics/names`
 
 ```rust
-pub fn list_metric_names_post(&self, body: Option<&m::ListMetricNamesPostBody>) -> Request<m::ListMetricNamesPostResponse>
+pub fn list_metric_names_post(&self, body: &m::ListMetricNamesPostBody) -> Request<m::ListMetricNamesPostResponse>
 ```
 
 ## `telemetry.list_metric_series`
 
-List distinct label sets for a metric
+List metric series
 
 `GET /v1/metrics/series`
 
 ```rust
-pub fn list_metric_series(&self, query: &m::ListMetricSeriesQuery) -> Request<m::ListMetricSeriesResponse>
+pub fn list_metric_series(&self, query: &m::ListMetricSeriesQuery) -> PagedRequest<m::ListMetricSeriesResponse, m::ListMetricSeriesItem>
 ```
 
 ## `telemetry.list_metric_series_post`
 
-List distinct label sets for a metric (form body)
+List metric series (JSON)
 
 `POST /v1/metrics/series`
 
 ```rust
-pub fn list_metric_series_post(&self, body: Option<&m::ListMetricSeriesPostBody>) -> Request<m::ListMetricSeriesPostResponse>
+pub fn list_metric_series_post(&self, body: &m::ListMetricSeriesPostBody) -> Request<m::ListMetricSeriesPostResponse>
 ```
 
-## `telemetry.put_trace_settings`
+## `telemetry.list_trace_spans`
 
-Update the caller account's trace settings
+List spans in a trace
 
-`PUT /v1/trace-settings`
+`GET /v1/traces/{trace_id}/spans`
 
 ```rust
-pub fn put_trace_settings(&self, body: &m::PutTraceSettingsBody) -> Request<m::PutTraceSettingsResponse>
+pub fn list_trace_spans(&self, trace_id: &str, query: &m::ListTraceSpansQuery) -> PagedRequest<m::ListTraceSpansResponse, m::ListTraceSpansItem>
 ```
 
 ## `telemetry.query_metrics_instant`
 
-Instant structured metric query
+Run an instant metric query
 
 `GET /v1/metrics/query`
 
@@ -3444,19 +3474,19 @@ pub fn query_metrics_instant(&self, query: &m::QueryMetricsInstantQuery) -> Requ
 
 ## `telemetry.query_metrics_instant_post`
 
-Instant structured metric query (form body)
+Run an instant metric query (JSON)
 
 `POST /v1/metrics/query`
 
 ```rust
-pub fn query_metrics_instant_post(&self, body: Option<&m::QueryMetricsInstantPostBody>) -> Request<m::QueryMetricsInstantPostResponse>
+pub fn query_metrics_instant_post(&self, body: &m::QueryMetricsInstantPostBody) -> Request<m::QueryMetricsInstantPostResponse>
 ```
 
 ## `telemetry.query_metrics_range`
 
-Range structured metric query
+Run a range metric query
 
-`GET /v1/metrics/query_range`
+`GET /v1/metrics/query-range`
 
 ```rust
 pub fn query_metrics_range(&self, query: &m::QueryMetricsRangeQuery) -> Request<m::QueryMetricsRangeResponse>
@@ -3464,12 +3494,12 @@ pub fn query_metrics_range(&self, query: &m::QueryMetricsRangeQuery) -> Request<
 
 ## `telemetry.query_metrics_range_post`
 
-Range structured metric query (form body)
+Run a range metric query (JSON)
 
-`POST /v1/metrics/query_range`
+`POST /v1/metrics/query-range`
 
 ```rust
-pub fn query_metrics_range_post(&self, body: Option<&m::QueryMetricsRangePostBody>) -> Request<m::QueryMetricsRangePostResponse>
+pub fn query_metrics_range_post(&self, body: &m::QueryMetricsRangePostBody) -> Request<m::QueryMetricsRangePostResponse>
 ```
 
 ## `telemetry.search_logs`
@@ -3500,6 +3530,16 @@ Update a log group
 
 ```rust
 pub fn update_log_group(&self, id: &str, body: &m::UpdateLogGroupBody) -> Request<m::UpdateLogGroupResponse>
+```
+
+## `telemetry.update_trace_settings`
+
+Update the caller account's trace settings
+
+`PATCH /v1/trace-settings`
+
+```rust
+pub fn update_trace_settings(&self, body: &m::UpdateTraceSettingsBody) -> Request<m::UpdateTraceSettingsResponse>
 ```
 
 ## `telemetry.write_metrics`

@@ -80,21 +80,9 @@ pub struct Secret {
 
     #[serde(rename = "crn")]
     pub crn: String,
-    /// True when the bound key has been deleted. The CRN is omitted, but the binding remains encrypted under its original key identity; this does not select platform encryption or plaintext.
-    #[serde(
-        rename = "kms_key_unavailable",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub kms_key_unavailable: Option<bool>,
-    /// Customer-managed KMS key the secret is encrypted under. Omitted for platform encryption or when kms_key_unavailable is true.
-    #[serde(
-        rename = "kms_key_crn",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub kms_key_crn: Option<crate::Nullable<String>>,
+    /// Customer-managed encryption key. Omitted for platform encryption.
+    #[serde(rename = "kms_key", default, skip_serializing_if = "Option::is_none")]
+    pub kms_key: Option<ResourceRef>,
     /// True when a platform service generated this value and reads it back to act on. You can read and delete a managed secret, but UpdateSecret and PutSecretValue answer 403 SECRET_PLATFORM_MANAGED.
     #[serde(rename = "managed")]
     pub managed: bool,
@@ -133,6 +121,18 @@ pub struct Secret {
 }
 
 pub type Tags = std::collections::BTreeMap<String, String>;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
 
 pub type CreateSecretResponse = SecretResponse;
 
@@ -174,10 +174,8 @@ impl std::fmt::Debug for SecretValueResponse {
     }
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SecretValue {
-    #[serde(rename = "secret_id")]
-    pub secret_id: String,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
@@ -190,17 +188,6 @@ pub struct SecretValue {
 
     #[serde(rename = "created_at")]
     pub created_at: String,
-}
-impl std::fmt::Debug for SecretValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut d = f.debug_struct("SecretValue");
-        d.field("secret_id", &"[REDACTED]");
-        d.field("name", &self.name);
-        d.field("version", &self.version);
-        d.field("value", &self.value);
-        d.field("created_at", &self.created_at);
-        d.finish()
-    }
 }
 
 pub type GetSecretValueResponse = SecretValueResponse;
@@ -302,13 +289,6 @@ pub struct SecretVersion {
 
     #[serde(rename = "is_current")]
     pub is_current: bool,
-    /// CRN of the principal that created this version (e.g. crn:iam:::user/&lt;id&gt;, crn:iam:::service-account/&lt;id&gt;).
-    #[serde(
-        rename = "created_by",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_by: Option<String>,
 
     #[serde(rename = "created_at")]
     pub created_at: String,

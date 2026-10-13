@@ -51,7 +51,7 @@ static OP_3: Operation = Operation {
 static OP_4: Operation = Operation {
     id: "createSnapshotPolicy",
     method: "POST",
-    path: "/v1/snapshot-policies",
+    path: "/v1/volumes/{volume_id}/snapshot-policies",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -172,7 +172,7 @@ static OP_14: Operation = Operation {
 static OP_15: Operation = Operation {
     id: "deleteSnapshotPolicy",
     method: "DELETE",
-    path: "/v1/snapshot-policies/{policy_id}",
+    path: "/v1/volumes/{volume_id}/snapshot-policies/{policy_id}",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -304,7 +304,7 @@ static OP_26: Operation = Operation {
 static OP_27: Operation = Operation {
     id: "getSnapshotPolicy",
     method: "GET",
-    path: "/v1/snapshot-policies/{policy_id}",
+    path: "/v1/volumes/{volume_id}/snapshot-policies/{policy_id}",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -488,7 +488,7 @@ static OP_36: Operation = Operation {
 static OP_37: Operation = Operation {
     id: "listSnapshotPolicies",
     method: "GET",
-    path: "/v1/snapshot-policies",
+    path: "/v1/volumes/{volume_id}/snapshot-policies",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -502,11 +502,6 @@ static OP_37: Operation = Operation {
         },
         QueryEncoding {
             name: "marker",
-            style: "form",
-            explode: true,
-        },
-        QueryEncoding {
-            name: "volume",
             style: "form",
             explode: true,
         },
@@ -757,7 +752,7 @@ static OP_51: Operation = Operation {
 static OP_52: Operation = Operation {
     id: "updateSnapshotPolicy",
     method: "PATCH",
-    path: "/v1/snapshot-policies/{policy_id}",
+    path: "/v1/volumes/{volume_id}/snapshot-policies/{policy_id}",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -862,6 +857,7 @@ impl StorageService {
     /// Create snapshot policy
     pub fn create_snapshot_policy(
         &self,
+        volume_id: &str,
         body: &m::CreateSnapshotPolicyBody,
     ) -> Request<m::CreateSnapshotPolicyResponse> {
         Request::new(Core::new(
@@ -869,7 +865,7 @@ impl StorageService {
             "storage",
             ENDPOINT,
             &OP_4,
-            &[],
+            &[("volume_id", volume_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
         ))
@@ -995,13 +991,13 @@ impl StorageService {
         ))
     }
     /// Delete snapshot policy
-    pub fn delete_snapshot_policy(&self, policy_id: &str) -> EmptyRequest {
+    pub fn delete_snapshot_policy(&self, volume_id: &str, policy_id: &str) -> EmptyRequest {
         EmptyRequest::new(Core::new(
             self.client.clone(),
             "storage",
             ENDPOINT,
             &OP_15,
-            &[("policy_id", policy_id)],
+            &[("volume_id", volume_id), ("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
         ))
@@ -1175,13 +1171,17 @@ impl StorageService {
         Request::reference(core, extract)
     }
     /// Get snapshot policy
-    pub fn get_snapshot_policy(&self, policy_id: &str) -> Request<m::GetSnapshotPolicyResponse> {
+    pub fn get_snapshot_policy(
+        &self,
+        volume_id: &str,
+        policy_id: &str,
+    ) -> Request<m::GetSnapshotPolicyResponse> {
         Request::new(Core::new(
             self.client.clone(),
             "storage",
             ENDPOINT,
             &OP_27,
-            &[("policy_id", policy_id)],
+            &[("volume_id", volume_id), ("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
         ))
@@ -1189,6 +1189,7 @@ impl StorageService {
     /// Resolve one resource by UUID, CRN, or an unambiguous name.
     pub fn get_snapshot_policy_by_reference(
         &self,
+        volume_id: &str,
         reference: &str,
         scope: &m::GetSnapshotPolicyScope,
     ) -> Request<m::GetSnapshotPolicyResource> {
@@ -1198,7 +1199,7 @@ impl StorageService {
                 "storage",
                 ENDPOINT,
                 &OP_27,
-                &[("policy_id", reference)],
+                &[("volume_id", volume_id), ("policy_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
             ),
@@ -1207,7 +1208,7 @@ impl StorageService {
                 "storage",
                 ENDPOINT,
                 &OP_37,
-                &[],
+                &[("volume_id", volume_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
             ),
@@ -1396,6 +1397,7 @@ impl StorageService {
     /// List snapshot policies
     pub fn list_snapshot_policies(
         &self,
+        volume_id: &str,
         query: &m::ListSnapshotPoliciesQuery,
     ) -> PagedRequest<m::ListSnapshotPoliciesResponse, m::ListSnapshotPoliciesItem> {
         PagedRequest::new(
@@ -1404,7 +1406,7 @@ impl StorageService {
                 "storage",
                 ENDPOINT,
                 &OP_37,
-                &[],
+                &[("volume_id", volume_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
@@ -1629,6 +1631,7 @@ impl StorageService {
     /// Update snapshot policy
     pub fn update_snapshot_policy(
         &self,
+        volume_id: &str,
         policy_id: &str,
         body: &m::UpdateSnapshotPolicyBody,
     ) -> Request<m::UpdateSnapshotPolicyResponse> {
@@ -1637,7 +1640,7 @@ impl StorageService {
             "storage",
             ENDPOINT,
             &OP_52,
-            &[("policy_id", policy_id)],
+            &[("volume_id", volume_id), ("policy_id", policy_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
         ))

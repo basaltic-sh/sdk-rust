@@ -197,32 +197,32 @@ pub type TagsInput = std::collections::BTreeMap<String, String>;
 
 pub type CreateSnapshotBody = SnapshotCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SnapshotResponse {
-    #[serde(rename = "snapshot", default, skip_serializing_if = "Option::is_none")]
-    pub snapshot: Option<Snapshot>,
+    #[serde(rename = "snapshot")]
+    pub snapshot: Snapshot,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Snapshot {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Cloud Resource Name (name-based, region-scoped).
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
-    /// Source volume the snapshot was taken from.
-    #[serde(rename = "volume_id", default, skip_serializing_if = "Option::is_none")]
-    pub volume_id: Option<String>,
-    /// The snapshot policy that took this snapshot. Absent when a person did. This is also what retention matches on, so its presence is what makes a snapshot eligible for automatic deletion — snapshots taken by hand are never reaped.
+    #[serde(rename = "crn")]
+    pub crn: String,
+
+    #[serde(rename = "volume")]
+    pub volume: ResourceRef,
+    /// The schedule that created this snapshot. Absent for manual snapshots, which are never reaped by schedule retention.
     #[serde(
-        rename = "snapshot_policy_id",
+        rename = "snapshot_policy",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub snapshot_policy_id: Option<String>,
+    pub snapshot_policy: Option<ResourceRef>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "name")]
+    pub name: String,
 
     #[serde(
         rename = "description",
@@ -231,129 +231,38 @@ pub struct Snapshot {
     )]
     pub description: Option<String>,
 
-    #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
-    pub tags: Option<Tags>,
-    /// Frozen size of the source volume at the time the snapshot was taken — the volume may have been extended since.
-    #[serde(rename = "size_gb", default, skip_serializing_if = "Option::is_none")]
-    pub size_gb: Option<i64>,
-    /// Frozen logical restore capacity in bytes (size_gb multiplied by 2^30), not measured written data.
-    #[serde(
-        rename = "logical_size_bytes",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub logical_size_bytes: Option<i64>,
+    #[serde(rename = "tags")]
+    pub tags: Tags,
+    /// Frozen logical restore capacity in bytes, not measured written data. The source volume may have been extended since the snapshot was taken.
+    #[serde(rename = "size_bytes")]
+    pub size_bytes: i64,
 
-    #[serde(
-        rename = "snapshot_usage",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub snapshot_usage: Option<SnapshotUsage>,
-
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<SnapshotStatus>,
+    #[serde(rename = "status")]
+    pub status: SnapshotStatus,
     /// Active faults, newest first. Empty when healthy. Status is error if and only if an active error-severity fault exists. Resolved history is retained internally.
     #[serde(rename = "faults")]
     pub faults: Vec<Fault>,
 
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
 
-    #[serde(
-        rename = "updated_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub updated_at: Option<String>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 pub type Tags = std::collections::BTreeMap<String, String>;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct SnapshotUsage {
-    /// Measured means a complete observation with a matching current catalog generation and age at most 90 minutes. Stale means its generation changed or it expired. This is a last-observed value, not continuous backend verification. Unknown and stale never imply zero usage.
-    #[serde(rename = "state")]
-    pub state: SnapshotUsageState,
-
-    #[serde(rename = "scope")]
-    pub scope: SnapshotUsageScope,
-    /// These observations do not produce charges.
-    #[serde(rename = "billable")]
-    pub billable: bool,
-    /// Observation timestamp for measured or stale data; null when unknown.
-    #[serde(rename = "measured_at")]
-    pub measured_at: crate::Nullable<String>,
-    /// Exact retained lineage bytes only when measured; null when unknown or stale. An explicit measured zero is distinct from unavailable data.
-    #[serde(rename = "lineage_retained_bytes")]
-    pub lineage_retained_bytes: crate::Nullable<i64>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SnapshotUsageState {
-    Unknown1,
-    Stale,
-    Measured,
-    Unknown(String),
-}
-impl SnapshotUsageState {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Unknown1 => "unknown",
-            Self::Stale => "stale",
-            Self::Measured => "measured",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for SnapshotUsageState {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for SnapshotUsageState {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "unknown" => Self::Unknown1,
-            "stale" => Self::Stale,
-            "measured" => Self::Measured,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SnapshotUsageScope {
-    VolumeLineage,
-    Unknown(String),
-}
-impl SnapshotUsageScope {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::VolumeLineage => "volume_lineage",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for SnapshotUsageScope {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for SnapshotUsageScope {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "volume_lineage" => Self::VolumeLineage,
-            _ => Self::Unknown(value),
-        })
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SnapshotStatus {
@@ -452,10 +361,7 @@ pub type CreateSnapshotResponse = SnapshotResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SnapshotPolicyCreateRequestInput {
-    /// Account-owned volume UUID, CRN, or exact name.
-    #[serde(rename = "volume")]
-    pub volume: String,
-    /// Unique within the account — it names the policy in its CRN. Scheduled snapshots are named `<policy>-<UTC timestamp>`. Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    /// Unique within the volume — it names the policy in its CRN. Scheduled snapshots are named `<policy>-<UTC timestamp>`. Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
     pub name: String,
 
@@ -489,13 +395,11 @@ impl SnapshotPolicyCreateRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        volume: String,
         name: String,
         interval_minutes: SnapshotIntervalMinutesInput,
         retention_count: SnapshotRetentionCountInput,
     ) -> Self {
         Self {
-            volume,
             name,
             description: None,
             interval_minutes,
@@ -515,14 +419,10 @@ pub type SnapshotRetentionDaysInput = i64;
 
 pub type CreateSnapshotPolicyBody = SnapshotPolicyCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SnapshotPolicyResponse {
-    #[serde(
-        rename = "snapshot_policy",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub snapshot_policy: Option<SnapshotPolicy>,
+    #[serde(rename = "snapshot_policy")]
+    pub snapshot_policy: SnapshotPolicy,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -532,9 +432,6 @@ pub struct SnapshotPolicy {
     /// Cloud Resource Name (name-based, region-scoped).
     #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
     pub crn: Option<String>,
-    /// The volume this schedule is attached to. A volume supports up to 16 independent policies.
-    #[serde(rename = "volume_id", default, skip_serializing_if = "Option::is_none")]
-    pub volume_id: Option<String>,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -730,22 +627,22 @@ impl<'de> serde::Deserialize<'de> for CreatableVolumeTypeNameInput {
 
 pub type CreateVolumeBody = VolumeCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct VolumeResponse {
-    #[serde(rename = "volume", default, skip_serializing_if = "Option::is_none")]
-    pub volume: Option<Volume>,
+    #[serde(rename = "volume")]
+    pub volume: Volume,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Volume {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Cloud Resource Name (name-based, region-scoped).
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
+    #[serde(rename = "crn")]
+    pub crn: String,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "name")]
+    pub name: String,
 
     #[serde(
         rename = "description",
@@ -754,71 +651,41 @@ pub struct Volume {
     )]
     pub description: Option<String>,
 
-    #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
-    pub tags: Option<Tags>,
+    #[serde(rename = "tags")]
+    pub tags: Tags,
 
-    #[serde(
-        rename = "volume_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub volume_type: Option<VolumeTypeName>,
+    #[serde(rename = "volume_type")]
+    pub volume_type: VolumeTypeName,
 
-    #[serde(rename = "size_gb", default, skip_serializing_if = "Option::is_none")]
-    pub size_gb: Option<i64>,
+    #[serde(rename = "size_gb")]
+    pub size_gb: i64,
 
-    #[serde(
-        rename = "performance",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub performance: Option<VolumePerformance>,
+    #[serde(rename = "performance")]
+    pub performance: VolumePerformance,
 
-    #[serde(
-        rename = "included_io_limits",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub included_io_limits: Option<IncludedIOLimits>,
+    #[serde(rename = "included_io_limits")]
+    pub included_io_limits: IncludedIOLimits,
 
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<VolumeStatus>,
+    #[serde(rename = "status")]
+    pub status: VolumeStatus,
     /// Set at create time when the volume is provisioned from a bootable image. Immutable after creation.
-    #[serde(rename = "bootable", default, skip_serializing_if = "Option::is_none")]
-    pub bootable: Option<bool>,
-    /// Image the volume was cloned from, when applicable.
-    #[serde(
-        rename = "source_image_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub source_image_id: Option<crate::Nullable<String>>,
-    /// Snapshot the volume was cloned from (restore path), when applicable.
-    #[serde(
-        rename = "source_snapshot_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub source_snapshot_id: Option<crate::Nullable<String>>,
+    #[serde(rename = "bootable")]
+    pub bootable: bool,
     /// Active faults, newest first. Empty when healthy. Status is error if and only if an active error-severity fault exists. Resolved history is retained internally.
     #[serde(rename = "faults")]
     pub faults: Vec<Fault>,
 
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
 
-    #[serde(
-        rename = "updated_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub updated_at: Option<String>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+    /// Source image identity, or null when this volume was not created from an image.
+    #[serde(rename = "source_image")]
+    pub source_image: VolumeSourceImage,
+    /// Source snapshot identity, or null when not created from a snapshot.
+    #[serde(rename = "source_snapshot")]
+    pub source_snapshot: VolumeSourceSnapshot,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -862,30 +729,6 @@ pub struct VolumePerformance {
 
     #[serde(rename = "applied")]
     pub applied: IncludedIOLimits,
-
-    #[serde(rename = "state")]
-    pub state: VolumePerformanceState,
-
-    #[serde(
-        rename = "operation_id",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub operation_id: Option<String>,
-
-    #[serde(
-        rename = "applied_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub applied_at: Option<String>,
-    /// Latest retryable failure; the accepted request remains durable.
-    #[serde(
-        rename = "last_error",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub last_error: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -907,45 +750,12 @@ pub struct IncludedIOLimits {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VolumePerformanceState {
-    Creating,
-    Pending,
-    Applied,
-    Unknown(String),
-}
-impl VolumePerformanceState {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Creating => "creating",
-            Self::Pending => "pending",
-            Self::Applied => "applied",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for VolumePerformanceState {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for VolumePerformanceState {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "creating" => Self::Creating,
-            "pending" => Self::Pending,
-            "applied" => Self::Applied,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VolumeStatus {
     Creating,
     Available,
     InUse,
     Extending,
+    Updating,
     Deleting,
     Error,
     Unknown(String),
@@ -957,6 +767,7 @@ impl VolumeStatus {
             Self::Available => "available",
             Self::InUse => "in_use",
             Self::Extending => "extending",
+            Self::Updating => "updating",
             Self::Deleting => "deleting",
             Self::Error => "error",
             Self::Unknown(value) => value,
@@ -976,11 +787,26 @@ impl<'de> serde::Deserialize<'de> for VolumeStatus {
             "available" => Self::Available,
             "in_use" => Self::InUse,
             "extending" => Self::Extending,
+            "updating" => Self::Updating,
             "deleting" => Self::Deleting,
             "error" => Self::Error,
             _ => Self::Unknown(value),
         })
     }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum VolumeSourceImage {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum VolumeSourceSnapshot {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type CreateVolumeResponse = VolumeResponse;
@@ -1020,14 +846,8 @@ pub type ExtendVolumeResponse = VolumeResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BucketCORSResponse {
-    #[serde(rename = "cors")]
-    pub cors: CORSConfig,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct CORSConfig {
-    #[serde(rename = "rules")]
-    pub rules: Vec<CORSRule>,
+    #[serde(rename = "cors_rules")]
+    pub cors_rules: Vec<CORSRule>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -1107,14 +927,8 @@ pub type GetBucketCORSResponse = BucketCORSResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BucketEncryptionResponse {
-    #[serde(rename = "encryption")]
-    pub encryption: EncryptionConfig,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct EncryptionConfig {
-    #[serde(rename = "rules")]
-    pub rules: Vec<EncryptionRule>,
+    #[serde(rename = "encryption_rules")]
+    pub encryption_rules: Vec<EncryptionRule>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
@@ -1151,14 +965,8 @@ pub struct BucketLifecycleResponse {
     #[serde(rename = "revision")]
     pub revision: String,
 
-    #[serde(rename = "lifecycle")]
-    pub lifecycle: LifecycleConfig,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct LifecycleConfig {
-    #[serde(rename = "rules")]
-    pub rules: Vec<LifecycleRule>,
+    #[serde(rename = "lifecycle_rules")]
+    pub lifecycle_rules: Vec<LifecycleRule>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -1320,11 +1128,7 @@ pub struct LifecycleRuleAbortIncompleteMultipartUpload {
 
 pub type GetBucketLifecycleResponse = BucketLifecycleResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct BucketObjectLockResponse {
-    #[serde(rename = "object_lock")]
-    pub object_lock: ObjectLockConfig,
-}
+pub type BucketObjectLockResponse = ObjectLockConfig;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ObjectLockConfig {
@@ -1335,24 +1139,28 @@ pub struct ObjectLockConfig {
     )]
     pub object_lock_enabled: Option<String>,
 
-    #[serde(rename = "rule", default, skip_serializing_if = "Option::is_none")]
-    pub rule: Option<ObjectLockConfigRule>,
+    #[serde(
+        rename = "object_lock_rule",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub object_lock_rule: Option<ObjectLockConfigObjectLockRule>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ObjectLockConfigRule {
+pub struct ObjectLockConfigObjectLockRule {
     #[serde(
         rename = "default_retention",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub default_retention: Option<ObjectLockConfigRuleDefaultRetention>,
+    pub default_retention: Option<ObjectLockConfigObjectLockRuleDefaultRetention>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ObjectLockConfigRuleDefaultRetention {
+pub struct ObjectLockConfigObjectLockRuleDefaultRetention {
     #[serde(rename = "mode", default, skip_serializing_if = "Option::is_none")]
-    pub mode: Option<ObjectLockConfigRuleDefaultRetentionMode>,
+    pub mode: Option<ObjectLockConfigObjectLockRuleDefaultRetentionMode>,
 
     #[serde(rename = "days", default, skip_serializing_if = "Option::is_none")]
     pub days: Option<i64>,
@@ -1362,12 +1170,12 @@ pub struct ObjectLockConfigRuleDefaultRetention {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ObjectLockConfigRuleDefaultRetentionMode {
+pub enum ObjectLockConfigObjectLockRuleDefaultRetentionMode {
     GOVERNANCE,
     COMPLIANCE,
     Unknown(String),
 }
-impl ObjectLockConfigRuleDefaultRetentionMode {
+impl ObjectLockConfigObjectLockRuleDefaultRetentionMode {
     pub fn as_str(&self) -> &str {
         match self {
             Self::GOVERNANCE => "GOVERNANCE",
@@ -1376,12 +1184,12 @@ impl ObjectLockConfigRuleDefaultRetentionMode {
         }
     }
 }
-impl serde::Serialize for ObjectLockConfigRuleDefaultRetentionMode {
+impl serde::Serialize for ObjectLockConfigObjectLockRuleDefaultRetentionMode {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
-impl<'de> serde::Deserialize<'de> for ObjectLockConfigRuleDefaultRetentionMode {
+impl<'de> serde::Deserialize<'de> for ObjectLockConfigObjectLockRuleDefaultRetentionMode {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <String as serde::Deserialize>::deserialize(deserializer)?;
         Ok(match value.as_str() {
@@ -1525,9 +1333,6 @@ pub struct GetSnapshotPolicyScope {
     #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<i64>,
 
-    #[serde(rename = "volume", default, skip_serializing_if = "Option::is_none")]
-    pub volume: Option<String>,
-
     #[serde(rename = "enabled", default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
 }
@@ -1551,6 +1356,7 @@ pub enum VolumeStatusInput {
     Available,
     InUse,
     Extending,
+    Updating,
     Deleting,
     Error,
     Unknown(String),
@@ -1562,6 +1368,7 @@ impl VolumeStatusInput {
             Self::Available => "available",
             Self::InUse => "in_use",
             Self::Extending => "extending",
+            Self::Updating => "updating",
             Self::Deleting => "deleting",
             Self::Error => "error",
             Self::Unknown(value) => value,
@@ -1581,6 +1388,7 @@ impl<'de> serde::Deserialize<'de> for VolumeStatusInput {
             "available" => Self::Available,
             "in_use" => Self::InUse,
             "extending" => Self::Extending,
+            "updating" => Self::Updating,
             "deleting" => Self::Deleting,
             "error" => Self::Error,
             _ => Self::Unknown(value),
@@ -1923,9 +1731,6 @@ pub struct ListSnapshotPoliciesParameters {
     #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
     pub marker: Option<String>,
 
-    #[serde(rename = "volume", default, skip_serializing_if = "Option::is_none")]
-    pub volume: Option<String>,
-
     #[serde(rename = "enabled", default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
 
@@ -1938,17 +1743,13 @@ pub struct ListSnapshotPoliciesParameters {
 
 pub type ListSnapshotPoliciesQuery = ListSnapshotPoliciesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SnapshotPolicyListResponse {
-    #[serde(
-        rename = "snapshot_policies",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub snapshot_policies: Option<Vec<SnapshotPolicy>>,
+    #[serde(rename = "snapshot_policies")]
+    pub snapshot_policies: Vec<SnapshotPolicy>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListSnapshotPoliciesResponse = SnapshotPolicyListResponse;
@@ -1985,13 +1786,13 @@ pub struct ListSnapshotsParameters {
 
 pub type ListSnapshotsQuery = ListSnapshotsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SnapshotListResponse {
-    #[serde(rename = "snapshots", default, skip_serializing_if = "Option::is_none")]
-    pub snapshots: Option<Vec<Snapshot>>,
+    #[serde(rename = "snapshots")]
+    pub snapshots: Vec<Snapshot>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListSnapshotsResponse = SnapshotListResponse;
@@ -2086,13 +1887,13 @@ pub struct ListVolumesParameters {
 
 pub type ListVolumesQuery = ListVolumesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct VolumeListResponse {
-    #[serde(rename = "volumes", default, skip_serializing_if = "Option::is_none")]
-    pub volumes: Option<Vec<Volume>>,
+    #[serde(rename = "volumes")]
+    pub volumes: Vec<Volume>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListVolumesResponse = VolumeListResponse;
@@ -2101,27 +1902,14 @@ pub type ListVolumesItem = Volume;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PutBucketCORSRequestInput {
-    #[serde(rename = "cors")]
-    pub cors: CORSConfigInput,
+    #[serde(rename = "cors_rules")]
+    pub cors_rules: Vec<CORSRuleInput>,
 }
 impl PutBucketCORSRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(cors: CORSConfigInput) -> Self {
-        Self { cors }
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct CORSConfigInput {
-    #[serde(rename = "rules")]
-    pub rules: Vec<CORSRuleInput>,
-}
-impl CORSConfigInput {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(rules: Vec<CORSRuleInput>) -> Self {
-        Self { rules }
+    pub fn new(cors_rules: Vec<CORSRuleInput>) -> Self {
+        Self { cors_rules }
     }
 }
 
@@ -2245,27 +2033,14 @@ pub type PutBucketDeletionProtectionBody = PutBucketDeletionProtectionRequestInp
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PutBucketEncryptionRequestInput {
-    #[serde(rename = "encryption")]
-    pub encryption: EncryptionConfigInput,
+    #[serde(rename = "encryption_rules")]
+    pub encryption_rules: Vec<EncryptionRuleInput>,
 }
 impl PutBucketEncryptionRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(encryption: EncryptionConfigInput) -> Self {
-        Self { encryption }
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct EncryptionConfigInput {
-    #[serde(rename = "rules")]
-    pub rules: Vec<EncryptionRuleInput>,
-}
-impl EncryptionConfigInput {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(rules: Vec<EncryptionRuleInput>) -> Self {
-        Self { rules }
+    pub fn new(encryption_rules: Vec<EncryptionRuleInput>) -> Self {
+        Self { encryption_rules }
     }
 }
 
@@ -2309,27 +2084,14 @@ pub type PutBucketEncryptionBody = PutBucketEncryptionRequestInput;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PutBucketLifecycleRequestInput {
-    #[serde(rename = "lifecycle")]
-    pub lifecycle: LifecycleConfigInput,
+    #[serde(rename = "lifecycle_rules")]
+    pub lifecycle_rules: Vec<LifecycleRuleInput>,
 }
 impl PutBucketLifecycleRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(lifecycle: LifecycleConfigInput) -> Self {
-        Self { lifecycle }
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct LifecycleConfigInput {
-    #[serde(rename = "rules")]
-    pub rules: Vec<LifecycleRuleInput>,
-}
-impl LifecycleConfigInput {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(rules: Vec<LifecycleRuleInput>) -> Self {
-        Self { rules }
+    pub fn new(lifecycle_rules: Vec<LifecycleRuleInput>) -> Self {
+        Self { lifecycle_rules }
     }
 }
 
@@ -2518,18 +2280,7 @@ pub struct LifecycleRuleInputAbortIncompleteMultipartUpload {
 
 pub type PutBucketLifecycleBody = PutBucketLifecycleRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct PutBucketObjectLockRequestInput {
-    #[serde(rename = "object_lock")]
-    pub object_lock: ObjectLockConfigInput,
-}
-impl PutBucketObjectLockRequestInput {
-    /// Set the required fields; optional fields start omitted.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(object_lock: ObjectLockConfigInput) -> Self {
-        Self { object_lock }
-    }
-}
+pub type PutBucketObjectLockRequestInput = ObjectLockConfigInput;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ObjectLockConfigInput {
@@ -2540,24 +2291,28 @@ pub struct ObjectLockConfigInput {
     )]
     pub object_lock_enabled: Option<String>,
 
-    #[serde(rename = "rule", default, skip_serializing_if = "Option::is_none")]
-    pub rule: Option<ObjectLockConfigInputRule>,
+    #[serde(
+        rename = "object_lock_rule",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub object_lock_rule: Option<ObjectLockConfigInputObjectLockRule>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ObjectLockConfigInputRule {
+pub struct ObjectLockConfigInputObjectLockRule {
     #[serde(
         rename = "default_retention",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub default_retention: Option<ObjectLockConfigInputRuleDefaultRetention>,
+    pub default_retention: Option<ObjectLockConfigInputObjectLockRuleDefaultRetention>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ObjectLockConfigInputRuleDefaultRetention {
+pub struct ObjectLockConfigInputObjectLockRuleDefaultRetention {
     #[serde(rename = "mode", default, skip_serializing_if = "Option::is_none")]
-    pub mode: Option<ObjectLockConfigInputRuleDefaultRetentionMode>,
+    pub mode: Option<ObjectLockConfigInputObjectLockRuleDefaultRetentionMode>,
 
     #[serde(rename = "days", default, skip_serializing_if = "Option::is_none")]
     pub days: Option<i64>,
@@ -2567,12 +2322,12 @@ pub struct ObjectLockConfigInputRuleDefaultRetention {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ObjectLockConfigInputRuleDefaultRetentionMode {
+pub enum ObjectLockConfigInputObjectLockRuleDefaultRetentionMode {
     GOVERNANCE,
     COMPLIANCE,
     Unknown(String),
 }
-impl ObjectLockConfigInputRuleDefaultRetentionMode {
+impl ObjectLockConfigInputObjectLockRuleDefaultRetentionMode {
     pub fn as_str(&self) -> &str {
         match self {
             Self::GOVERNANCE => "GOVERNANCE",
@@ -2581,12 +2336,12 @@ impl ObjectLockConfigInputRuleDefaultRetentionMode {
         }
     }
 }
-impl serde::Serialize for ObjectLockConfigInputRuleDefaultRetentionMode {
+impl serde::Serialize for ObjectLockConfigInputObjectLockRuleDefaultRetentionMode {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
-impl<'de> serde::Deserialize<'de> for ObjectLockConfigInputRuleDefaultRetentionMode {
+impl<'de> serde::Deserialize<'de> for ObjectLockConfigInputObjectLockRuleDefaultRetentionMode {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <String as serde::Deserialize>::deserialize(deserializer)?;
         Ok(match value.as_str() {

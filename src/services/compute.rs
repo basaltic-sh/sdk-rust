@@ -5,9 +5,9 @@ use crate::transport::{Core, Operation, Payload, QueryEncoding};
 use crate::{BinaryRequest, Client, EmptyRequest, PagedRequest, Request, WebSocketRequest};
 const ENDPOINT: &str = "https://compute.{region}.basaltic.sh";
 static OP_0: Operation = Operation {
-    id: "attachInstanceNIC",
+    id: "attachInstanceInterface",
     method: "POST",
-    path: "/v1/instances/{instance_id}/nics",
+    path: "/v1/instances/{instance_id}/interfaces",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -115,9 +115,9 @@ static OP_9: Operation = Operation {
     query_encoding: &[],
 };
 static OP_10: Operation = Operation {
-    id: "detachInstanceNIC",
+    id: "detachInstanceInterface",
     method: "DELETE",
-    path: "/v1/instances/{instance_id}/nics/{interface_id}",
+    path: "/v1/instances/{instance_id}/interfaces/{interface_id}",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -334,9 +334,9 @@ static OP_21: Operation = Operation {
     ],
 };
 static OP_22: Operation = Operation {
-    id: "listInstanceNICs",
+    id: "listInstanceInterfaces",
     method: "GET",
-    path: "/v1/instances/{instance_id}/nics",
+    path: "/v1/instances/{instance_id}/interfaces",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -666,11 +666,11 @@ pub struct ComputeService {
 }
 impl ComputeService {
     /// Attach an existing NIC to an instance
-    pub fn attach_instance_nic(
+    pub fn attach_instance_interface(
         &self,
         instance_id: &str,
-        body: &m::AttachInstanceNICBody,
-    ) -> Request<m::AttachInstanceNICResponse> {
+        body: &m::AttachInstanceInterfaceBody,
+    ) -> Request<m::AttachInstanceInterfaceResponse> {
         Request::new(Core::new(
             self.client.clone(),
             "compute",
@@ -806,8 +806,8 @@ impl ComputeService {
             Ok(serde_json::json!({})),
         ))
     }
-    /// Detach a NIC from a running instance
-    pub fn detach_instance_nic(&self, instance_id: &str, interface_id: &str) -> EmptyRequest {
+    /// Detach an interface from a running instance
+    pub fn detach_instance_interface(&self, instance_id: &str, interface_id: &str) -> EmptyRequest {
         EmptyRequest::new(Core::new(
             self.client.clone(),
             "compute",
@@ -1105,11 +1105,11 @@ impl ComputeService {
         )
     }
     /// List the instance's network interfaces
-    pub fn list_instance_ni_cs(
+    pub fn list_instance_interfaces(
         &self,
         instance_id: &str,
-        query: &m::ListInstanceNICsQuery,
-    ) -> PagedRequest<m::ListInstanceNICsResponse, m::ListInstanceNICsItem> {
+        query: &m::ListInstanceInterfacesQuery,
+    ) -> PagedRequest<m::ListInstanceInterfacesResponse, m::ListInstanceInterfacesItem> {
         PagedRequest::new(
             Core::new(
                 self.client.clone(),
@@ -1120,7 +1120,7 @@ impl ComputeService {
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "nics",
+            "interfaces",
         )
     }
     /// List the pool's shared public addresses
@@ -1177,7 +1177,7 @@ impl ComputeService {
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "attachments",
+            "volumes",
         )
     }
     /// List instances

@@ -1,11 +1,11 @@
 //! Generated typed wire models. Unknown string enum values are retained.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct AttachInstanceNICRequest {
+pub struct AttachInstanceInterfaceRequest {
     /// Existing standalone interface UUID or complete VPC/subnet/interface CRN. Bare names lack the subnet parent and are rejected. It keeps its address, MAC, and security groups; detach returns it to standalone instead of destroying it.
     #[serde(rename = "interface")]
     pub interface: String,
 }
-impl AttachInstanceNICRequest {
+impl AttachInstanceInterfaceRequest {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
     pub fn new(interface: String) -> Self {
@@ -13,39 +13,58 @@ impl AttachInstanceNICRequest {
     }
 }
 
-pub type AttachInstanceNICBody = AttachInstanceNICRequest;
+pub type AttachInstanceInterfaceBody = AttachInstanceInterfaceRequest;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct AttachInstanceNICResult {
-    #[serde(
-        rename = "attachment",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub attachment: Option<AttachInstanceNICResultAttachment>,
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InstanceInterfaceResponse {
+    #[serde(rename = "interface")]
+    pub interface: AttachedInterface,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct AttachInstanceNICResultAttachment {
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AttachedInterface {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Subnet containing this interface.
+    #[serde(rename = "subnet")]
+    pub subnet: ResourceRef,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
     #[serde(
-        rename = "interface_id",
+        rename = "description",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub interface_id: Option<String>,
+    pub description: Option<String>,
 
-    #[serde(rename = "mac", default, skip_serializing_if = "Option::is_none")]
-    pub mac: Option<String>,
+    #[serde(rename = "mac")]
+    pub mac: String,
+    /// Instance holding this interface, including a stopped instance. Null when unbound. Floating IP attachments are tracked separately.
+    #[serde(rename = "attached_to")]
+    pub attached_to: AttachedInterfaceAttachedTo,
 
-    #[serde(
-        rename = "boot_index",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub boot_index: Option<i64>,
-    /// The attached interface existed before this call (interface was given). Detach unbinds it and leaves it standalone rather than destroying it.
-    #[serde(rename = "external", default, skip_serializing_if = "Option::is_none")]
-    pub external: Option<bool>,
+    #[serde(rename = "tags")]
+    pub tags: std::collections::BTreeMap<String, String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+
+    #[serde(rename = "boot_index")]
+    pub boot_index: i64,
+    /// The lowest-boot-index NIC — the one carrying the guest's default and metadata routes.
+    #[serde(rename = "primary")]
+    pub primary: bool,
+    /// A customer-attached standalone interface — detach unbinds it instead of destroying it.
+    #[serde(rename = "external")]
+    pub external: bool,
     /// The guest does not carry the interface yet and a hard reboot is what delivers it — an interface past the first is a network on the instance's launcher, and a launcher's networks are fixed for its lifetime. Set when the instance was running in a region that cannot attach to a running guest. Absent for a stopped instance, which comes up with the device, and absent where the region attaches live, where the running guest is given the device without a restart.
     #[serde(
         rename = "restart_required",
@@ -53,110 +72,28 @@ pub struct AttachInstanceNICResultAttachment {
         skip_serializing_if = "Option::is_none"
     )]
     pub restart_required: Option<bool>,
-
-    #[serde(rename = "addresses", default, skip_serializing_if = "Option::is_none")]
-    pub addresses: Option<Vec<InterfaceAddress>>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InterfaceAddress {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "family")]
-    pub family: InterfaceAddressFamily,
-
-    #[serde(rename = "address")]
-    pub address: String,
-    /// Owned allocation, not the guest netmask: IPv4 /32 or IPv6 /96. DHCPv6 configures the first /128.
-    #[serde(rename = "prefix")]
-    pub prefix: String,
-
-    #[serde(rename = "primary")]
-    pub primary: bool,
-
-    #[serde(rename = "floating_ips")]
-    pub floating_ips: Vec<AddressFloatingIp>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum InterfaceAddressFamily {
-    Ipv4,
-    Ipv6,
-    Unknown(String),
-}
-impl InterfaceAddressFamily {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Ipv4 => "ipv4",
-            Self::Ipv6 => "ipv6",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for InterfaceAddressFamily {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for InterfaceAddressFamily {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "ipv4" => Self::Ipv4,
-            "ipv6" => Self::Ipv6,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct AddressFloatingIp {
+pub struct ResourceRef {
     #[serde(rename = "id")]
     pub id: String,
 
     #[serde(rename = "crn")]
     pub crn: String,
-
-    #[serde(rename = "visibility")]
-    pub visibility: AddressFloatingIpVisibility,
-
-    #[serde(rename = "address")]
-    pub address: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AddressFloatingIpVisibility {
-    Public,
-    Private,
-    Unknown(String),
-}
-impl AddressFloatingIpVisibility {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Public => "public",
-            Self::Private => "private",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for AddressFloatingIpVisibility {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for AddressFloatingIpVisibility {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "public" => Self::Public,
-            "private" => Self::Private,
-            _ => Self::Unknown(value),
-        })
-    }
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum AttachedInterfaceAttachedTo {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
-pub type AttachInstanceNICResponse = AttachInstanceNICResult;
+pub type AttachInstanceInterfaceResponse = InstanceInterfaceResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolFloatingIpAttachRequestInput {
@@ -174,14 +111,10 @@ impl InstancePoolFloatingIpAttachRequestInput {
 
 pub type AttachInstancePoolFloatingIpBody = InstancePoolFloatingIpAttachRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolFloatingIpResponse {
-    #[serde(
-        rename = "floating_ip",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub floating_ip: Option<FloatingIp>,
+    #[serde(rename = "floating_ip")]
+    pub floating_ip: FloatingIp,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -201,12 +134,9 @@ pub struct FloatingIp {
 
     #[serde(rename = "family")]
     pub family: IpFamily,
-    /// Canonical CRN of the bound interface, instance pool, or load balancer; null when unattached. A pool-owned address names its pool even when the pool has zero members. Only pool-owned addresses may have multiple NIC members. Manage their bindings through the instance pool floating IP endpoints; direct attach and detach are refused.
+    /// Instance pool or load balancer that owns the address. Null for direct interface attachments and unattached addresses. An empty pool retains ownership.
     #[serde(rename = "attached_to")]
-    pub attached_to: crate::Nullable<String>,
-    /// The floating IP's bindings. A floating IP fronts 0 members (allocated, unattached), 1 member (the everyday case), or N members for an instance pool — an anycast floating IP, where one public IP is delivered to N VM NICs across hosts (each advertised as a /32 from the host holding it). Members may share a hypervisor. Two of them on one host used to mean one served and the other was silently dark; a member's forwarding rule now names the member, and the host splits connections across the members it holds, so where the members sit is a capacity decision rather than a correctness one. An instance pool's address takes its members from the pool's live replicas — every one of them — so a scale-out joins and a scale-in leaves without a per-replica attach. With more than one member ONE member serves each connection, chosen by hashing the flow's addresses and ports, and every packet of that connection goes to the same one. The members are separate instances that share nothing, so this spreads connections and survives the loss of a host — it is not a load balancer: nothing checks whether the service inside the instance is up, and connections in progress to a member that goes away are not moved, they end. A POOL's address is the exception, and only for booting. A replica joins the address as soon as it is placed, but does not receive traffic until it has reached the instance metadata service — evidence that the guest booted, rather than that its virtual machine was started. Until then it is a member with `health` `unhealthy`. A replica whose image never contacts the metadata service is admitted anyway after a few minutes, so an unusual image delays traffic rather than never getting it.
-    #[serde(rename = "members")]
-    pub members: Vec<FloatingIpMember>,
+    pub attached_to: FloatingIpAttachedTo,
 
     #[serde(rename = "tags")]
     pub tags: std::collections::BTreeMap<String, String>,
@@ -229,17 +159,12 @@ pub struct FloatingIp {
 
     #[serde(rename = "visibility")]
     pub visibility: FloatingIpVisibility,
-    /// Allocation subnet for private floating IPs.
-    #[serde(
-        rename = "subnet_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub subnet_id: Option<crate::Nullable<String>>,
-    /// Allocation VPC for private floating IPs.
-    #[serde(rename = "vpc_id", default, skip_serializing_if = "Option::is_none")]
-    pub vpc_id: Option<String>,
+    /// Allocation subnet for a private floating IP; null for public addresses.
+    #[serde(rename = "subnet")]
+    pub subnet: FloatingIpSubnet,
+    /// Allocation VPC for a private floating IP; null for public addresses.
+    #[serde(rename = "vpc")]
+    pub vpc: FloatingIpVpc,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -274,122 +199,10 @@ impl<'de> serde::Deserialize<'de> for IpFamily {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMember {
-    /// Bound NIC summary; null for a load balancer binding named by attached_to.
-    #[serde(rename = "interface")]
-    pub interface: crate::Nullable<FloatingIpMemberInterfaceValue>,
-    /// What the platform knows about this member. `unknown` — nobody is checking. A member you attached yourself with no health check on the address reads this: you chose the moment of attach, and the platform has no signal about what runs inside the instance. It is advertised. `healthy` — the platform has evidence this member is up (and, if a health check is configured on the address, that the check is passing). `unhealthy` — the platform is waiting for that evidence and has not seen it, or a configured check is failing. The member keeps its place on the address and receives no traffic until it recovers. Without a health check this is liveness only — `healthy` means the guest came up, not that your service is listening. Configure `health_check` on the floating IP to add readiness on top of that.
-    #[serde(rename = "health")]
-    pub health: FloatingIpMemberHealth,
-    /// Why the member reads the `health` it does — so you can tell "your service is not answering" from "the guest has not booted yet". `unprobed` — nobody is checking (no health check, hand-attached). `booting` — the platform has not yet seen the guest come up. `probe_failed` — the configured health check is failing. `passing` — the guest is up and, if a check is configured, it passes.
-    #[serde(rename = "reason")]
-    pub reason: FloatingIpMemberReason,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-    /// Target child address on the member interface.
-    #[serde(
-        rename = "address_id",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub address_id: Option<crate::Nullable<String>>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMemberInterfaceValue {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// Owning instance; null when the interface has no owning instance.
-    #[serde(rename = "instance")]
-    pub instance: crate::Nullable<FloatingIpMemberInterfaceValueInstanceValue>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct FloatingIpMemberInterfaceValueInstanceValue {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-
-    #[serde(rename = "name")]
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpMemberHealth {
-    Unknown1,
-    Healthy,
-    Unhealthy,
-    Unknown(String),
-}
-impl FloatingIpMemberHealth {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Unknown1 => "unknown",
-            Self::Healthy => "healthy",
-            Self::Unhealthy => "unhealthy",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FloatingIpMemberHealth {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FloatingIpMemberHealth {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "unknown" => Self::Unknown1,
-            "healthy" => Self::Healthy,
-            "unhealthy" => Self::Unhealthy,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FloatingIpMemberReason {
-    Unprobed,
-    Booting,
-    ProbeFailed,
-    Passing,
-    Unknown(String),
-}
-impl FloatingIpMemberReason {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Unprobed => "unprobed",
-            Self::Booting => "booting",
-            Self::ProbeFailed => "probe_failed",
-            Self::Passing => "passing",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FloatingIpMemberReason {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FloatingIpMemberReason {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "unprobed" => Self::Unprobed,
-            "booting" => Self::Booting,
-            "probe_failed" => Self::ProbeFailed,
-            "passing" => Self::Passing,
-            _ => Self::Unknown(value),
-        })
-    }
+#[serde(untagged)]
+pub enum FloatingIpAttachedTo {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -485,6 +298,20 @@ impl<'de> serde::Deserialize<'de> for FloatingIpVisibility {
     }
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpSubnet {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum FloatingIpVpc {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
 pub type AttachInstancePoolFloatingIpResponse = InstancePoolFloatingIpResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -552,33 +379,418 @@ impl<'de> serde::Deserialize<'de> for AttachInstanceVolumeRequestFstype {
 
 pub type AttachInstanceVolumeBody = AttachInstanceVolumeRequest;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct AttachInstanceVolumeResult {
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InstanceVolumeResponse {
+    #[serde(rename = "volume")]
+    pub volume: AttachedVolume,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AttachedVolume {
+    #[serde(rename = "id")]
+    pub id: String,
+    /// Cloud Resource Name (name-based, region-scoped).
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
     #[serde(
-        rename = "attachment",
+        rename = "description",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub attachment: Option<AttachInstanceVolumeResultAttachment>,
-}
+    pub description: Option<String>,
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct AttachInstanceVolumeResultAttachment {
+    #[serde(rename = "tags")]
+    pub tags: Tags,
+
+    #[serde(rename = "volume_type")]
+    pub volume_type: VolumeTypeName,
+
+    #[serde(rename = "size_gb")]
+    pub size_gb: i64,
+
+    #[serde(rename = "performance")]
+    pub performance: VolumePerformance,
+
+    #[serde(rename = "included_io_limits")]
+    pub included_io_limits: IncludedIOLimits,
+
+    #[serde(rename = "status")]
+    pub status: VolumeStatus,
+    /// Set at create time when the volume is provisioned from a bootable image. Immutable after creation.
+    #[serde(rename = "bootable")]
+    pub bootable: bool,
+    /// Active faults, newest first. Empty when healthy. Status is error if and only if an active error-severity fault exists. Resolved history is retained internally.
+    #[serde(rename = "faults")]
+    pub faults: Vec<Fault>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+    /// Source image identity, or null when this volume was not created from an image.
+    #[serde(rename = "source_image")]
+    pub source_image: AttachedVolumeSourceImage,
+    /// Source snapshot identity, or null when not created from a snapshot.
+    #[serde(rename = "source_snapshot")]
+    pub source_snapshot: AttachedVolumeSourceSnapshot,
+
+    #[serde(rename = "device")]
+    pub device: String,
+
+    #[serde(rename = "boot_index")]
+    pub boot_index: i64,
+
+    #[serde(rename = "delete_on_termination")]
+    pub delete_on_termination: bool,
+
     #[serde(
-        rename = "instance_id",
+        rename = "mount_path",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub instance_id: Option<String>,
+    pub mount_path: Option<String>,
+    /// Filesystem the in-guest agent formatted the volume with, or absent when the attachment did not name one and the agent used the ext4 default. Every write path — instance create, pool template and attach — refuses anything else, so this is the whole set the field can hold.
+    #[serde(rename = "fstype", default, skip_serializing_if = "Option::is_none")]
+    pub fstype: Option<AttachedVolumeFstype>,
 
-    #[serde(rename = "volume_id", default, skip_serializing_if = "Option::is_none")]
-    pub volume_id: Option<String>,
-
-    #[serde(rename = "device", default, skip_serializing_if = "Option::is_none")]
-    pub device: Option<String>,
+    #[serde(rename = "mount", default, skip_serializing_if = "Option::is_none")]
+    pub mount: Option<VolumeMount>,
 }
 
-pub type AttachInstanceVolumeResponse = AttachInstanceVolumeResult;
+pub type Tags = std::collections::BTreeMap<String, String>;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VolumeTypeName {
+    Hdd,
+    Ssd,
+    Nvme,
+    Unknown(String),
+}
+impl VolumeTypeName {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Hdd => "hdd",
+            Self::Ssd => "ssd",
+            Self::Nvme => "nvme",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for VolumeTypeName {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for VolumeTypeName {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "hdd" => Self::Hdd,
+            "ssd" => Self::Ssd,
+            "nvme" => Self::Nvme,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct VolumePerformance {
+    #[serde(rename = "requested")]
+    pub requested: IncludedIOLimits,
+
+    #[serde(rename = "applied")]
+    pub applied: IncludedIOLimits,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IncludedIOLimits {
+    #[serde(rename = "iops")]
+    pub iops: i64,
+
+    #[serde(rename = "bytes_per_sec")]
+    pub bytes_per_sec: i64,
+    /// Always zero for SSD and NVMe volumes; IOPS bursting is disabled.
+    #[serde(rename = "burst_iops")]
+    pub burst_iops: i64,
+    /// Always zero for SSD and NVMe volumes; throughput bursting is disabled.
+    #[serde(rename = "burst_bytes_per_sec")]
+    pub burst_bytes_per_sec: i64,
+    /// Always zero for SSD and NVMe volumes; no burst duration applies.
+    #[serde(rename = "burst_seconds")]
+    pub burst_seconds: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VolumeStatus {
+    Creating,
+    Available,
+    InUse,
+    Extending,
+    Updating,
+    Deleting,
+    Error,
+    Unknown(String),
+}
+impl VolumeStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Creating => "creating",
+            Self::Available => "available",
+            Self::InUse => "in_use",
+            Self::Extending => "extending",
+            Self::Updating => "updating",
+            Self::Deleting => "deleting",
+            Self::Error => "error",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for VolumeStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for VolumeStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "creating" => Self::Creating,
+            "available" => Self::Available,
+            "in_use" => Self::InUse,
+            "extending" => Self::Extending,
+            "updating" => Self::Updating,
+            "deleting" => Self::Deleting,
+            "error" => Self::Error,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Fault {
+    /// Stable machine-readable code owned by the reporting operation.
+    #[serde(rename = "code")]
+    pub code: String,
+
+    #[serde(rename = "severity")]
+    pub severity: FaultSeverity,
+
+    #[serde(rename = "message")]
+    pub message: String,
+    /// Structured context; legacy strings are preserved in legacy_text.
+    #[serde(rename = "details")]
+    pub details: crate::Nullable<std::collections::BTreeMap<String, serde_json::Value>>,
+    /// First observation in this active occurrence series.
+    #[serde(rename = "first_at")]
+    pub first_at: String,
+    /// Latest observation in this active occurrence series.
+    #[serde(rename = "last_at")]
+    pub last_at: String,
+
+    #[serde(rename = "occurrences")]
+    pub occurrences: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FaultSeverity {
+    Error,
+    Warning,
+    Unknown(String),
+}
+impl FaultSeverity {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Error => "error",
+            Self::Warning => "warning",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FaultSeverity {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FaultSeverity {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "error" => Self::Error,
+            "warning" => Self::Warning,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum AttachedVolumeSourceImage {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum AttachedVolumeSourceSnapshot {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AttachedVolumeFstype {
+    Ext4,
+    Xfs,
+    Unknown(String),
+}
+impl AttachedVolumeFstype {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ext4 => "ext4",
+            Self::Xfs => "xfs",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AttachedVolumeFstype {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AttachedVolumeFstype {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ext4" => Self::Ext4,
+            "xfs" => Self::Xfs,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct VolumeMount {
+    /// - `unknown` — no guest agent has ever reported on this volume. The agent may predate this feature, may have been removed (which is supported), or the guest may never have booted. - `pending` — the agent cannot mount it yet and expects that to change. The ordinary state for the first seconds after an attach, while the hot-plugged disk appears in the guest. - `mounted` — mounted at `mount_path`. May still carry a `code`. - `failed` — it will not mount until something changes. Either the agent reported a refusal that waiting cannot fix, or it has been unable to make progress for long enough that waiting is no longer the explanation. `code` says which.
+    #[serde(rename = "state")]
+    pub state: VolumeMountState,
+    /// Why the volume is in this state. Absent when there is nothing to say. Independent of `state` rather than something only a failure carries: `fstab_write_failed` accompanies a **mounted** volume whose fstab entry could not be written, which works now and will be gone after the next reboot. The commonest one to act on is `signatures_no_filesystem` — the disk carries a partition table or other signatures but no mountable filesystem, so the agent will not format it, because formatting would destroy what is there. A volume cloned from a boot disk and attached with a `mount_path` lands here. Partition and format it inside the guest, or attach it without a `mount_path` and mount it yourself. `unknown_error` is a code this platform does not recognise, reported by a guest agent newer than the region.
+    #[serde(rename = "code", default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<VolumeMountCode>,
+    /// Human-readable detail from inside the guest — the failing command's output, the partition table type it found. Free text originating in the customer's own VM: sanitised and capped, but display it as text, never as markup.
+    #[serde(rename = "message", default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    /// When the volume entered this condition. Absent when `state` is `unknown`.
+    #[serde(rename = "since", default, skip_serializing_if = "Option::is_none")]
+    pub since: Option<String>,
+    /// When the guest agent last reported, whether or not anything had changed. A `reported_at` far in the past means the agent has stopped talking to us, and the state beside it is what it last said rather than what is true now. Absent when `state` is `unknown`.
+    #[serde(
+        rename = "reported_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub reported_at: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VolumeMountState {
+    Unknown1,
+    Pending,
+    Mounted,
+    Failed,
+    Unknown(String),
+}
+impl VolumeMountState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Unknown1 => "unknown",
+            Self::Pending => "pending",
+            Self::Mounted => "mounted",
+            Self::Failed => "failed",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for VolumeMountState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for VolumeMountState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "unknown" => Self::Unknown1,
+            "pending" => Self::Pending,
+            "mounted" => Self::Mounted,
+            "failed" => Self::Failed,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum VolumeMountCode {
+    UnsafeSerial,
+    DeviceAbsent,
+    ProbeFailed,
+    SignaturesNoFilesystem,
+    UnsupportedFstype,
+    MkfsFailed,
+    UnsafeMountPath,
+    MkdirFailed,
+    MountFailed,
+    FstabWriteFailed,
+    UnknownError,
+    Unknown(String),
+}
+impl VolumeMountCode {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::UnsafeSerial => "unsafe_serial",
+            Self::DeviceAbsent => "device_absent",
+            Self::ProbeFailed => "probe_failed",
+            Self::SignaturesNoFilesystem => "signatures_no_filesystem",
+            Self::UnsupportedFstype => "unsupported_fstype",
+            Self::MkfsFailed => "mkfs_failed",
+            Self::UnsafeMountPath => "unsafe_mount_path",
+            Self::MkdirFailed => "mkdir_failed",
+            Self::MountFailed => "mount_failed",
+            Self::FstabWriteFailed => "fstab_write_failed",
+            Self::UnknownError => "unknown_error",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for VolumeMountCode {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for VolumeMountCode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "unsafe_serial" => Self::UnsafeSerial,
+            "device_absent" => Self::DeviceAbsent,
+            "probe_failed" => Self::ProbeFailed,
+            "signatures_no_filesystem" => Self::SignaturesNoFilesystem,
+            "unsupported_fstype" => Self::UnsupportedFstype,
+            "mkfs_failed" => Self::MkfsFailed,
+            "unsafe_mount_path" => Self::UnsafeMountPath,
+            "mkdir_failed" => Self::MkdirFailed,
+            "mount_failed" => Self::MountFailed,
+            "fstab_write_failed" => Self::FstabWriteFailed,
+            "unknown_error" => Self::UnknownError,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type AttachInstanceVolumeResponse = InstanceVolumeResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ImageCreateRequestInput {
@@ -948,64 +1160,6 @@ impl<'de> serde::Deserialize<'de> for ImageDeletionRetentionReason {
         })
     }
 }
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Fault {
-    /// Stable machine-readable code owned by the reporting operation.
-    #[serde(rename = "code")]
-    pub code: String,
-
-    #[serde(rename = "severity")]
-    pub severity: FaultSeverity,
-
-    #[serde(rename = "message")]
-    pub message: String,
-    /// Structured context; legacy strings are preserved in legacy_text.
-    #[serde(rename = "details")]
-    pub details: crate::Nullable<std::collections::BTreeMap<String, serde_json::Value>>,
-    /// First observation in this active occurrence series.
-    #[serde(rename = "first_at")]
-    pub first_at: String,
-    /// Latest observation in this active occurrence series.
-    #[serde(rename = "last_at")]
-    pub last_at: String,
-
-    #[serde(rename = "occurrences")]
-    pub occurrences: i64,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FaultSeverity {
-    Error,
-    Warning,
-    Unknown(String),
-}
-impl FaultSeverity {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Error => "error",
-            Self::Warning => "warning",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FaultSeverity {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FaultSeverity {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "error" => Self::Error,
-            "warning" => Self::Warning,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type Tags = std::collections::BTreeMap<String, String>;
 
 pub type CreateImageResponse = ImageResponse;
 
@@ -1466,22 +1620,22 @@ pub type MetadataInput = std::collections::BTreeMap<String, String>;
 
 pub type CreateInstanceBody = InstanceCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct CreateInstanceResult {
-    #[serde(rename = "instance", default, skip_serializing_if = "Option::is_none")]
-    pub instance: Option<Instance>,
+    #[serde(rename = "instance")]
+    pub instance: Instance,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Instance {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
     /// Cloud Resource Name
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
+    #[serde(rename = "crn")]
+    pub crn: String,
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(rename = "name")]
+    pub name: String,
 
     #[serde(
         rename = "description",
@@ -1497,18 +1651,18 @@ pub struct Instance {
         deserialize_with = "crate::response::present_nullable"
     )]
     pub task_state: Option<crate::Nullable<String>>,
-    /// Resolved flavor (compute size) the instance runs on. Omitted if the referenced flavor row has been retired.
-    #[serde(rename = "flavor", default, skip_serializing_if = "Option::is_none")]
-    pub flavor: Option<Flavor>,
-    /// Resolved source image the instance booted from. Omitted for a volume-only boot or if the referenced image row is gone.
-    #[serde(rename = "image", default, skip_serializing_if = "Option::is_none")]
-    pub image: Option<Image>,
+    /// Flavor identity. Every instance has a flavor; query the flavor resource for CPU and RAM.
+    #[serde(rename = "flavor")]
+    pub flavor: ResourceRef,
+    /// Pinned source image identity, or null for a volume-only boot.
+    #[serde(rename = "image")]
+    pub image: InstanceImage,
     /// Base64-encoded cloud-init user-data supplied at launch.
     #[serde(rename = "user_data", default, skip_serializing_if = "Option::is_none")]
     pub user_data: Option<String>,
-    /// Summary of the attached IAM role, visible with instance read access without iam:GetRole. Omitted when no role is attached, the role was deleted, or it belongs to another account. Sensitive role fields remain available only through the IAM API.
-    #[serde(rename = "iam_role", default, skip_serializing_if = "Option::is_none")]
-    pub iam_role: Option<InstanceRole>,
+    /// Attached IAM role identity, or null when no role is attached. Deleted roles retain their identity without name.
+    #[serde(rename = "iam_role")]
+    pub iam_role: InstanceIamRole,
 
     #[serde(rename = "metadata", default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
@@ -1519,19 +1673,11 @@ pub struct Instance {
     #[serde(rename = "faults")]
     pub faults: Vec<Fault>,
 
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
+    #[serde(rename = "created_at")]
+    pub created_at: String,
 
-    #[serde(
-        rename = "updated_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub updated_at: Option<String>,
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
 
     #[serde(
         rename = "launched_at",
@@ -1549,192 +1695,25 @@ pub struct Instance {
     )]
     pub terminated_at: Option<crate::Nullable<String>>,
     /// What was asked for. Only three values, because there are only three things you can ask an instance to be: Create/Start/Reboot ask for running, Stop for stopped, Delete for deleted.
-    #[serde(
-        rename = "desired_state",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub desired_state: Option<InstanceDesiredState>,
+    #[serde(rename = "desired_state")]
+    pub desired_state: InstanceDesiredState,
     /// Where the instance actually is. Read this one to answer "is it up" — the transitional states live here, not on desired_state, because nobody asks for `stopping`. desired_state=running with current_state=stopped is an instance that was asked to start and has not come up yet.
-    #[serde(
-        rename = "current_state",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub current_state: Option<CurrentState>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct Flavor {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    /// Cloud Resource Name
-    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
-    pub crn: Option<String>,
-    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-    /// Number of virtual CPUs
-    #[serde(rename = "vcpus", default, skip_serializing_if = "Option::is_none")]
-    pub vcpus: Option<i64>,
-    /// RAM in MB
-    #[serde(rename = "ram_mb", default, skip_serializing_if = "Option::is_none")]
-    pub ram_mb: Option<i64>,
-    /// Host-pool routing. "shared" oversubscribes CPU for higher density; "dedicated" pins each vCPU 1:1 to a physical core.
-    #[serde(rename = "class", default, skip_serializing_if = "Option::is_none")]
-    pub class: Option<FlavorClass>,
-    /// Which product can book the flavor. "general" flavors are for regular instances and instance pools; "loadbalancer" and "database" flavors are reserved for the managed products (their nodes are platform- operated and priced accordingly) and cannot be used for regular instances.
-    #[serde(rename = "family", default, skip_serializing_if = "Option::is_none")]
-    pub family: Option<FlavorFamily>,
-    /// Aggregate instance network throughput limit in megabits per second. Omitted when uncapped.
-    #[serde(rename = "net_mbps", default, skip_serializing_if = "Option::is_none")]
-    pub net_mbps: Option<i64>,
-    /// Guaranteed CPU floor as a percentage of each vCPU. Omitted when no floor is guaranteed.
-    #[serde(
-        rename = "cpu_baseline_pct",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub cpu_baseline_pct: Option<i64>,
-    /// CPU ceiling as a percentage of each vCPU. A value of 100 or an omitted field allows the full vCPU count.
-    #[serde(
-        rename = "cpu_burst_pct",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub cpu_burst_pct: Option<i64>,
-
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<FlavorStatus>,
-
-    #[serde(
-        rename = "created_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub created_at: Option<String>,
-
-    #[serde(
-        rename = "updated_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub updated_at: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FlavorClass {
-    Shared,
-    Dedicated,
-    Unknown(String),
-}
-impl FlavorClass {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Shared => "shared",
-            Self::Dedicated => "dedicated",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FlavorClass {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FlavorClass {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "shared" => Self::Shared,
-            "dedicated" => Self::Dedicated,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FlavorFamily {
-    General,
-    Loadbalancer,
-    Database,
-    Unknown(String),
-}
-impl FlavorFamily {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::General => "general",
-            Self::Loadbalancer => "loadbalancer",
-            Self::Database => "database",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FlavorFamily {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FlavorFamily {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "general" => Self::General,
-            "loadbalancer" => Self::Loadbalancer,
-            "database" => Self::Database,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FlavorStatus {
-    Active,
-    Disabled,
-    Unknown(String),
-}
-impl FlavorStatus {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Active => "active",
-            Self::Disabled => "disabled",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for FlavorStatus {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for FlavorStatus {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "active" => Self::Active,
-            "disabled" => Self::Disabled,
-            _ => Self::Unknown(value),
-        })
-    }
+    #[serde(rename = "current_state")]
+    pub current_state: CurrentState,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct InstanceRole {
-    #[serde(rename = "id")]
-    pub id: String,
-    /// Account-scoped role identity, as used in policy documents.
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// Immutable role name.
-    #[serde(rename = "name")]
-    pub name: String,
+#[serde(untagged)]
+pub enum InstanceImage {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum InstanceIamRole {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 pub type Metadata = std::collections::BTreeMap<String, String>;
@@ -1841,6 +1820,10 @@ pub type CreateInstanceResponse = CreateInstanceResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolCreateRequestInput {
+    /// Subnet UUIDs or CRNs in the same VPC.
+    #[serde(rename = "subnets")]
+    pub subnets: Vec<String>,
+
     #[serde(
         rename = "autoscaling",
         default,
@@ -1880,8 +1863,13 @@ pub struct InstancePoolCreateRequestInput {
 impl InstancePoolCreateRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(name: String, template: InstancePoolTemplateRequestInput) -> Self {
+    pub fn new(
+        subnets: Vec<String>,
+        name: String,
+        template: InstancePoolTemplateRequestInput,
+    ) -> Self {
         Self {
+            subnets,
             autoscaling: None,
             name,
             description: None,
@@ -2184,9 +2172,23 @@ pub struct InstancePoolTemplateRequestInput {
     /// Image to clone each replica's boot disk from. Accepts the same four forms instance create does: an architecture-qualified CRN, an image id, `name:version`, or a bare `name`. Unlike instance create, the reference is resolved ONCE, when the pool is created, and the resulting image id is what every replica boots — including replacements spawned months later. A tag re-resolved per replica would let a heal boot a newer build than its siblings, and a pool whose members are quietly not identical is the premise of the primitive breaking silently. To move a pool to a new build, change the template.
     #[serde(rename = "image", default, skip_serializing_if = "Option::is_none")]
     pub image: Option<String>,
-    /// Per-replica interfaces. Index 0 is the primary NIC and is required; the rest are extras.
-    #[serde(rename = "networks")]
-    pub networks: Vec<NetworkConfigInput>,
+    /// Address families allocated per member; fixed addresses are not allowed.
+    #[serde(rename = "addresses", default, skip_serializing_if = "Option::is_none")]
+    pub addresses: Option<Vec<AddressRequestInput>>,
+    /// Security group selectors applied to every member interface.
+    #[serde(
+        rename = "security_groups",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub security_groups: Option<Vec<String>>,
+    /// Per-member public floating IP assignment. Explicit families require addresses and internet routes in every selected subnet.
+    #[serde(
+        rename = "floating_ip_assignment",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub floating_ip_assignment: Option<InstancePoolTemplateRequestInputFloatingIpAssignment>,
     /// Base64-encoded user data (cloud-init), stamped on every replica.
     #[serde(rename = "user_data", default, skip_serializing_if = "Option::is_none")]
     pub user_data: Option<String>,
@@ -2206,18 +2208,60 @@ pub struct InstancePoolTemplateRequestInput {
 impl InstancePoolTemplateRequestInput {
     /// Set the required fields; optional fields start omitted.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(flavor: String, networks: Vec<NetworkConfigInput>) -> Self {
+    pub fn new(flavor: String) -> Self {
         Self {
             flavor,
             architecture: None,
             image: None,
-            networks,
+            addresses: None,
+            security_groups: None,
+            floating_ip_assignment: None,
             user_data: None,
             metadata: None,
             tags: None,
             iam_role: None,
             volumes: None,
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InstancePoolTemplateRequestInputFloatingIpAssignment {
+    None,
+    Ipv4,
+    Ipv6,
+    DualStack,
+    Auto,
+    Unknown(String),
+}
+impl InstancePoolTemplateRequestInputFloatingIpAssignment {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::None => "none",
+            Self::Ipv4 => "ipv4",
+            Self::Ipv6 => "ipv6",
+            Self::DualStack => "dual_stack",
+            Self::Auto => "auto",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for InstancePoolTemplateRequestInputFloatingIpAssignment {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for InstancePoolTemplateRequestInputFloatingIpAssignment {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "none" => Self::None,
+            "ipv4" => Self::Ipv4,
+            "ipv6" => Self::Ipv6,
+            "dual_stack" => Self::DualStack,
+            "auto" => Self::Auto,
+            _ => Self::Unknown(value),
+        })
     }
 }
 
@@ -2279,18 +2323,21 @@ impl InstanceVolumeInput {
 
 pub type CreateInstancePoolBody = InstancePoolCreateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolResponse {
-    #[serde(
-        rename = "instance_pool",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub instance_pool: Option<InstancePool>,
+    #[serde(rename = "instance_pool")]
+    pub instance_pool: InstancePool,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePool {
+    /// Eligible placement subnets in the same account, region and VPC.
+    #[serde(rename = "subnets")]
+    pub subnets: Vec<ResourceRef>,
+
+    #[serde(rename = "vpc")]
+    pub vpc: InstancePoolVpc,
+
     #[serde(
         rename = "autoscaling",
         default,
@@ -2394,6 +2441,13 @@ pub struct InstancePool {
     /// The pool's launch config, in the shape instance create takes. The only place it appears: a flat copy of it beside this was two spellings of one thing, and two spellings drift.
     #[serde(rename = "template", default, skip_serializing_if = "Option::is_none")]
     pub template: Option<InstancePoolTemplate>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum InstancePoolVpc {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -2792,16 +2846,17 @@ impl<'de> serde::Deserialize<'de> for InstancePoolStatus {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolTemplate {
-    #[serde(rename = "flavor_id", default, skip_serializing_if = "Option::is_none")]
-    pub flavor_id: Option<String>,
-    /// Resolved image UUID pinned for every replica until template replacement.
-    #[serde(rename = "image_id", default, skip_serializing_if = "Option::is_none")]
-    pub image_id: Option<String>,
-    /// Per-replica interfaces. Index 0 is the primary NIC and is required; the rest are extras.
-    #[serde(rename = "networks", default, skip_serializing_if = "Option::is_none")]
-    pub networks: Option<Vec<NetworkConfigResponse>>,
+    /// Address families allocated on the member's sole interface. Fixed addresses are not allowed.
+    #[serde(rename = "addresses", default, skip_serializing_if = "Option::is_none")]
+    pub addresses: Option<Vec<AddressRequest>>,
+
+    #[serde(rename = "security_groups")]
+    pub security_groups: Vec<ResourceRef>,
+    /// Per-member public floating IP assignment. Explicit families require addresses and internet routes in every selected subnet.
+    #[serde(rename = "floating_ip_assignment")]
+    pub floating_ip_assignment: InstancePoolTemplateFloatingIpAssignment,
     /// Base64-encoded user data (cloud-init), stamped on every replica.
     #[serde(rename = "user_data", default, skip_serializing_if = "Option::is_none")]
     pub user_data: Option<String>,
@@ -2811,195 +2866,18 @@ pub struct InstancePoolTemplate {
     /// Tags stamped on every instance this template launches. These are the replicas' tags, not the pool's — the pool's own labels are the top-level `tags`, and the two are independent. Changing them affects FUTURE launches only. The instances already running keep the tags they were launched with, so between the change and a refresh the pool holds members carrying two different tag sets; `stale_instance_count` is how many are still on the old one. POST /v1/instance-pools/{pool_id}/refresh rolls them onto the current template.
     #[serde(rename = "tags", default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Tags>,
-    /// Summary of the IAM role attached to every replica, visible with pool read access without iam:GetRole. Omitted when no role is attached, the role was deleted, or it belongs to another account. Sensitive role fields remain available only through the IAM API.
-    #[serde(rename = "iam_role", default, skip_serializing_if = "Option::is_none")]
-    pub iam_role: Option<InstanceRole>,
+    /// Role assigned to replicas, or null when none is configured.
+    #[serde(rename = "iam_role")]
+    pub iam_role: InstancePoolTemplateIamRole,
     /// Per-replica disks, the boot disk included — mark it with `boot: true`. Each new replica receives the configured provisioned performance. Omitted performance uses the included allowance. Existing volumes and snapshot schedules are not supported in pool templates.
     #[serde(rename = "volumes", default, skip_serializing_if = "Option::is_none")]
     pub volumes: Option<Vec<InstanceVolume>>,
-}
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct NetworkConfigResponse {
-    /// Subnet placement; null when the referenced subnet no longer exists.
-    #[serde(rename = "subnet")]
-    pub subnet: NetworkConfigResponseSubnet,
-    /// Optional MAC address. Must be locally-administered (`X2:`, `X6:`, `XA:`, `XE:` in the first octet). Generated when omitted.
-    #[serde(rename = "mac", default, skip_serializing_if = "Option::is_none")]
-    pub mac: Option<String>,
-    /// Account-scoped security group references (UUID, CRN or name) to attach to this NIC. Each must be owned by the same account. Empty list = no per-NIC ACLs (the platform's default-allow stays in force).
-    #[serde(
-        rename = "security_group_ids",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub security_group_ids: Option<Vec<String>>,
-    /// Allocate public floating IPs for this NIC at launch. Explicit families require matching guest addresses and internet routes. Detach leaves the FIP reserved. No ordinary public IPv4 mapping exists.
-    #[serde(
-        rename = "floating_ip_assignment",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub floating_ip_assignment: Option<NetworkConfigResponseFloatingIpAssignment>,
-
-    #[serde(rename = "addresses", default, skip_serializing_if = "Option::is_none")]
-    pub addresses: Option<Vec<AddressRequest>>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(untagged)]
-pub enum NetworkConfigResponseSubnet {
-    Variant1(Box<Subnet>),
-    Variant2(Box<crate::Nullable<serde_json::Value>>),
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Subnet {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-
-    #[serde(rename = "vpc")]
-    pub vpc: Vpc,
-
-    #[serde(rename = "route_table")]
-    pub route_table: RouteTableSummary,
-    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-
-    #[serde(rename = "cidr_ipv4")]
-    pub cidr_ipv4: String,
-
-    #[serde(rename = "gateway_ipv4")]
-    pub gateway_ipv4: String,
-    /// The dual-stack IPv6 /64, if the subnet is v6-enabled. Its presence (vs the v4 cidr_ipv4) is how a client tells the subnet's families apart.
-    #[serde(
-        rename = "cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub cidr_ipv6: Option<crate::Nullable<String>>,
-
-    #[serde(
-        rename = "gateway_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub gateway_ipv6: Option<crate::Nullable<String>>,
-
-    #[serde(rename = "tags")]
-    pub tags: std::collections::BTreeMap<String, String>,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-
-    #[serde(rename = "updated_at")]
-    pub updated_at: String,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Vpc {
-    #[serde(rename = "id")]
-    pub id: String,
-    /// Cloud Resource Name (name-based, region+account-scoped).
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// 1-63 chars, lowercase alphanumeric + hyphen Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
-    #[serde(rename = "name")]
-    pub name: String,
-
-    #[serde(
-        rename = "description",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub description: Option<String>,
-    /// IPv4 CIDR block carved up by subnets. Must be private (RFC 1918): within 10.0.0.0/8, 172.16.0.0/12 or 192.168.0.0/16. Immutable after create.
-    #[serde(rename = "cidr_ipv4")]
-    pub cidr_ipv4: String,
-    /// Associated regional GUA or private ULA prefix.
-    #[serde(
-        rename = "cidr_ipv6",
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::response::present_nullable"
-    )]
-    pub cidr_ipv6: Option<crate::Nullable<String>>,
-
-    #[serde(rename = "tags")]
-    pub tags: std::collections::BTreeMap<String, String>,
-
-    #[serde(rename = "created_at")]
-    pub created_at: String,
-
-    #[serde(rename = "updated_at")]
-    pub updated_at: String,
-}
-
-pub type RouteTableSummary = crate::Nullable<RouteTableSummaryValue>;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct RouteTableSummaryValue {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "crn")]
-    pub crn: String,
-
-    #[serde(rename = "name")]
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NetworkConfigResponseFloatingIpAssignment {
-    None,
-    Ipv4,
-    Ipv6,
-    DualStack,
-    Auto,
-    Unknown(String),
-}
-impl NetworkConfigResponseFloatingIpAssignment {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::None => "none",
-            Self::Ipv4 => "ipv4",
-            Self::Ipv6 => "ipv6",
-            Self::DualStack => "dual_stack",
-            Self::Auto => "auto",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for NetworkConfigResponseFloatingIpAssignment {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for NetworkConfigResponseFloatingIpAssignment {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "none" => Self::None,
-            "ipv4" => Self::Ipv4,
-            "ipv6" => Self::Ipv6,
-            "dual_stack" => Self::DualStack,
-            "auto" => Self::Auto,
-            _ => Self::Unknown(value),
-        })
-    }
+    #[serde(rename = "flavor")]
+    pub flavor: ResourceRef,
+    /// Source image pinned until the template is replaced, or null when no image is selected.
+    #[serde(rename = "image")]
+    pub image: InstancePoolTemplateImage,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -3040,6 +2918,53 @@ impl<'de> serde::Deserialize<'de> for AddressRequestFamily {
             _ => Self::Unknown(value),
         })
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InstancePoolTemplateFloatingIpAssignment {
+    None,
+    Ipv4,
+    Ipv6,
+    DualStack,
+    Auto,
+    Unknown(String),
+}
+impl InstancePoolTemplateFloatingIpAssignment {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::None => "none",
+            Self::Ipv4 => "ipv4",
+            Self::Ipv6 => "ipv6",
+            Self::DualStack => "dual_stack",
+            Self::Auto => "auto",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for InstancePoolTemplateFloatingIpAssignment {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for InstancePoolTemplateFloatingIpAssignment {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "none" => Self::None,
+            "ipv4" => Self::Ipv4,
+            "ipv6" => Self::Ipv6,
+            "dual_stack" => Self::DualStack,
+            "auto" => Self::Auto,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum InstancePoolTemplateIamRole {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -3096,6 +3021,13 @@ pub struct VolumePerformanceRequest {
     pub throughput_mib_s: Option<f64>,
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum InstancePoolTemplateImage {
+    Variant1(Box<ResourceRef>),
+    Variant2(Box<crate::Nullable<serde_json::Value>>),
+}
+
 pub type CreateInstancePoolResponse = InstancePoolResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -3135,10 +3067,157 @@ pub struct GetConsoleOutputResult {
 
 pub type GetConsoleOutputResponse = GetConsoleOutputResult;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct GetFlavorResult {
-    #[serde(rename = "flavor", default, skip_serializing_if = "Option::is_none")]
-    pub flavor: Option<Flavor>,
+    #[serde(rename = "flavor")]
+    pub flavor: Flavor,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Flavor {
+    #[serde(rename = "id")]
+    pub id: String,
+    /// Cloud Resource Name
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub description: Option<String>,
+    /// Number of virtual CPUs
+    #[serde(rename = "vcpus")]
+    pub vcpus: i64,
+    /// RAM in MB
+    #[serde(rename = "ram_mb")]
+    pub ram_mb: i64,
+    /// Host-pool routing. "shared" oversubscribes CPU for higher density; "dedicated" pins each vCPU 1:1 to a physical core.
+    #[serde(rename = "class")]
+    pub class: FlavorClass,
+    /// Which product can book the flavor. "general" flavors are for regular instances and instance pools; "loadbalancer" and "database" flavors are reserved for the managed products (their nodes are platform- operated and priced accordingly) and cannot be used for regular instances.
+    #[serde(rename = "family")]
+    pub family: FlavorFamily,
+    /// Aggregate instance network throughput limit in megabits per second. Omitted when uncapped.
+    #[serde(rename = "net_mbps", default, skip_serializing_if = "Option::is_none")]
+    pub net_mbps: Option<i64>,
+    /// Guaranteed CPU floor as a percentage of each vCPU. Omitted when no floor is guaranteed.
+    #[serde(
+        rename = "cpu_baseline_pct",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cpu_baseline_pct: Option<i64>,
+    /// CPU ceiling as a percentage of each vCPU. A value of 100 or an omitted field allows the full vCPU count.
+    #[serde(
+        rename = "cpu_burst_pct",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub cpu_burst_pct: Option<i64>,
+    /// Active when capacity can currently place this flavor; unavailable when no capacity is available. Disabled flavors are excluded from the public catalog.
+    #[serde(rename = "status")]
+    pub status: FlavorStatus,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FlavorClass {
+    Shared,
+    Dedicated,
+    Unknown(String),
+}
+impl FlavorClass {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Shared => "shared",
+            Self::Dedicated => "dedicated",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FlavorClass {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FlavorClass {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "shared" => Self::Shared,
+            "dedicated" => Self::Dedicated,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FlavorFamily {
+    General,
+    Loadbalancer,
+    Database,
+    Unknown(String),
+}
+impl FlavorFamily {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::General => "general",
+            Self::Loadbalancer => "loadbalancer",
+            Self::Database => "database",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FlavorFamily {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FlavorFamily {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "general" => Self::General,
+            "loadbalancer" => Self::Loadbalancer,
+            "database" => Self::Database,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FlavorStatus {
+    Active,
+    Unavailable,
+    Unknown(String),
+}
+impl FlavorStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Active => "active",
+            Self::Unavailable => "unavailable",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for FlavorStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for FlavorStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "active" => Self::Active,
+            "unavailable" => Self::Unavailable,
+            _ => Self::Unknown(value),
+        })
+    }
 }
 
 pub type GetFlavorResponse = GetFlavorResult;
@@ -3258,10 +3337,10 @@ impl<'de> serde::Deserialize<'de> for GetImageScopeStatus {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct GetInstanceResult {
-    #[serde(rename = "instance", default, skip_serializing_if = "Option::is_none")]
-    pub instance: Option<Instance>,
+    #[serde(rename = "instance")]
+    pub instance: Instance,
 }
 
 pub type GetInstanceResponse = GetInstanceResult;
@@ -3409,10 +3488,29 @@ impl<'de> serde::Deserialize<'de> for ListFlavorsParametersFamily {
 
 pub type ListFlavorsQuery = ListFlavorsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct FlavorListResponse {
-    #[serde(rename = "flavors", default, skip_serializing_if = "Option::is_none")]
-    pub flavors: Option<Vec<Flavor>>,
+    #[serde(rename = "flavors")]
+    pub flavors: Vec<Flavor>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct PaginationMeta {
+    /// Total number of items
+    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+    /// Number of items per page
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+    /// Whether there are more items
+    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
+    pub has_more: Option<bool>,
 }
 
 pub type ListFlavorsResponse = FlavorListResponse;
@@ -3494,22 +3592,6 @@ pub struct CatalogImage {
 
     #[serde(rename = "eol_date", default, skip_serializing_if = "Option::is_none")]
     pub eol_date: Option<String>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PaginationMeta {
-    /// Total number of items
-    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
-    pub total: Option<i64>,
-    /// Number of items per page
-    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
-    pub limit: Option<i64>,
-    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
-    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
-    pub marker: Option<String>,
-    /// Whether there are more items
-    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
-    pub has_more: Option<bool>,
 }
 
 pub type ListImageCatalogResponse = ImageCatalogResponse;
@@ -3610,7 +3692,7 @@ pub type ListImagesResponse = ImageListResponse;
 pub type ListImagesItem = Image;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListInstanceNICsParameters {
+pub struct ListInstanceInterfacesParameters {
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
@@ -3618,134 +3700,20 @@ pub struct ListInstanceNICsParameters {
     pub crn: Option<String>,
 }
 
-pub type ListInstanceNICsQuery = ListInstanceNICsParameters;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListInstanceNICsResult {
-    #[serde(rename = "nics", default, skip_serializing_if = "Option::is_none")]
-    pub nics: Option<Vec<ListInstanceNICsResultNicsItem>>,
-}
+pub type ListInstanceInterfacesQuery = ListInstanceInterfacesParameters;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ListInstanceNICsResultNicsItem {
-    #[serde(rename = "interface_id")]
-    pub interface_id: String,
+pub struct InstanceInterfaceListResponse {
+    #[serde(rename = "interfaces")]
+    pub interfaces: Vec<AttachedInterface>,
 
-    #[serde(rename = "boot_index")]
-    pub boot_index: i64,
-    /// The lowest-boot-index NIC — the one carrying the guest's default and metadata routes.
-    #[serde(rename = "primary")]
-    pub primary: bool,
-    /// A customer-attached standalone interface — detach unbinds it instead of destroying it.
-    #[serde(rename = "external")]
-    pub external: bool,
-
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(rename = "mac", default, skip_serializing_if = "Option::is_none")]
-    pub mac: Option<String>,
-    /// Subnet placement; null when the referenced subnet no longer exists.
-    #[serde(rename = "subnet")]
-    pub subnet: ListInstanceNICsResultNicsItemSubnet,
-
-    #[serde(rename = "addresses")]
-    pub addresses: Vec<InterfaceAddress>,
-
-    #[serde(rename = "routed_prefixes")]
-    pub routed_prefixes: Vec<RoutedPrefix>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(untagged)]
-pub enum ListInstanceNICsResultNicsItemSubnet {
-    Variant1(Box<Subnet>),
-    Variant2(Box<crate::Nullable<serde_json::Value>>),
-}
+pub type ListInstanceInterfacesResponse = InstanceInterfaceListResponse;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct RoutedPrefix {
-    #[serde(rename = "id")]
-    pub id: String,
-
-    #[serde(rename = "pool_id")]
-    pub pool_id: String,
-
-    #[serde(rename = "family")]
-    pub family: RoutedPrefixFamily,
-    /// A routed /28 from a VPC prefix pool.
-    #[serde(rename = "prefix")]
-    pub prefix: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RoutedPrefixFamily {
-    Ipv4,
-    Unknown(String),
-}
-impl RoutedPrefixFamily {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Ipv4 => "ipv4",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for RoutedPrefixFamily {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for RoutedPrefixFamily {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "ipv4" => Self::Ipv4,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type ListInstanceNICsResponse = ListInstanceNICsResult;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ListInstanceNICsEntry {
-    #[serde(rename = "interface_id")]
-    pub interface_id: String,
-
-    #[serde(rename = "boot_index")]
-    pub boot_index: i64,
-    /// The lowest-boot-index NIC — the one carrying the guest's default and metadata routes.
-    #[serde(rename = "primary")]
-    pub primary: bool,
-    /// A customer-attached standalone interface — detach unbinds it instead of destroying it.
-    #[serde(rename = "external")]
-    pub external: bool,
-
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(rename = "mac", default, skip_serializing_if = "Option::is_none")]
-    pub mac: Option<String>,
-    /// Subnet placement; null when the referenced subnet no longer exists.
-    #[serde(rename = "subnet")]
-    pub subnet: ListInstanceNICsEntrySubnet,
-
-    #[serde(rename = "addresses")]
-    pub addresses: Vec<InterfaceAddress>,
-
-    #[serde(rename = "routed_prefixes")]
-    pub routed_prefixes: Vec<RoutedPrefix>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(untagged)]
-pub enum ListInstanceNICsEntrySubnet {
-    Variant1(Box<Subnet>),
-    Variant2(Box<crate::Nullable<serde_json::Value>>),
-}
-
-pub type ListInstanceNICsItem = ListInstanceNICsEntry;
+pub type ListInstanceInterfacesItem = AttachedInterface;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListInstancePoolFloatingIpsParameters {
@@ -3794,17 +3762,13 @@ pub struct ListInstancePoolsParameters {
 
 pub type ListInstancePoolsQuery = ListInstancePoolsParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstancePoolListResponse {
-    #[serde(
-        rename = "instance_pools",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub instance_pools: Option<Vec<InstancePool>>,
+    #[serde(rename = "instance_pools")]
+    pub instance_pools: Vec<InstancePool>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListInstancePoolsResponse = InstancePoolListResponse;
@@ -3822,309 +3786,18 @@ pub struct ListInstanceVolumesParameters {
 
 pub type ListInstanceVolumesQuery = ListInstanceVolumesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListInstanceVolumesResult {
-    #[serde(
-        rename = "attachments",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub attachments: Option<Vec<ListInstanceVolumesResultAttachmentsItem>>,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListInstanceVolumesResultAttachmentsItem {
-    #[serde(rename = "volume_id", default, skip_serializing_if = "Option::is_none")]
-    pub volume_id: Option<String>,
-
-    #[serde(rename = "device", default, skip_serializing_if = "Option::is_none")]
-    pub device: Option<String>,
-
-    #[serde(
-        rename = "boot_index",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub boot_index: Option<i64>,
-
-    #[serde(
-        rename = "delete_on_termination",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub delete_on_termination: Option<bool>,
-
-    #[serde(
-        rename = "mount_path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub mount_path: Option<String>,
-    /// Filesystem the in-guest agent formatted the volume with, or absent when the attachment did not name one and the agent used the ext4 default. Every write path — instance create, pool template and attach — refuses anything else, so this is the whole set the field can hold.
-    #[serde(rename = "fstype", default, skip_serializing_if = "Option::is_none")]
-    pub fstype: Option<ListInstanceVolumesResultAttachmentsItemFstype>,
-
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(
-        rename = "volume_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub volume_type: Option<String>,
-
-    #[serde(rename = "size_gb", default, skip_serializing_if = "Option::is_none")]
-    pub size_gb: Option<i64>,
-
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-
-    #[serde(rename = "bootable", default, skip_serializing_if = "Option::is_none")]
-    pub bootable: Option<bool>,
-
-    #[serde(rename = "mount", default, skip_serializing_if = "Option::is_none")]
-    pub mount: Option<VolumeMount>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ListInstanceVolumesResultAttachmentsItemFstype {
-    Ext4,
-    Xfs,
-    Unknown(String),
-}
-impl ListInstanceVolumesResultAttachmentsItemFstype {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Ext4 => "ext4",
-            Self::Xfs => "xfs",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for ListInstanceVolumesResultAttachmentsItemFstype {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for ListInstanceVolumesResultAttachmentsItemFstype {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "ext4" => Self::Ext4,
-            "xfs" => Self::Xfs,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct VolumeMount {
-    /// - `unknown` — no guest agent has ever reported on this volume. The agent may predate this feature, may have been removed (which is supported), or the guest may never have booted. - `pending` — the agent cannot mount it yet and expects that to change. The ordinary state for the first seconds after an attach, while the hot-plugged disk appears in the guest. - `mounted` — mounted at `mount_path`. May still carry a `code`. - `failed` — it will not mount until something changes. Either the agent reported a refusal that waiting cannot fix, or it has been unable to make progress for long enough that waiting is no longer the explanation. `code` says which.
-    #[serde(rename = "state")]
-    pub state: VolumeMountState,
-    /// Why the volume is in this state. Absent when there is nothing to say. Independent of `state` rather than something only a failure carries: `fstab_write_failed` accompanies a **mounted** volume whose fstab entry could not be written, which works now and will be gone after the next reboot. The commonest one to act on is `signatures_no_filesystem` — the disk carries a partition table or other signatures but no mountable filesystem, so the agent will not format it, because formatting would destroy what is there. A volume cloned from a boot disk and attached with a `mount_path` lands here. Partition and format it inside the guest, or attach it without a `mount_path` and mount it yourself. `unknown_error` is a code this platform does not recognise, reported by a guest agent newer than the region.
-    #[serde(rename = "code", default, skip_serializing_if = "Option::is_none")]
-    pub code: Option<VolumeMountCode>,
-    /// Human-readable detail from inside the guest — the failing command's output, the partition table type it found. Free text originating in the customer's own VM: sanitised and capped, but display it as text, never as markup.
-    #[serde(rename = "message", default, skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
-    /// When the volume entered this condition. Absent when `state` is `unknown`.
-    #[serde(rename = "since", default, skip_serializing_if = "Option::is_none")]
-    pub since: Option<String>,
-    /// When the guest agent last reported, whether or not anything had changed. A `reported_at` far in the past means the agent has stopped talking to us, and the state beside it is what it last said rather than what is true now. Absent when `state` is `unknown`.
-    #[serde(
-        rename = "reported_at",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub reported_at: Option<String>,
+pub struct InstanceVolumeListResponse {
+    #[serde(rename = "volumes")]
+    pub volumes: Vec<AttachedVolume>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VolumeMountState {
-    Unknown1,
-    Pending,
-    Mounted,
-    Failed,
-    Unknown(String),
-}
-impl VolumeMountState {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Unknown1 => "unknown",
-            Self::Pending => "pending",
-            Self::Mounted => "mounted",
-            Self::Failed => "failed",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for VolumeMountState {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for VolumeMountState {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "unknown" => Self::Unknown1,
-            "pending" => Self::Pending,
-            "mounted" => Self::Mounted,
-            "failed" => Self::Failed,
-            _ => Self::Unknown(value),
-        })
-    }
-}
+pub type ListInstanceVolumesResponse = InstanceVolumeListResponse;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VolumeMountCode {
-    UnsafeSerial,
-    DeviceAbsent,
-    ProbeFailed,
-    SignaturesNoFilesystem,
-    UnsupportedFstype,
-    MkfsFailed,
-    UnsafeMountPath,
-    MkdirFailed,
-    MountFailed,
-    FstabWriteFailed,
-    UnknownError,
-    Unknown(String),
-}
-impl VolumeMountCode {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::UnsafeSerial => "unsafe_serial",
-            Self::DeviceAbsent => "device_absent",
-            Self::ProbeFailed => "probe_failed",
-            Self::SignaturesNoFilesystem => "signatures_no_filesystem",
-            Self::UnsupportedFstype => "unsupported_fstype",
-            Self::MkfsFailed => "mkfs_failed",
-            Self::UnsafeMountPath => "unsafe_mount_path",
-            Self::MkdirFailed => "mkdir_failed",
-            Self::MountFailed => "mount_failed",
-            Self::FstabWriteFailed => "fstab_write_failed",
-            Self::UnknownError => "unknown_error",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for VolumeMountCode {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for VolumeMountCode {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "unsafe_serial" => Self::UnsafeSerial,
-            "device_absent" => Self::DeviceAbsent,
-            "probe_failed" => Self::ProbeFailed,
-            "signatures_no_filesystem" => Self::SignaturesNoFilesystem,
-            "unsupported_fstype" => Self::UnsupportedFstype,
-            "mkfs_failed" => Self::MkfsFailed,
-            "unsafe_mount_path" => Self::UnsafeMountPath,
-            "mkdir_failed" => Self::MkdirFailed,
-            "mount_failed" => Self::MountFailed,
-            "fstab_write_failed" => Self::FstabWriteFailed,
-            "unknown_error" => Self::UnknownError,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type ListInstanceVolumesResponse = ListInstanceVolumesResult;
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct ListInstanceVolumesEntry {
-    #[serde(rename = "volume_id", default, skip_serializing_if = "Option::is_none")]
-    pub volume_id: Option<String>,
-
-    #[serde(rename = "device", default, skip_serializing_if = "Option::is_none")]
-    pub device: Option<String>,
-
-    #[serde(
-        rename = "boot_index",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub boot_index: Option<i64>,
-
-    #[serde(
-        rename = "delete_on_termination",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub delete_on_termination: Option<bool>,
-
-    #[serde(
-        rename = "mount_path",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub mount_path: Option<String>,
-    /// Filesystem the in-guest agent formatted the volume with, or absent when the attachment did not name one and the agent used the ext4 default. Every write path — instance create, pool template and attach — refuses anything else, so this is the whole set the field can hold.
-    #[serde(rename = "fstype", default, skip_serializing_if = "Option::is_none")]
-    pub fstype: Option<ListInstanceVolumesEntryFstype>,
-
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-
-    #[serde(
-        rename = "volume_type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub volume_type: Option<String>,
-
-    #[serde(rename = "size_gb", default, skip_serializing_if = "Option::is_none")]
-    pub size_gb: Option<i64>,
-
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-
-    #[serde(rename = "bootable", default, skip_serializing_if = "Option::is_none")]
-    pub bootable: Option<bool>,
-
-    #[serde(rename = "mount", default, skip_serializing_if = "Option::is_none")]
-    pub mount: Option<VolumeMount>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ListInstanceVolumesEntryFstype {
-    Ext4,
-    Xfs,
-    Unknown(String),
-}
-impl ListInstanceVolumesEntryFstype {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Ext4 => "ext4",
-            Self::Xfs => "xfs",
-            Self::Unknown(value) => value,
-        }
-    }
-}
-impl serde::Serialize for ListInstanceVolumesEntryFstype {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for ListInstanceVolumesEntryFstype {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Ok(match value.as_str() {
-            "ext4" => Self::Ext4,
-            "xfs" => Self::Xfs,
-            _ => Self::Unknown(value),
-        })
-    }
-}
-
-pub type ListInstanceVolumesItem = ListInstanceVolumesEntry;
+pub type ListInstanceVolumesItem = AttachedVolume;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListInstancesParameters {
@@ -4156,13 +3829,13 @@ pub struct ListInstancesParameters {
 
 pub type ListInstancesQuery = ListInstancesParameters;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstanceListResponse {
-    #[serde(rename = "instances", default, skip_serializing_if = "Option::is_none")]
-    pub instances: Option<Vec<Instance>>,
+    #[serde(rename = "instances")]
+    pub instances: Vec<Instance>,
 
-    #[serde(rename = "meta", default, skip_serializing_if = "Option::is_none")]
-    pub meta: Option<PaginationMeta>,
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
 }
 
 pub type ListInstancesResponse = InstanceListResponse;
@@ -4349,16 +4022,20 @@ pub struct InstanceUpdateRequestInput {
 
 pub type UpdateInstanceBody = InstanceUpdateRequestInput;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UpdateInstanceResult {
-    #[serde(rename = "instance", default, skip_serializing_if = "Option::is_none")]
-    pub instance: Option<Instance>,
+    #[serde(rename = "instance")]
+    pub instance: Instance,
 }
 
 pub type UpdateInstanceResponse = UpdateInstanceResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct InstancePoolUpdateRequestInput {
+    /// Replace the eligible placement set. Omit to preserve it. Affects future launches; run an explicit refresh to move existing members. All selected subnets must share a VPC.
+    #[serde(rename = "subnets", default, skip_serializing_if = "Option::is_none")]
+    pub subnets: Option<Vec<String>>,
+
     #[serde(
         rename = "autoscaling",
         default,

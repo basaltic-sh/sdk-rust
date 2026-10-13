@@ -81,6 +81,8 @@ impl Payload {
     pub fn json<T: Serialize>(body: &T) -> Result<Self> {
         Ok(Self::Bytes(serde_json::to_vec(body)?))
     }
+    // Form encoding remains supported by the generator for future form endpoints.
+    #[allow(dead_code)]
     pub fn form<T: Serialize>(body: &T) -> Result<Self> {
         Ok(Self::Bytes(
             encode_query(&serde_json::to_value(body)?, &[])?.into_bytes(),

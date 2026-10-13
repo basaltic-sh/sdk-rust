@@ -192,6 +192,17 @@ static OP_16: Operation = Operation {
     query_encoding: &[],
 };
 static OP_17: Operation = Operation {
+    id: "listListenerCertificates",
+    method: "GET",
+    path: "/v1/load-balancers/{id}/listeners/{listener_id}/certificates",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_18: Operation = Operation {
     id: "listListeners",
     method: "GET",
     path: "/v1/load-balancers/{id}/listeners",
@@ -213,10 +224,10 @@ static OP_17: Operation = Operation {
         },
     ],
 };
-static OP_18: Operation = Operation {
-    id: "listLoadBalancerReplicas",
+static OP_19: Operation = Operation {
+    id: "listLoadBalancerInstances",
     method: "GET",
-    path: "/v1/load-balancers/{id}/replicas",
+    path: "/v1/load-balancers/{id}/instances",
     authenticated: true,
     required_query: &[],
     required_headers: &[],
@@ -224,18 +235,43 @@ static OP_18: Operation = Operation {
     accept: "application/json",
     query_encoding: &[
         QueryEncoding {
+            name: "crn",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
             name: "name",
             style: "form",
             explode: true,
         },
         QueryEncoding {
-            name: "crn",
+            name: "current_state",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "flavor",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "image",
             style: "form",
             explode: true,
         },
     ],
 };
-static OP_19: Operation = Operation {
+static OP_20: Operation = Operation {
     id: "listLoadBalancers",
     method: "GET",
     path: "/v1/load-balancers",
@@ -272,7 +308,7 @@ static OP_19: Operation = Operation {
         },
     ],
 };
-static OP_20: Operation = Operation {
+static OP_21: Operation = Operation {
     id: "listRules",
     method: "GET",
     path: "/v1/load-balancers/{id}/listeners/{listener_id}/rules",
@@ -294,7 +330,7 @@ static OP_20: Operation = Operation {
         },
     ],
 };
-static OP_21: Operation = Operation {
+static OP_22: Operation = Operation {
     id: "listTargetGroups",
     method: "GET",
     path: "/v1/target-groups",
@@ -331,7 +367,7 @@ static OP_21: Operation = Operation {
         },
     ],
 };
-static OP_22: Operation = Operation {
+static OP_23: Operation = Operation {
     id: "listTargets",
     method: "GET",
     path: "/v1/target-groups/{id}/targets",
@@ -353,7 +389,7 @@ static OP_22: Operation = Operation {
         },
     ],
 };
-static OP_23: Operation = Operation {
+static OP_24: Operation = Operation {
     id: "updateListener",
     method: "PATCH",
     path: "/v1/load-balancers/{id}/listeners/{listener_id}",
@@ -364,7 +400,7 @@ static OP_23: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_24: Operation = Operation {
+static OP_25: Operation = Operation {
     id: "updateLoadBalancer",
     method: "PATCH",
     path: "/v1/load-balancers/{id}",
@@ -375,7 +411,7 @@ static OP_24: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_25: Operation = Operation {
+static OP_26: Operation = Operation {
     id: "updateRule",
     method: "PATCH",
     path: "/v1/load-balancers/{id}/listeners/{listener_id}/rules/{rule_id}",
@@ -386,7 +422,7 @@ static OP_25: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_26: Operation = Operation {
+static OP_27: Operation = Operation {
     id: "updateTargetGroup",
     method: "PATCH",
     path: "/v1/target-groups/{id}",
@@ -621,7 +657,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_17,
+                &OP_18,
                 &[("id", id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -665,7 +701,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_19,
+                &OP_20,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -724,7 +760,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_20,
+                &OP_21,
                 &[("id", id), ("listener_id", listener_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -769,7 +805,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_22,
+                &OP_23,
                 &[("id", id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -813,7 +849,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_21,
+                &OP_22,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -824,6 +860,25 @@ impl LoadbalancerService {
             "target_groups",
         );
         Request::reference(core, extract)
+    }
+    /// List listener certificates
+    pub fn list_listener_certificates(
+        &self,
+        id: &str,
+        listener_id: &str,
+    ) -> PagedRequest<m::ListListenerCertificatesResponse, m::ListListenerCertificatesItem> {
+        PagedRequest::new(
+            Core::new(
+                self.client.clone(),
+                "loadbalancer",
+                ENDPOINT,
+                &OP_17,
+                &[("id", id), ("listener_id", listener_id)],
+                Ok(Payload::Empty),
+                Ok(serde_json::json!({})),
+            ),
+            "certificates",
+        )
     }
     /// List this load balancer's listeners
     pub fn list_listeners(
@@ -836,7 +891,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_17,
+                &OP_18,
                 &[("id", id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -844,23 +899,23 @@ impl LoadbalancerService {
             "listeners",
         )
     }
-    /// List the LB's instance replicas with live health
-    pub fn list_load_balancer_replicas(
+    /// List a load balancer's instances
+    pub fn list_load_balancer_instances(
         &self,
         id: &str,
-        query: &m::ListLoadBalancerReplicasQuery,
-    ) -> PagedRequest<m::ListLoadBalancerReplicasResponse, m::ListLoadBalancerReplicasItem> {
+        query: &m::ListLoadBalancerInstancesQuery,
+    ) -> PagedRequest<m::ListLoadBalancerInstancesResponse, m::ListLoadBalancerInstancesItem> {
         PagedRequest::new(
             Core::new(
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_18,
+                &OP_19,
                 &[("id", id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "replicas",
+            "instances",
         )
     }
     /// List load balancers
@@ -873,7 +928,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_19,
+                &OP_20,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -893,7 +948,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_20,
+                &OP_21,
                 &[("id", id), ("listener_id", listener_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -911,7 +966,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_21,
+                &OP_22,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -930,7 +985,7 @@ impl LoadbalancerService {
                 self.client.clone(),
                 "loadbalancer",
                 ENDPOINT,
-                &OP_22,
+                &OP_23,
                 &[("id", id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -938,7 +993,7 @@ impl LoadbalancerService {
             "targets",
         )
     }
-    /// Patch a listener (rotate cert, change default target group)
+    /// Update a listener
     pub fn update_listener(
         &self,
         id: &str,
@@ -949,7 +1004,7 @@ impl LoadbalancerService {
             self.client.clone(),
             "loadbalancer",
             ENDPOINT,
-            &OP_23,
+            &OP_24,
             &[("id", id), ("listener_id", listener_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -965,7 +1020,7 @@ impl LoadbalancerService {
             self.client.clone(),
             "loadbalancer",
             ENDPOINT,
-            &OP_24,
+            &OP_25,
             &[("id", id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -983,7 +1038,7 @@ impl LoadbalancerService {
             self.client.clone(),
             "loadbalancer",
             ENDPOINT,
-            &OP_25,
+            &OP_26,
             &[
                 ("id", id),
                 ("listener_id", listener_id),
@@ -1003,7 +1058,7 @@ impl LoadbalancerService {
             self.client.clone(),
             "loadbalancer",
             ENDPOINT,
-            &OP_26,
+            &OP_27,
             &[("id", id)],
             Payload::json(body),
             Ok(serde_json::json!({})),

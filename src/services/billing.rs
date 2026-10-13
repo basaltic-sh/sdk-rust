@@ -95,11 +95,23 @@ static OP_6: Operation = Operation {
     required_headers: &[],
     content_type: "",
     accept: "application/json",
-    query_encoding: &[QueryEncoding {
-        name: "invoice",
-        style: "form",
-        explode: true,
-    }],
+    query_encoding: &[
+        QueryEncoding {
+            name: "invoice",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+    ],
 };
 static OP_7: Operation = Operation {
     id: "listInvoices",
@@ -310,7 +322,7 @@ impl BillingService {
             ),
             reference,
             false,
-            None,
+            Some("invoice"),
             "invoices",
         );
         Request::reference(core, extract)
@@ -345,7 +357,7 @@ impl BillingService {
             "credits",
         )
     }
-    /// List fiscal invoice issuance and delivery status
+    /// List issued fiscal invoices
     pub fn list_fiscal_invoices(
         &self,
         query: &m::ListFiscalInvoicesQuery,
@@ -360,7 +372,7 @@ impl BillingService {
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
             ),
-            "fiscal_documents",
+            "fiscal_invoices",
         )
     }
     /// List invoices
