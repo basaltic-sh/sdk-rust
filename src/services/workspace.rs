@@ -247,6 +247,17 @@ static OP_21: Operation = Operation {
     query_encoding: &[],
 };
 static OP_22: Operation = Operation {
+    id: "getAccountOnboarding",
+    method: "GET",
+    path: "/v1/accounts/{account_id}/onboarding",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_23: Operation = Operation {
     id: "getAccountResources",
     method: "GET",
     path: "/v1/accounts/{account_id}/resources",
@@ -257,7 +268,7 @@ static OP_22: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_23: Operation = Operation {
+static OP_24: Operation = Operation {
     id: "getGroup",
     method: "GET",
     path: "/v1/groups/{group_id}",
@@ -268,7 +279,7 @@ static OP_23: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_24: Operation = Operation {
+static OP_25: Operation = Operation {
     id: "getGroupInlinePolicy",
     method: "GET",
     path: "/v1/groups/{group_id}/inline-policies/{policy_name}",
@@ -279,7 +290,7 @@ static OP_24: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_25: Operation = Operation {
+static OP_26: Operation = Operation {
     id: "getInvitation",
     method: "GET",
     path: "/v1/invitations/{invitation_id}",
@@ -290,7 +301,7 @@ static OP_25: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_26: Operation = Operation {
+static OP_27: Operation = Operation {
     id: "getOrganization",
     method: "GET",
     path: "/v1/organizations/{organization_id}",
@@ -301,7 +312,7 @@ static OP_26: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_27: Operation = Operation {
+static OP_28: Operation = Operation {
     id: "getPolicy",
     method: "GET",
     path: "/v1/policies/{policy_id}",
@@ -312,7 +323,7 @@ static OP_27: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_28: Operation = Operation {
+static OP_29: Operation = Operation {
     id: "getUser",
     method: "GET",
     path: "/v1/users/{user_id}",
@@ -323,7 +334,7 @@ static OP_28: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_29: Operation = Operation {
+static OP_30: Operation = Operation {
     id: "getUserInlinePolicy",
     method: "GET",
     path: "/v1/users/{user_id}/inline-policies/{policy_name}",
@@ -334,7 +345,7 @@ static OP_29: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_30: Operation = Operation {
+static OP_31: Operation = Operation {
     id: "getUserPermissionBoundary",
     method: "GET",
     path: "/v1/users/{user_id}/permission-boundary",
@@ -345,7 +356,7 @@ static OP_30: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_31: Operation = Operation {
+static OP_32: Operation = Operation {
     id: "listAccountRoleAssignments",
     method: "GET",
     path: "/v1/accounts/{account_id}/role-assignments",
@@ -356,7 +367,7 @@ static OP_31: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_32: Operation = Operation {
+static OP_33: Operation = Operation {
     id: "listAccountRoles",
     method: "GET",
     path: "/v1/account-roles",
@@ -367,7 +378,7 @@ static OP_32: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_33: Operation = Operation {
+static OP_34: Operation = Operation {
     id: "listAccounts",
     method: "GET",
     path: "/v1/accounts",
@@ -399,7 +410,7 @@ static OP_33: Operation = Operation {
         },
     ],
 };
-static OP_34: Operation = Operation {
+static OP_35: Operation = Operation {
     id: "listGroupInlinePolicies",
     method: "GET",
     path: "/v1/groups/{group_id}/inline-policies",
@@ -421,7 +432,7 @@ static OP_34: Operation = Operation {
         },
     ],
 };
-static OP_35: Operation = Operation {
+static OP_36: Operation = Operation {
     id: "listGroupPolicies",
     method: "GET",
     path: "/v1/groups/{group_id}/policies",
@@ -443,7 +454,7 @@ static OP_35: Operation = Operation {
         },
     ],
 };
-static OP_36: Operation = Operation {
+static OP_37: Operation = Operation {
     id: "listGroupUsers",
     method: "GET",
     path: "/v1/groups/{group_id}/users",
@@ -475,7 +486,7 @@ static OP_36: Operation = Operation {
         },
     ],
 };
-static OP_37: Operation = Operation {
+static OP_38: Operation = Operation {
     id: "listGroups",
     method: "GET",
     path: "/v1/groups",
@@ -507,7 +518,7 @@ static OP_37: Operation = Operation {
         },
     ],
 };
-static OP_38: Operation = Operation {
+static OP_39: Operation = Operation {
     id: "listInvitations",
     method: "GET",
     path: "/v1/invitations",
@@ -539,7 +550,7 @@ static OP_38: Operation = Operation {
         },
     ],
 };
-static OP_39: Operation = Operation {
+static OP_40: Operation = Operation {
     id: "listOrganizations",
     method: "GET",
     path: "/v1/organizations",
@@ -571,7 +582,7 @@ static OP_39: Operation = Operation {
         },
     ],
 };
-static OP_40: Operation = Operation {
+static OP_41: Operation = Operation {
     id: "listPolicies",
     method: "GET",
     path: "/v1/policies",
@@ -603,7 +614,7 @@ static OP_40: Operation = Operation {
         },
     ],
 };
-static OP_41: Operation = Operation {
+static OP_42: Operation = Operation {
     id: "listPolicyGroups",
     method: "GET",
     path: "/v1/policies/{policy_id}/groups",
@@ -635,7 +646,7 @@ static OP_41: Operation = Operation {
         },
     ],
 };
-static OP_42: Operation = Operation {
+static OP_43: Operation = Operation {
     id: "listPolicyRoles",
     method: "GET",
     path: "/v1/policies/{policy_id}/roles",
@@ -667,7 +678,7 @@ static OP_42: Operation = Operation {
         },
     ],
 };
-static OP_43: Operation = Operation {
+static OP_44: Operation = Operation {
     id: "listPolicyServiceAccounts",
     method: "GET",
     path: "/v1/policies/{policy_id}/service-accounts",
@@ -699,7 +710,7 @@ static OP_43: Operation = Operation {
         },
     ],
 };
-static OP_44: Operation = Operation {
+static OP_45: Operation = Operation {
     id: "listPolicyUsers",
     method: "GET",
     path: "/v1/policies/{policy_id}/users",
@@ -731,7 +742,7 @@ static OP_44: Operation = Operation {
         },
     ],
 };
-static OP_45: Operation = Operation {
+static OP_46: Operation = Operation {
     id: "listRolePolicies",
     method: "GET",
     path: "/v1/roles/{role_id}/policies",
@@ -753,7 +764,7 @@ static OP_45: Operation = Operation {
         },
     ],
 };
-static OP_46: Operation = Operation {
+static OP_47: Operation = Operation {
     id: "listServiceAccountPolicies",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/policies",
@@ -775,7 +786,7 @@ static OP_46: Operation = Operation {
         },
     ],
 };
-static OP_47: Operation = Operation {
+static OP_48: Operation = Operation {
     id: "listUserGroups",
     method: "GET",
     path: "/v1/users/{user_id}/groups",
@@ -797,7 +808,7 @@ static OP_47: Operation = Operation {
         },
     ],
 };
-static OP_48: Operation = Operation {
+static OP_49: Operation = Operation {
     id: "listUserInlinePolicies",
     method: "GET",
     path: "/v1/users/{user_id}/inline-policies",
@@ -819,7 +830,7 @@ static OP_48: Operation = Operation {
         },
     ],
 };
-static OP_49: Operation = Operation {
+static OP_50: Operation = Operation {
     id: "listUserPolicies",
     method: "GET",
     path: "/v1/users/{user_id}/policies",
@@ -841,7 +852,7 @@ static OP_49: Operation = Operation {
         },
     ],
 };
-static OP_50: Operation = Operation {
+static OP_51: Operation = Operation {
     id: "listUsers",
     method: "GET",
     path: "/v1/users",
@@ -873,7 +884,7 @@ static OP_50: Operation = Operation {
         },
     ],
 };
-static OP_51: Operation = Operation {
+static OP_52: Operation = Operation {
     id: "putGroupInlinePolicy",
     method: "PUT",
     path: "/v1/groups/{group_id}/inline-policies/{policy_name}",
@@ -884,7 +895,7 @@ static OP_51: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_52: Operation = Operation {
+static OP_53: Operation = Operation {
     id: "putUserInlinePolicy",
     method: "PUT",
     path: "/v1/users/{user_id}/inline-policies/{policy_name}",
@@ -895,7 +906,7 @@ static OP_52: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_53: Operation = Operation {
+static OP_54: Operation = Operation {
     id: "removeAccountRoleAssignment",
     method: "DELETE",
     path: "/v1/accounts/{account_id}/role-assignments/{assignment_id}",
@@ -906,7 +917,7 @@ static OP_53: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_54: Operation = Operation {
+static OP_55: Operation = Operation {
     id: "removeUser",
     method: "DELETE",
     path: "/v1/users/{user_id}",
@@ -917,7 +928,7 @@ static OP_54: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_55: Operation = Operation {
+static OP_56: Operation = Operation {
     id: "removeUserFromGroup",
     method: "DELETE",
     path: "/v1/users/{user_id}/groups/{group_id}",
@@ -928,7 +939,7 @@ static OP_55: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_56: Operation = Operation {
+static OP_57: Operation = Operation {
     id: "removeUserPermissionBoundary",
     method: "DELETE",
     path: "/v1/users/{user_id}/permission-boundary",
@@ -939,7 +950,18 @@ static OP_56: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_57: Operation = Operation {
+static OP_58: Operation = Operation {
+    id: "retryAccountProvisioning",
+    method: "POST",
+    path: "/v1/accounts/{account_id}/onboarding/retry",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_59: Operation = Operation {
     id: "setUserPermissionBoundary",
     method: "PUT",
     path: "/v1/users/{user_id}/permission-boundary",
@@ -950,7 +972,7 @@ static OP_57: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_58: Operation = Operation {
+static OP_60: Operation = Operation {
     id: "updateAccount",
     method: "PATCH",
     path: "/v1/accounts/{account_id}",
@@ -961,7 +983,18 @@ static OP_58: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_59: Operation = Operation {
+static OP_61: Operation = Operation {
+    id: "updateAccountOnboarding",
+    method: "PATCH",
+    path: "/v1/accounts/{account_id}/onboarding",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_62: Operation = Operation {
     id: "updateGroup",
     method: "PATCH",
     path: "/v1/groups/{group_id}",
@@ -972,7 +1005,7 @@ static OP_59: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_60: Operation = Operation {
+static OP_63: Operation = Operation {
     id: "updateOrganization",
     method: "PATCH",
     path: "/v1/organizations/{organization_id}",
@@ -983,7 +1016,7 @@ static OP_60: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_61: Operation = Operation {
+static OP_64: Operation = Operation {
     id: "updatePolicy",
     method: "PATCH",
     path: "/v1/policies/{policy_id}",
@@ -1310,7 +1343,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_33,
+                &OP_34,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1322,6 +1355,21 @@ impl WorkspaceService {
         );
         Request::reference(core, extract)
     }
+    /// Get shared account setup progress
+    pub fn get_account_onboarding(
+        &self,
+        account_id: &str,
+    ) -> Request<m::GetAccountOnboardingResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "workspace",
+            ENDPOINT,
+            &OP_22,
+            &[("account_id", account_id)],
+            Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
     /// Check account resource presence
     pub fn get_account_resources(
         &self,
@@ -1331,7 +1379,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_22,
+            &OP_23,
             &[("account_id", account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1343,7 +1391,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_23,
+            &OP_24,
             &[("group_id", group_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1360,7 +1408,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_23,
+                &OP_24,
                 &[("group_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1369,7 +1417,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_37,
+                &OP_38,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1391,7 +1439,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_24,
+            &OP_25,
             &[("group_id", group_id), ("policy_name", policy_name)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1409,7 +1457,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_24,
+                &OP_25,
                 &[("group_id", group_id), ("policy_name", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1418,7 +1466,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_34,
+                &OP_35,
                 &[("group_id", group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1436,7 +1484,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_25,
+            &OP_26,
             &[("invitation_id", invitation_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1453,7 +1501,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_25,
+                &OP_26,
                 &[("invitation_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1462,7 +1510,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_38,
+                &OP_39,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1480,7 +1528,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_26,
+            &OP_27,
             &[("organization_id", organization_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1497,7 +1545,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_26,
+                &OP_27,
                 &[("organization_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1506,7 +1554,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_39,
+                &OP_40,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1524,7 +1572,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_27,
+            &OP_28,
             &[("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1541,7 +1589,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_27,
+                &OP_28,
                 &[("policy_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1550,7 +1598,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_40,
+                &OP_41,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1568,7 +1616,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_28,
+            &OP_29,
             &[("user_id", user_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1585,7 +1633,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_28,
+                &OP_29,
                 &[("user_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1594,7 +1642,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_50,
+                &OP_51,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1616,7 +1664,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_29,
+            &OP_30,
             &[("user_id", user_id), ("policy_name", policy_name)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1634,7 +1682,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_29,
+                &OP_30,
                 &[("user_id", user_id), ("policy_name", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1643,7 +1691,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_48,
+                &OP_49,
                 &[("user_id", user_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1664,7 +1712,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_30,
+            &OP_31,
             &[("user_id", user_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1681,7 +1729,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_31,
+                &OP_32,
                 &[("account_id", account_id)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1698,7 +1746,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_32,
+                &OP_33,
                 &[],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1716,7 +1764,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_33,
+                &OP_34,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1735,7 +1783,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_34,
+                &OP_35,
                 &[("group_id", group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1754,7 +1802,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_35,
+                &OP_36,
                 &[("group_id", group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1773,7 +1821,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_36,
+                &OP_37,
                 &[("group_id", group_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1791,7 +1839,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_37,
+                &OP_38,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1809,7 +1857,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_38,
+                &OP_39,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1827,7 +1875,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_39,
+                &OP_40,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1845,7 +1893,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_40,
+                &OP_41,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1864,7 +1912,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_41,
+                &OP_42,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1883,7 +1931,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_42,
+                &OP_43,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1902,7 +1950,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_43,
+                &OP_44,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1921,7 +1969,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_44,
+                &OP_45,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1940,7 +1988,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_45,
+                &OP_46,
                 &[("role_id", role_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1960,7 +2008,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_46,
+                &OP_47,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1979,7 +2027,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_47,
+                &OP_48,
                 &[("user_id", user_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1998,7 +2046,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_48,
+                &OP_49,
                 &[("user_id", user_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2017,7 +2065,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_49,
+                &OP_50,
                 &[("user_id", user_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2035,7 +2083,7 @@ impl WorkspaceService {
                 self.client.clone(),
                 "workspace",
                 ENDPOINT,
-                &OP_50,
+                &OP_51,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -2054,7 +2102,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_51,
+            &OP_52,
             &[("group_id", group_id), ("policy_name", policy_name)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2071,7 +2119,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_52,
+            &OP_53,
             &[("user_id", user_id), ("policy_name", policy_name)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2087,7 +2135,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_53,
+            &OP_54,
             &[("account_id", account_id), ("assignment_id", assignment_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -2099,7 +2147,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_54,
+            &OP_55,
             &[("user_id", user_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -2111,7 +2159,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_55,
+            &OP_56,
             &[("user_id", user_id), ("group_id", group_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -2123,8 +2171,23 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_56,
+            &OP_57,
             &[("user_id", user_id)],
+            Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Resume failed default network provisioning
+    pub fn retry_account_provisioning(
+        &self,
+        account_id: &str,
+    ) -> Request<m::RetryAccountProvisioningResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "workspace",
+            ENDPOINT,
+            &OP_58,
+            &[("account_id", account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
         ))
@@ -2139,7 +2202,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_57,
+            &OP_59,
             &[("user_id", user_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2155,7 +2218,23 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_58,
+            &OP_60,
+            &[("account_id", account_id)],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Update shared account guide preferences
+    pub fn update_account_onboarding(
+        &self,
+        account_id: &str,
+        body: &m::UpdateAccountOnboardingBody,
+    ) -> Request<m::UpdateAccountOnboardingResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "workspace",
+            ENDPOINT,
+            &OP_61,
             &[("account_id", account_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2171,7 +2250,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_59,
+            &OP_62,
             &[("group_id", group_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2187,7 +2266,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_60,
+            &OP_63,
             &[("organization_id", organization_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2203,7 +2282,7 @@ impl WorkspaceService {
             self.client.clone(),
             "workspace",
             ENDPOINT,
-            &OP_61,
+            &OP_64,
             &[("policy_id", policy_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),

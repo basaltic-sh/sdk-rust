@@ -164,6 +164,9 @@ pub struct CurrentUsage {
     /// Per-SKU breakdown, ordered by cost.
     #[serde(rename = "items")]
     pub items: Vec<UsageLine>,
+    /// Independent organization-wide monthly allowance pools; empty before activation.
+    #[serde(rename = "included_usage")]
+    pub included_usage: Vec<IncludedUsage>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -173,7 +176,7 @@ pub struct UsageLine {
 
     #[serde(rename = "description")]
     pub description: String,
-
+    /// Billable quantity after included usage; may be zero.
     #[serde(rename = "quantity")]
     pub quantity: String,
 
@@ -182,6 +185,48 @@ pub struct UsageLine {
     /// Accrued cost at 4-decimal precision (sub-centavo lines stay visible mid-month).
     #[serde(rename = "amount")]
     pub amount: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IncludedUsage {
+    #[serde(rename = "code")]
+    pub code: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "unit")]
+    pub unit: String,
+
+    #[serde(rename = "period_start")]
+    pub period_start: String,
+    /// Exclusive UTC month end. Unused allowance does not roll over.
+    #[serde(rename = "period_end")]
+    pub period_end: String,
+    /// Later of month start and policy activation. Earlier usage retains its original charges.
+    #[serde(rename = "counted_from")]
+    pub counted_from: String,
+    /// Monthly organization grant.
+    #[serde(rename = "base")]
+    pub base: String,
+    /// Allowance earned by rated instance-hours, prorated by this UTC month's actual hour count.
+    #[serde(rename = "contributed")]
+    pub contributed: String,
+    /// Base plus earned contributions.
+    #[serde(rename = "total")]
+    pub total: String,
+    /// Gross eligible usage since counted_from; excludes inbound and unmetered private traffic.
+    #[serde(rename = "used")]
+    pub used: String,
+    /// Persisted allowance allocations, including any already invoiced.
+    #[serde(rename = "included_used")]
+    pub included_used: String,
+    /// Nonnegative unused allowance.
+    #[serde(rename = "remaining")]
+    pub remaining: String,
+    /// Usage exceeding included allocations, before money credits. Can fall as instance allowance accrues.
+    #[serde(rename = "overage")]
+    pub overage: String,
 }
 
 pub type GetCurrentUsageResponse = CurrentUsage;
@@ -770,6 +815,28 @@ pub struct Price {
     /// Extra facts about the SKU — `class`, `family`, `vcpus`, `memory_gb`, `storage_type`, … `family` separates the managed products (load balancer replicas, database cluster nodes) from the general compute flavors they share a `resource_type` with.
     #[serde(rename = "metadata")]
     pub metadata: std::collections::BTreeMap<String, serde_json::Value>,
+    /// Active allowance contributions for this plan, omitted when none apply.
+    #[serde(
+        rename = "included_usage",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub included_usage: Option<Vec<CatalogAllowance>>,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct CatalogAllowance {
+    #[serde(rename = "policy_code")]
+    pub policy_code: String,
+
+    #[serde(rename = "unit")]
+    pub unit: String,
+    /// Full-month contribution per instance; prorated by billed hours in the actual calendar month.
+    #[serde(rename = "monthly_quantity")]
+    pub monthly_quantity: String,
+    /// One grant per billing organization, not per instance, account region or bucket.
+    #[serde(rename = "monthly_base")]
+    pub monthly_base: String,
 }
 
 pub type ListPricesResponse = PriceListResponse;

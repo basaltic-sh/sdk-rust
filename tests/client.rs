@@ -656,3 +656,13 @@ async fn kms_rotation_202_and_optional_versions_remain_typed() {
     verify.key_version = Some(1);
     assert_eq!(serde_json::to_value(verify).unwrap()["key_version"], 1);
 }
+
+#[test]
+fn snapshot_unknown_zero_and_restore_capacity_are_distinct() {
+    for size in [Value::Null, json!(0), json!(4096)] {
+        let raw = json!({"id":"s","crn":"crn:storage:r:a:volume/v/snapshot/s", "volume":{"id":"v","crn":"crn:storage:r:a:volume/v"}, "name":"s", "size_bytes":size, "restore_size_bytes":107374182400_i64, "usage_state":"unknown", "usage_measured_at":null, "status":"available", "faults":[], "tags":{}, "created_at":"2026-10-15T00:00:00Z", "updated_at":"2026-10-15T00:00:00Z"});
+        let snapshot: basaltic::models::storage::Snapshot = serde_json::from_value(raw).unwrap();
+        assert_eq!(serde_json::to_value(&snapshot).unwrap()["size_bytes"], size);
+        assert_eq!(snapshot.restore_size_bytes, 107374182400);
+    }
+}

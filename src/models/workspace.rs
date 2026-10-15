@@ -1196,6 +1196,158 @@ pub struct GetAccountScope {
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AccountOnboardingResponse {
+    #[serde(rename = "onboarding")]
+    pub onboarding: AccountOnboarding,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AccountOnboarding {
+    #[serde(rename = "account_id")]
+    pub account_id: String,
+
+    #[serde(rename = "region")]
+    pub region: String,
+
+    #[serde(rename = "provisioning_status")]
+    pub provisioning_status: AccountOnboardingProvisioningStatus,
+
+    #[serde(rename = "provisioning_step")]
+    pub provisioning_step: String,
+
+    #[serde(
+        rename = "error_code",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub error_code: Option<String>,
+
+    #[serde(rename = "dismissed")]
+    pub dismissed: bool,
+
+    #[serde(rename = "welcome_seen")]
+    pub welcome_seen: bool,
+
+    #[serde(rename = "connection_recorded")]
+    pub connection_recorded: bool,
+
+    #[serde(rename = "steps")]
+    pub steps: Vec<AccountOnboardingStepsItem>,
+
+    #[serde(rename = "vpc_id", default, skip_serializing_if = "Option::is_none")]
+    pub vpc_id: Option<String>,
+
+    #[serde(rename = "subnet_id", default, skip_serializing_if = "Option::is_none")]
+    pub subnet_id: Option<String>,
+
+    #[serde(
+        rename = "security_group_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub security_group_id: Option<String>,
+
+    #[serde(
+        rename = "instance_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instance_id: Option<String>,
+
+    #[serde(
+        rename = "confirmed_instance_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub confirmed_instance_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AccountOnboardingProvisioningStatus {
+    Pending,
+    Provisioning,
+    Ready,
+    Failed,
+    Existing,
+    Unknown(String),
+}
+impl AccountOnboardingProvisioningStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Pending => "pending",
+            Self::Provisioning => "provisioning",
+            Self::Ready => "ready",
+            Self::Failed => "failed",
+            Self::Existing => "existing",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AccountOnboardingProvisioningStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AccountOnboardingProvisioningStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "pending" => Self::Pending,
+            "provisioning" => Self::Provisioning,
+            "ready" => Self::Ready,
+            "failed" => Self::Failed,
+            "existing" => Self::Existing,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AccountOnboardingStepsItem {
+    #[serde(rename = "id")]
+    pub id: AccountOnboardingStepsItemId,
+
+    #[serde(rename = "complete")]
+    pub complete: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AccountOnboardingStepsItemId {
+    Ssh,
+    Launch,
+    Connect,
+    Unknown(String),
+}
+impl AccountOnboardingStepsItemId {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ssh => "ssh",
+            Self::Launch => "launch",
+            Self::Connect => "connect",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AccountOnboardingStepsItemId {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AccountOnboardingStepsItemId {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ssh" => Self::Ssh,
+            "launch" => Self::Launch,
+            "connect" => Self::Connect,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type GetAccountOnboardingResponse = AccountOnboardingResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct GetAccountResourcesResult {
     #[serde(rename = "has_resources")]
     pub has_resources: bool,
@@ -2319,6 +2471,8 @@ pub type PutUserInlinePolicyBody = PutInlinePolicyRequestInput;
 
 pub type PutUserInlinePolicyResponse = InlinePolicyResponse;
 
+pub type RetryAccountProvisioningResponse = AccountOnboardingResponse;
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SetBoundaryRequestInput {
     #[serde(rename = "policy")]
@@ -2350,6 +2504,37 @@ pub struct UpdateAccountRequestInput {
 pub type UpdateAccountBody = UpdateAccountRequestInput;
 
 pub type UpdateAccountResponse = AccountResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct AccountOnboardingUpdateRequestInput {
+    #[serde(rename = "dismissed", default, skip_serializing_if = "Option::is_none")]
+    pub dismissed: Option<bool>,
+
+    #[serde(
+        rename = "welcome_seen",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub welcome_seen: Option<bool>,
+
+    #[serde(
+        rename = "instance_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instance_id: Option<String>,
+
+    #[serde(
+        rename = "confirmed_instance_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub confirmed_instance_id: Option<String>,
+}
+
+pub type UpdateAccountOnboardingBody = AccountOnboardingUpdateRequestInput;
+
+pub type UpdateAccountOnboardingResponse = AccountOnboardingResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct GroupUpdateRequestInput {

@@ -3772,6 +3772,16 @@ Get account
 pub fn get_account(&self, account_id: &str) -> Request<m::GetAccountResponse>
 ```
 
+## `workspace.get_account_onboarding`
+
+Get shared account setup progress
+
+`GET /v1/accounts/{account_id}/onboarding`
+
+```rust
+pub fn get_account_onboarding(&self, account_id: &str) -> Request<m::GetAccountOnboardingResponse>
+```
+
 ## `workspace.get_account_resources`
 
 Check account resource presence
@@ -4122,6 +4132,16 @@ Remove a user's permission boundary
 pub fn remove_user_permission_boundary(&self, user_id: &str) -> EmptyRequest
 ```
 
+## `workspace.retry_account_provisioning`
+
+Resume failed default network provisioning
+
+`POST /v1/accounts/{account_id}/onboarding/retry`
+
+```rust
+pub fn retry_account_provisioning(&self, account_id: &str) -> Request<m::RetryAccountProvisioningResponse>
+```
+
 ## `workspace.set_user_permission_boundary`
 
 Set a user's permission boundary
@@ -4140,6 +4160,16 @@ Update account
 
 ```rust
 pub fn update_account(&self, account_id: &str, body: &m::UpdateAccountBody) -> Request<m::UpdateAccountResponse>
+```
+
+## `workspace.update_account_onboarding`
+
+Update shared account guide preferences
+
+`PATCH /v1/accounts/{account_id}/onboarding`
+
+```rust
+pub fn update_account_onboarding(&self, account_id: &str, body: &m::UpdateAccountOnboardingBody) -> Request<m::UpdateAccountOnboardingResponse>
 ```
 
 ## `workspace.update_group`

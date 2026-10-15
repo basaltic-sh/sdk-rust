@@ -233,9 +233,18 @@ pub struct Snapshot {
 
     #[serde(rename = "tags")]
     pub tags: Tags,
-    /// Frozen logical restore capacity in bytes, not measured written data. The source volume may have been extended since the snapshot was taken.
+    /// Measured retained logical bytes attributed to this snapshot, before replication and compression. Shared extents are counted once across the volume's snapshot chain. Attribution can move when another snapshot is deleted. Null when usage is unknown or stale; zero is a measured empty attribution.
     #[serde(rename = "size_bytes")]
-    pub size_bytes: i64,
+    pub size_bytes: crate::Nullable<i64>,
+    /// Minimum restore volume capacity, frozen when this snapshot was created. Independent of consumed storage and later source-volume expansion.
+    #[serde(rename = "restore_size_bytes")]
+    pub restore_size_bytes: i64,
+    /// Freshness of size_bytes. Unknown or stale measurements are never substituted with provisioned capacity.
+    #[serde(rename = "usage_state")]
+    pub usage_state: SnapshotUsageState,
+    /// Time of the last observation. Null before the first observation.
+    #[serde(rename = "usage_measured_at")]
+    pub usage_measured_at: crate::Nullable<String>,
 
     #[serde(rename = "status")]
     pub status: SnapshotStatus,
@@ -263,6 +272,40 @@ pub struct ResourceRef {
 }
 
 pub type Tags = std::collections::BTreeMap<String, String>;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SnapshotUsageState {
+    Unknown1,
+    Stale,
+    Measured,
+    Unknown(String),
+}
+impl SnapshotUsageState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Unknown1 => "unknown",
+            Self::Stale => "stale",
+            Self::Measured => "measured",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for SnapshotUsageState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for SnapshotUsageState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "unknown" => Self::Unknown1,
+            "stale" => Self::Stale,
+            "measured" => Self::Measured,
+            _ => Self::Unknown(value),
+        })
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SnapshotStatus {
