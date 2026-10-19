@@ -2,9 +2,9 @@
 
 [![Checks](https://github.com/basaltic-sh/sdk-rust/actions/workflows/public-checks.yml/badge.svg)](https://github.com/basaltic-sh/sdk-rust/actions/workflows/public-checks.yml)
 
-Official typed, asynchronous Rust client for Basaltic. Covers 401 operations across
-15 services: audit, billing, catalog, certificate, compute, DNS, IAM, KMS, load balancer,
-network, quota, secrets, storage, telemetry, and workspace.
+Official typed, asynchronous Rust client for Basaltic. Covers 547 operations across
+19 services: audit, billing, catalog, certificate, compute, DNS, email, IAM, KMS, load balancer,
+network, notifications, queue, quota, registry, secrets, storage, telemetry, and workspace.
 
 Requires Rust 1.89 or newer and a Tokio runtime. HTTP connections use reqwest with
 Rustls. Clone a client to share its connection pool and cached credentials.
@@ -13,7 +13,7 @@ Rustls. Clone a client to share its connection pool and cached credentials.
 
 ```toml
 [dependencies]
-basaltic = { package = "basaltic-sdk-rust", version = "0.6" }
+basaltic = { package = "basaltic-sdk-rust", version = "0.7" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures-util = "0.3"
 ```

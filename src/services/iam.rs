@@ -49,17 +49,6 @@ static OP_3: Operation = Operation {
     query_encoding: &[],
 };
 static OP_4: Operation = Operation {
-    id: "authorizeOAuthClient",
-    method: "POST",
-    path: "/v1/oauth/authorize",
-    authenticated: true,
-    required_query: &[],
-    required_headers: &[],
-    content_type: "application/json",
-    accept: "application/json",
-    query_encoding: &[],
-};
-static OP_5: Operation = Operation {
     id: "createOIDCProvider",
     method: "POST",
     path: "/v1/oidc-providers",
@@ -70,7 +59,7 @@ static OP_5: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_6: Operation = Operation {
+static OP_5: Operation = Operation {
     id: "createPersonalSSHKey",
     method: "POST",
     path: "/v1/auth/ssh-keys",
@@ -81,7 +70,7 @@ static OP_6: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_7: Operation = Operation {
+static OP_6: Operation = Operation {
     id: "createPolicy",
     method: "POST",
     path: "/v1/policies",
@@ -92,7 +81,7 @@ static OP_7: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_8: Operation = Operation {
+static OP_7: Operation = Operation {
     id: "createRole",
     method: "POST",
     path: "/v1/roles",
@@ -103,7 +92,7 @@ static OP_8: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_9: Operation = Operation {
+static OP_8: Operation = Operation {
     id: "createServiceAccount",
     method: "POST",
     path: "/v1/service-accounts",
@@ -114,7 +103,7 @@ static OP_9: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_10: Operation = Operation {
+static OP_9: Operation = Operation {
     id: "createServiceAccountCredential",
     method: "POST",
     path: "/v1/service-accounts/{service_account_id}/credentials",
@@ -125,7 +114,7 @@ static OP_10: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_11: Operation = Operation {
+static OP_10: Operation = Operation {
     id: "createServiceAccountSSHKey",
     method: "POST",
     path: "/v1/service-accounts/{service_account_id}/ssh-keys",
@@ -136,7 +125,7 @@ static OP_11: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_12: Operation = Operation {
+static OP_11: Operation = Operation {
     id: "deleteOIDCProvider",
     method: "DELETE",
     path: "/v1/oidc-providers/{provider_id}",
@@ -147,7 +136,7 @@ static OP_12: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_13: Operation = Operation {
+static OP_12: Operation = Operation {
     id: "deletePersonalSSHKey",
     method: "DELETE",
     path: "/v1/auth/ssh-keys/{ssh_key_id}",
@@ -158,7 +147,7 @@ static OP_13: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_14: Operation = Operation {
+static OP_13: Operation = Operation {
     id: "deletePolicy",
     method: "DELETE",
     path: "/v1/policies/{policy_id}",
@@ -169,7 +158,7 @@ static OP_14: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_15: Operation = Operation {
+static OP_14: Operation = Operation {
     id: "deleteRole",
     method: "DELETE",
     path: "/v1/roles/{role_id}",
@@ -180,7 +169,7 @@ static OP_15: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_16: Operation = Operation {
+static OP_15: Operation = Operation {
     id: "deleteRoleInlinePolicy",
     method: "DELETE",
     path: "/v1/roles/{role_id}/inline-policies/{policy_name}",
@@ -191,7 +180,7 @@ static OP_16: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_17: Operation = Operation {
+static OP_16: Operation = Operation {
     id: "deleteServiceAccount",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}",
@@ -202,7 +191,7 @@ static OP_17: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_18: Operation = Operation {
+static OP_17: Operation = Operation {
     id: "deleteServiceAccountCredential",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}/credentials/{credential_id}",
@@ -213,7 +202,7 @@ static OP_18: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_19: Operation = Operation {
+static OP_18: Operation = Operation {
     id: "deleteServiceAccountInlinePolicy",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}/inline-policies/{policy_name}",
@@ -224,7 +213,7 @@ static OP_19: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_20: Operation = Operation {
+static OP_19: Operation = Operation {
     id: "deleteServiceAccountSSHKey",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}/ssh-keys/{ssh_key_id}",
@@ -235,7 +224,7 @@ static OP_20: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_21: Operation = Operation {
+static OP_20: Operation = Operation {
     id: "detachRolePolicy",
     method: "DELETE",
     path: "/v1/roles/{role_id}/policies/{policy_id}",
@@ -246,7 +235,7 @@ static OP_21: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_22: Operation = Operation {
+static OP_21: Operation = Operation {
     id: "detachServiceAccountPolicy",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}/policies/{policy_id}",
@@ -257,7 +246,7 @@ static OP_22: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_23: Operation = Operation {
+static OP_22: Operation = Operation {
     id: "getOAuthToken",
     method: "POST",
     path: "/v1/oauth/token",
@@ -268,7 +257,7 @@ static OP_23: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_24: Operation = Operation {
+static OP_23: Operation = Operation {
     id: "getOIDCProvider",
     method: "GET",
     path: "/v1/oidc-providers/{provider_id}",
@@ -279,7 +268,7 @@ static OP_24: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_25: Operation = Operation {
+static OP_24: Operation = Operation {
     id: "getPersonalLinuxIdentity",
     method: "GET",
     path: "/v1/auth/linux-identity",
@@ -290,7 +279,7 @@ static OP_25: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_26: Operation = Operation {
+static OP_25: Operation = Operation {
     id: "getPolicy",
     method: "GET",
     path: "/v1/policies/{policy_id}",
@@ -301,7 +290,7 @@ static OP_26: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_27: Operation = Operation {
+static OP_26: Operation = Operation {
     id: "getRole",
     method: "GET",
     path: "/v1/roles/{role_id}",
@@ -312,7 +301,7 @@ static OP_27: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_28: Operation = Operation {
+static OP_27: Operation = Operation {
     id: "getRoleInlinePolicy",
     method: "GET",
     path: "/v1/roles/{role_id}/inline-policies/{policy_name}",
@@ -323,7 +312,7 @@ static OP_28: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_29: Operation = Operation {
+static OP_28: Operation = Operation {
     id: "getRolePermissionBoundary",
     method: "GET",
     path: "/v1/roles/{role_id}/permission-boundary",
@@ -334,7 +323,7 @@ static OP_29: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_30: Operation = Operation {
+static OP_29: Operation = Operation {
     id: "getSTSSession",
     method: "GET",
     path: "/v1/sts-sessions/{session_id}",
@@ -345,7 +334,7 @@ static OP_30: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_31: Operation = Operation {
+static OP_30: Operation = Operation {
     id: "getServiceAccount",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}",
@@ -356,7 +345,7 @@ static OP_31: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_32: Operation = Operation {
+static OP_31: Operation = Operation {
     id: "getServiceAccountInlinePolicy",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/inline-policies/{policy_name}",
@@ -367,7 +356,7 @@ static OP_32: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_33: Operation = Operation {
+static OP_32: Operation = Operation {
     id: "getServiceAccountLinuxIdentity",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/linux-identity",
@@ -378,7 +367,7 @@ static OP_33: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_34: Operation = Operation {
+static OP_33: Operation = Operation {
     id: "getServiceAccountPermissionBoundary",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/permission-boundary",
@@ -389,7 +378,7 @@ static OP_34: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_35: Operation = Operation {
+static OP_34: Operation = Operation {
     id: "listOIDCProviders",
     method: "GET",
     path: "/v1/oidc-providers",
@@ -421,7 +410,7 @@ static OP_35: Operation = Operation {
         },
     ],
 };
-static OP_36: Operation = Operation {
+static OP_35: Operation = Operation {
     id: "listPersonalSSHKeys",
     method: "GET",
     path: "/v1/auth/ssh-keys",
@@ -432,7 +421,7 @@ static OP_36: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_37: Operation = Operation {
+static OP_36: Operation = Operation {
     id: "listPolicies",
     method: "GET",
     path: "/v1/policies",
@@ -464,7 +453,7 @@ static OP_37: Operation = Operation {
         },
     ],
 };
-static OP_38: Operation = Operation {
+static OP_37: Operation = Operation {
     id: "listPolicyRoles",
     method: "GET",
     path: "/v1/policies/{policy_id}/roles",
@@ -496,7 +485,7 @@ static OP_38: Operation = Operation {
         },
     ],
 };
-static OP_39: Operation = Operation {
+static OP_38: Operation = Operation {
     id: "listPolicyServiceAccounts",
     method: "GET",
     path: "/v1/policies/{policy_id}/service-accounts",
@@ -528,7 +517,7 @@ static OP_39: Operation = Operation {
         },
     ],
 };
-static OP_40: Operation = Operation {
+static OP_39: Operation = Operation {
     id: "listRoleInlinePolicies",
     method: "GET",
     path: "/v1/roles/{role_id}/inline-policies",
@@ -550,7 +539,7 @@ static OP_40: Operation = Operation {
         },
     ],
 };
-static OP_41: Operation = Operation {
+static OP_40: Operation = Operation {
     id: "listRolePolicies",
     method: "GET",
     path: "/v1/roles/{role_id}/policies",
@@ -572,7 +561,7 @@ static OP_41: Operation = Operation {
         },
     ],
 };
-static OP_42: Operation = Operation {
+static OP_41: Operation = Operation {
     id: "listRoles",
     method: "GET",
     path: "/v1/roles",
@@ -604,7 +593,7 @@ static OP_42: Operation = Operation {
         },
     ],
 };
-static OP_43: Operation = Operation {
+static OP_42: Operation = Operation {
     id: "listSTSSessions",
     method: "GET",
     path: "/v1/sts-sessions",
@@ -656,7 +645,7 @@ static OP_43: Operation = Operation {
         },
     ],
 };
-static OP_44: Operation = Operation {
+static OP_43: Operation = Operation {
     id: "listServiceAccountCredentials",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/credentials",
@@ -678,7 +667,7 @@ static OP_44: Operation = Operation {
         },
     ],
 };
-static OP_45: Operation = Operation {
+static OP_44: Operation = Operation {
     id: "listServiceAccountInlinePolicies",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/inline-policies",
@@ -700,7 +689,7 @@ static OP_45: Operation = Operation {
         },
     ],
 };
-static OP_46: Operation = Operation {
+static OP_45: Operation = Operation {
     id: "listServiceAccountPolicies",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/policies",
@@ -722,7 +711,7 @@ static OP_46: Operation = Operation {
         },
     ],
 };
-static OP_47: Operation = Operation {
+static OP_46: Operation = Operation {
     id: "listServiceAccountSSHKeys",
     method: "GET",
     path: "/v1/service-accounts/{service_account_id}/ssh-keys",
@@ -733,7 +722,7 @@ static OP_47: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_48: Operation = Operation {
+static OP_47: Operation = Operation {
     id: "listServiceAccounts",
     method: "GET",
     path: "/v1/service-accounts",
@@ -765,7 +754,7 @@ static OP_48: Operation = Operation {
         },
     ],
 };
-static OP_49: Operation = Operation {
+static OP_48: Operation = Operation {
     id: "putRoleInlinePolicy",
     method: "PUT",
     path: "/v1/roles/{role_id}/inline-policies/{policy_name}",
@@ -776,7 +765,7 @@ static OP_49: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_50: Operation = Operation {
+static OP_49: Operation = Operation {
     id: "putServiceAccountInlinePolicy",
     method: "PUT",
     path: "/v1/service-accounts/{service_account_id}/inline-policies/{policy_name}",
@@ -787,7 +776,7 @@ static OP_50: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_51: Operation = Operation {
+static OP_50: Operation = Operation {
     id: "removeRolePermissionBoundary",
     method: "DELETE",
     path: "/v1/roles/{role_id}/permission-boundary",
@@ -798,7 +787,7 @@ static OP_51: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_52: Operation = Operation {
+static OP_51: Operation = Operation {
     id: "removeServiceAccountPermissionBoundary",
     method: "DELETE",
     path: "/v1/service-accounts/{service_account_id}/permission-boundary",
@@ -809,7 +798,7 @@ static OP_52: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_53: Operation = Operation {
+static OP_52: Operation = Operation {
     id: "revokeOAuthToken",
     method: "POST",
     path: "/v1/oauth/revoke",
@@ -820,7 +809,7 @@ static OP_53: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_54: Operation = Operation {
+static OP_53: Operation = Operation {
     id: "revokeSTSSession",
     method: "DELETE",
     path: "/v1/sts-sessions/{session_id}",
@@ -831,7 +820,7 @@ static OP_54: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_55: Operation = Operation {
+static OP_54: Operation = Operation {
     id: "setRolePermissionBoundary",
     method: "PUT",
     path: "/v1/roles/{role_id}/permission-boundary",
@@ -842,7 +831,7 @@ static OP_55: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_56: Operation = Operation {
+static OP_55: Operation = Operation {
     id: "setServiceAccountPermissionBoundary",
     method: "PUT",
     path: "/v1/service-accounts/{service_account_id}/permission-boundary",
@@ -853,7 +842,7 @@ static OP_56: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_57: Operation = Operation {
+static OP_56: Operation = Operation {
     id: "updateOIDCProvider",
     method: "PATCH",
     path: "/v1/oidc-providers/{provider_id}",
@@ -864,7 +853,7 @@ static OP_57: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_58: Operation = Operation {
+static OP_57: Operation = Operation {
     id: "updatePolicy",
     method: "PATCH",
     path: "/v1/policies/{policy_id}",
@@ -875,7 +864,7 @@ static OP_58: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_59: Operation = Operation {
+static OP_58: Operation = Operation {
     id: "updateRole",
     method: "PATCH",
     path: "/v1/roles/{role_id}",
@@ -886,7 +875,7 @@ static OP_59: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_60: Operation = Operation {
+static OP_59: Operation = Operation {
     id: "updateServiceAccount",
     method: "PATCH",
     path: "/v1/service-accounts/{service_account_id}",
@@ -961,21 +950,6 @@ impl IamService {
             Ok(serde_json::json!({})),
         ))
     }
-    /// Approve a CLI login and issue an authorization code
-    pub fn authorize_oauth_client(
-        &self,
-        body: &m::AuthorizeOAuthClientBody,
-    ) -> Request<m::AuthorizeOAuthClientResponse> {
-        Request::new(Core::new(
-            self.client.clone(),
-            "iam",
-            ENDPOINT,
-            &OP_4,
-            &[],
-            Payload::json(body),
-            Ok(serde_json::json!({})),
-        ))
-    }
     /// Create an OIDC provider
     pub fn create_oidc_provider(
         &self,
@@ -985,7 +959,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_5,
+            &OP_4,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1000,7 +974,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_6,
+            &OP_5,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1012,7 +986,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_7,
+            &OP_6,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1024,7 +998,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_8,
+            &OP_7,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1039,7 +1013,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_9,
+            &OP_8,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1055,7 +1029,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_10,
+            &OP_9,
             &[("service_account_id", service_account_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1071,7 +1045,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_11,
+            &OP_10,
             &[("service_account_id", service_account_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1083,7 +1057,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_12,
+            &OP_11,
             &[("provider_id", provider_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1095,7 +1069,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_13,
+            &OP_12,
             &[("ssh_key_id", ssh_key_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1107,7 +1081,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_14,
+            &OP_13,
             &[("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1119,7 +1093,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_15,
+            &OP_14,
             &[("role_id", role_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1131,7 +1105,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_16,
+            &OP_15,
             &[("role_id", role_id), ("policy_name", policy_name)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1143,7 +1117,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_17,
+            &OP_16,
             &[("service_account_id", service_account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1159,7 +1133,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_18,
+            &OP_17,
             &[
                 ("service_account_id", service_account_id),
                 ("credential_id", credential_id),
@@ -1178,7 +1152,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_19,
+            &OP_18,
             &[
                 ("service_account_id", service_account_id),
                 ("policy_name", policy_name),
@@ -1197,7 +1171,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_20,
+            &OP_19,
             &[
                 ("service_account_id", service_account_id),
                 ("ssh_key_id", ssh_key_id),
@@ -1212,7 +1186,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_21,
+            &OP_20,
             &[("role_id", role_id), ("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1228,7 +1202,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_22,
+            &OP_21,
             &[
                 ("service_account_id", service_account_id),
                 ("policy_id", policy_id),
@@ -1246,7 +1220,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_23,
+            &OP_22,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1258,7 +1232,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_24,
+            &OP_23,
             &[("provider_id", provider_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1275,7 +1249,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_24,
+                &OP_23,
                 &[("provider_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1284,7 +1258,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_35,
+                &OP_34,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1302,7 +1276,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_25,
+            &OP_24,
             &[],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1314,7 +1288,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_26,
+            &OP_25,
             &[("policy_id", policy_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1331,7 +1305,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_26,
+                &OP_25,
                 &[("policy_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1340,7 +1314,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_37,
+                &OP_36,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1358,7 +1332,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_27,
+            &OP_26,
             &[("role_id", role_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1375,7 +1349,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_27,
+                &OP_26,
                 &[("role_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1384,7 +1358,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_42,
+                &OP_41,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1406,7 +1380,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_28,
+            &OP_27,
             &[("role_id", role_id), ("policy_name", policy_name)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1424,7 +1398,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_28,
+                &OP_27,
                 &[("role_id", role_id), ("policy_name", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1433,7 +1407,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_40,
+                &OP_39,
                 &[("role_id", role_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1454,7 +1428,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_29,
+            &OP_28,
             &[("role_id", role_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1466,7 +1440,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_30,
+            &OP_29,
             &[("session_id", session_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1483,7 +1457,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_30,
+                &OP_29,
                 &[("session_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1492,7 +1466,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_43,
+                &OP_42,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1513,7 +1487,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_31,
+            &OP_30,
             &[("service_account_id", service_account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1530,7 +1504,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_31,
+                &OP_30,
                 &[("service_account_id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1539,7 +1513,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_48,
+                &OP_47,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1561,7 +1535,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_32,
+            &OP_31,
             &[
                 ("service_account_id", service_account_id),
                 ("policy_name", policy_name),
@@ -1582,7 +1556,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_32,
+                &OP_31,
                 &[
                     ("service_account_id", service_account_id),
                     ("policy_name", reference),
@@ -1594,7 +1568,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_45,
+                &OP_44,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -1615,7 +1589,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_33,
+            &OP_32,
             &[("service_account_id", service_account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1630,7 +1604,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_34,
+            &OP_33,
             &[("service_account_id", service_account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1646,7 +1620,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_35,
+                &OP_34,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1663,7 +1637,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_36,
+                &OP_35,
                 &[],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1681,7 +1655,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_37,
+                &OP_36,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1700,7 +1674,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_38,
+                &OP_37,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1719,7 +1693,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_39,
+                &OP_38,
                 &[("policy_id", policy_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1738,7 +1712,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_40,
+                &OP_39,
                 &[("role_id", role_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1757,7 +1731,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_41,
+                &OP_40,
                 &[("role_id", role_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1775,7 +1749,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_42,
+                &OP_41,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1793,7 +1767,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_43,
+                &OP_42,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1813,7 +1787,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_44,
+                &OP_43,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1835,7 +1809,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_45,
+                &OP_44,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1855,7 +1829,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_46,
+                &OP_45,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1873,7 +1847,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_47,
+                &OP_46,
                 &[("service_account_id", service_account_id)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -1891,7 +1865,7 @@ impl IamService {
                 self.client.clone(),
                 "iam",
                 ENDPOINT,
-                &OP_48,
+                &OP_47,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -1910,7 +1884,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_49,
+            &OP_48,
             &[("role_id", role_id), ("policy_name", policy_name)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1927,7 +1901,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_50,
+            &OP_49,
             &[
                 ("service_account_id", service_account_id),
                 ("policy_name", policy_name),
@@ -1942,7 +1916,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_51,
+            &OP_50,
             &[("role_id", role_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1957,7 +1931,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_52,
+            &OP_51,
             &[("service_account_id", service_account_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -1969,7 +1943,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_53,
+            &OP_52,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -1985,7 +1959,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_54,
+            &OP_53,
             &[("session_id", session_id)],
             body.map(Payload::json).unwrap_or(Ok(Payload::Empty)),
             Ok(serde_json::json!({})),
@@ -2001,7 +1975,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_55,
+            &OP_54,
             &[("role_id", role_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2017,7 +1991,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_56,
+            &OP_55,
             &[("service_account_id", service_account_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2033,7 +2007,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_57,
+            &OP_56,
             &[("provider_id", provider_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2049,7 +2023,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_58,
+            &OP_57,
             &[("policy_id", policy_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2065,7 +2039,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_59,
+            &OP_58,
             &[("role_id", role_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -2081,7 +2055,7 @@ impl IamService {
             self.client.clone(),
             "iam",
             ENDPOINT,
-            &OP_60,
+            &OP_59,
             &[("service_account_id", service_account_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),

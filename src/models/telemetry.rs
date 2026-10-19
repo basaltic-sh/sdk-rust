@@ -1,5 +1,594 @@
 //! Generated typed wire models. Unknown string enum values are retained.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct CreateAlertRequestInput {
+    /// Immutable account-unique name. UUID names and the crn: prefix are reserved.
+    #[serde(rename = "name")]
+    pub name: String,
+    /// Required same-account, same-region notification topic reference: UUID, canonical CRN or exact name, classified by syntax. Multiple alerts may share a topic. Binding requires notifications:Publish and respects explicit topic-policy denies.
+    #[serde(rename = "topic")]
+    pub topic: String,
+
+    #[serde(rename = "expression")]
+    pub expression: AlertExpressionInput,
+
+    #[serde(rename = "operator")]
+    pub operator: CreateAlertRequestInputOperator,
+
+    #[serde(rename = "threshold")]
+    pub threshold: f64,
+    /// Whole-minute window. Evaluated every minute against the last complete UTC-aligned window.
+    #[serde(rename = "window_seconds")]
+    pub window_seconds: i64,
+    /// Continuous breach duration before firing; 0 fires immediately. Missing data, query failures and scheduling gaps reset a pending duration.
+    #[serde(rename = "for_seconds")]
+    pub for_seconds: i64,
+
+    #[serde(rename = "enabled", default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    /// Mute notifications until this instant (at most 30 days ahead). Evaluation continues; null removes silence. An active alert notifies on the next evaluation after silence expires.
+    #[serde(
+        rename = "silenced_until",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub silenced_until: Option<crate::Nullable<String>>,
+}
+impl CreateAlertRequestInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        name: String,
+        topic: String,
+        expression: AlertExpressionInput,
+        operator: CreateAlertRequestInputOperator,
+        threshold: f64,
+        window_seconds: i64,
+        for_seconds: i64,
+    ) -> Self {
+        Self {
+            name,
+            topic,
+            expression,
+            operator,
+            threshold,
+            window_seconds,
+            for_seconds,
+            enabled: None,
+            silenced_until: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertExpressionInput {
+    #[serde(rename = "metric")]
+    pub metric: String,
+
+    #[serde(rename = "agg")]
+    pub agg: AlertExpressionInputAgg,
+    /// Label matchers (label=value, label!=value, label=~regex, label!~regex). Tenant scope is always applied independently.
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+    /// Grouping labels; the resulting series are summed to match the console metric card.
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
+
+    #[serde(
+        rename = "denominator",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub denominator: Option<AlertQueryInput>,
+    /// Multiplier after optional division, e.g. 100 for a percentage or 1/1048576 for MiB/s.
+    #[serde(rename = "scale")]
+    pub scale: f64,
+    /// Display unit for the scaled threshold and value.
+    #[serde(rename = "unit", default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+}
+impl AlertExpressionInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(metric: String, agg: AlertExpressionInputAgg, scale: f64) -> Self {
+        Self {
+            metric,
+            agg,
+            match_: None,
+            by: None,
+            denominator: None,
+            scale,
+            unit: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertExpressionInputAgg {
+    Avg,
+    Min,
+    Max,
+    Sum,
+    Last,
+    Count,
+    Rate,
+    Increase,
+    Unknown(String),
+}
+impl AlertExpressionInputAgg {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Avg => "avg",
+            Self::Min => "min",
+            Self::Max => "max",
+            Self::Sum => "sum",
+            Self::Last => "last",
+            Self::Count => "count",
+            Self::Rate => "rate",
+            Self::Increase => "increase",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertExpressionInputAgg {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertExpressionInputAgg {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "avg" => Self::Avg,
+            "min" => Self::Min,
+            "max" => Self::Max,
+            "sum" => Self::Sum,
+            "last" => Self::Last,
+            "count" => Self::Count,
+            "rate" => Self::Rate,
+            "increase" => Self::Increase,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertQueryInput {
+    #[serde(rename = "metric")]
+    pub metric: String,
+
+    #[serde(rename = "agg")]
+    pub agg: AlertQueryInputAgg,
+    /// Label matchers (label=value, label!=value, label=~regex, label!~regex). Tenant scope is always applied independently.
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+    /// Grouping labels; the resulting series are summed to match the console metric card.
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
+}
+impl AlertQueryInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(metric: String, agg: AlertQueryInputAgg) -> Self {
+        Self {
+            metric,
+            agg,
+            match_: None,
+            by: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertQueryInputAgg {
+    Avg,
+    Min,
+    Max,
+    Sum,
+    Last,
+    Count,
+    Rate,
+    Increase,
+    Unknown(String),
+}
+impl AlertQueryInputAgg {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Avg => "avg",
+            Self::Min => "min",
+            Self::Max => "max",
+            Self::Sum => "sum",
+            Self::Last => "last",
+            Self::Count => "count",
+            Self::Rate => "rate",
+            Self::Increase => "increase",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertQueryInputAgg {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertQueryInputAgg {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "avg" => Self::Avg,
+            "min" => Self::Min,
+            "max" => Self::Max,
+            "sum" => Self::Sum,
+            "last" => Self::Last,
+            "count" => Self::Count,
+            "rate" => Self::Rate,
+            "increase" => Self::Increase,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CreateAlertRequestInputOperator {
+    Gt,
+    Gte,
+    Lt,
+    Lte,
+    Unknown(String),
+}
+impl CreateAlertRequestInputOperator {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Gt => "gt",
+            Self::Gte => "gte",
+            Self::Lt => "lt",
+            Self::Lte => "lte",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for CreateAlertRequestInputOperator {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for CreateAlertRequestInputOperator {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "gt" => Self::Gt,
+            "gte" => Self::Gte,
+            "lt" => Self::Lt,
+            "lte" => Self::Lte,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type CreateAlertBody = CreateAlertRequestInput;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertResponse {
+    #[serde(rename = "alert")]
+    pub alert: Alert,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Alert {
+    #[serde(rename = "expression")]
+    pub expression: AlertExpression,
+
+    #[serde(rename = "operator")]
+    pub operator: AlertOperator,
+
+    #[serde(rename = "threshold")]
+    pub threshold: f64,
+    /// Whole-minute window. Evaluated every minute against the last complete UTC-aligned window.
+    #[serde(rename = "window_seconds")]
+    pub window_seconds: i64,
+    /// Continuous breach duration before firing; 0 fires immediately. Missing data, query failures and scheduling gaps reset a pending duration.
+    #[serde(rename = "for_seconds")]
+    pub for_seconds: i64,
+
+    #[serde(rename = "enabled")]
+    pub enabled: bool,
+    /// Mute notifications until this instant (at most 30 days ahead). Evaluation continues; null removes silence. An active alert notifies on the next evaluation after silence expires.
+    #[serde(rename = "silenced_until")]
+    pub silenced_until: crate::Nullable<String>,
+
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+
+    #[serde(rename = "name")]
+    pub name: String,
+
+    #[serde(rename = "topic")]
+    pub topic: ResourceRef,
+    /// Evaluation state, independent of enabled and silenced_until. Missing data/errors do not resolve an open incident.
+    #[serde(rename = "state")]
+    pub state: AlertState,
+
+    #[serde(rename = "last_value")]
+    pub last_value: crate::Nullable<f64>,
+
+    #[serde(
+        rename = "evaluated_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub evaluated_at: Option<String>,
+
+    #[serde(
+        rename = "state_changed_at",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub state_changed_at: Option<String>,
+
+    #[serde(
+        rename = "pending_since",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub pending_since: Option<String>,
+
+    #[serde(
+        rename = "evaluation_error",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub evaluation_error: Option<String>,
+    /// Notification remains queued for retry; metric evaluation continues.
+    #[serde(
+        rename = "delivery_error",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub delivery_error: Option<String>,
+
+    #[serde(rename = "created_at")]
+    pub created_at: String,
+
+    #[serde(rename = "updated_at")]
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertExpression {
+    #[serde(rename = "metric")]
+    pub metric: String,
+
+    #[serde(rename = "agg")]
+    pub agg: AlertExpressionAgg,
+    /// Label matchers (label=value, label!=value, label=~regex, label!~regex). Tenant scope is always applied independently.
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+    /// Grouping labels; the resulting series are summed to match the console metric card.
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
+
+    #[serde(
+        rename = "denominator",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub denominator: Option<AlertQuery>,
+    /// Multiplier after optional division, e.g. 100 for a percentage or 1/1048576 for MiB/s.
+    #[serde(rename = "scale")]
+    pub scale: f64,
+    /// Display unit for the scaled threshold and value.
+    #[serde(rename = "unit", default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertExpressionAgg {
+    Avg,
+    Min,
+    Max,
+    Sum,
+    Last,
+    Count,
+    Rate,
+    Increase,
+    Unknown(String),
+}
+impl AlertExpressionAgg {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Avg => "avg",
+            Self::Min => "min",
+            Self::Max => "max",
+            Self::Sum => "sum",
+            Self::Last => "last",
+            Self::Count => "count",
+            Self::Rate => "rate",
+            Self::Increase => "increase",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertExpressionAgg {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertExpressionAgg {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "avg" => Self::Avg,
+            "min" => Self::Min,
+            "max" => Self::Max,
+            "sum" => Self::Sum,
+            "last" => Self::Last,
+            "count" => Self::Count,
+            "rate" => Self::Rate,
+            "increase" => Self::Increase,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertQuery {
+    #[serde(rename = "metric")]
+    pub metric: String,
+
+    #[serde(rename = "agg")]
+    pub agg: AlertQueryAgg,
+    /// Label matchers (label=value, label!=value, label=~regex, label!~regex). Tenant scope is always applied independently.
+    #[serde(rename = "match", default, skip_serializing_if = "Option::is_none")]
+    pub match_: Option<Vec<String>>,
+    /// Grouping labels; the resulting series are summed to match the console metric card.
+    #[serde(rename = "by", default, skip_serializing_if = "Option::is_none")]
+    pub by: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertQueryAgg {
+    Avg,
+    Min,
+    Max,
+    Sum,
+    Last,
+    Count,
+    Rate,
+    Increase,
+    Unknown(String),
+}
+impl AlertQueryAgg {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Avg => "avg",
+            Self::Min => "min",
+            Self::Max => "max",
+            Self::Sum => "sum",
+            Self::Last => "last",
+            Self::Count => "count",
+            Self::Rate => "rate",
+            Self::Increase => "increase",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertQueryAgg {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertQueryAgg {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "avg" => Self::Avg,
+            "min" => Self::Min,
+            "max" => Self::Max,
+            "sum" => Self::Sum,
+            "last" => Self::Last,
+            "count" => Self::Count,
+            "rate" => Self::Rate,
+            "increase" => Self::Increase,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertOperator {
+    Gt,
+    Gte,
+    Lt,
+    Lte,
+    Unknown(String),
+}
+impl AlertOperator {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Gt => "gt",
+            Self::Gte => "gte",
+            Self::Lt => "lt",
+            Self::Lte => "lte",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertOperator {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertOperator {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "gt" => Self::Gt,
+            "gte" => Self::Gte,
+            "lt" => Self::Lt,
+            "lte" => Self::Lte,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ResourceRef {
+    #[serde(rename = "id")]
+    pub id: String,
+
+    #[serde(rename = "crn")]
+    pub crn: String,
+    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AlertState {
+    Ok,
+    Pending,
+    Firing,
+    NoData,
+    Error,
+    Unknown(String),
+}
+impl AlertState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ok => "ok",
+            Self::Pending => "pending",
+            Self::Firing => "firing",
+            Self::NoData => "no_data",
+            Self::Error => "error",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for AlertState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for AlertState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ok" => Self::Ok,
+            "pending" => Self::Pending,
+            "firing" => Self::Firing,
+            "no_data" => Self::NoData,
+            "error" => Self::Error,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type CreateAlertResponse = AlertResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct CreateLogGroupRequestInput {
     /// Resource names must not start with the literal crn: prefix or be UUIDs (canonical, compact, braced, or urn:uuid: forms, in either case).
     #[serde(rename = "name")]
@@ -82,19 +671,66 @@ pub struct LogGroup {
     pub updated_at: String,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct ResourceRef {
-    #[serde(rename = "id")]
-    pub id: String,
+pub type CreateLogGroupResponse = LogGroupResponse;
 
-    #[serde(rename = "crn")]
-    pub crn: String,
-    /// Display label at response time — the resource's name where it has one, otherwise its human label (an invoice number, an account display name). Absent when the target is gone. Not a lookup key.
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+pub type GetAlertResponse = AlertResponse;
+
+pub type GetAlertResource = Alert;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct GetAlertScope {
+    #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<GetAlertScopeState>,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
 }
 
-pub type CreateLogGroupResponse = LogGroupResponse;
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GetAlertScopeState {
+    Ok,
+    Pending,
+    Firing,
+    NoData,
+    Error,
+    Silenced,
+    Disabled,
+    Unknown(String),
+}
+impl GetAlertScopeState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ok => "ok",
+            Self::Pending => "pending",
+            Self::Firing => "firing",
+            Self::NoData => "no_data",
+            Self::Error => "error",
+            Self::Silenced => "silenced",
+            Self::Disabled => "disabled",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for GetAlertScopeState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for GetAlertScopeState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ok" => Self::Ok,
+            "pending" => Self::Pending,
+            "firing" => Self::Firing,
+            "no_data" => Self::NoData,
+            "error" => Self::Error,
+            "silenced" => Self::Silenced,
+            "disabled" => Self::Disabled,
+            _ => Self::Unknown(value),
+        })
+    }
+}
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct LogResponse {
@@ -207,6 +843,13 @@ pub struct RetainedDataResponse {
 pub struct RetainedDataResponseRetainedData {
     #[serde(rename = "has_data")]
     pub has_data: bool,
+    /// True when retained logs, spans or their storage rollups still block account deletion. Metric samples alone do not block account soft-deletion and expire through normal retention. Clients talking to older servers that omit this field must fall back to has_data.
+    #[serde(
+        rename = "blocks_deletion",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub blocks_deletion: Option<bool>,
 }
 
 pub type GetRetainedTelemetryPresenceResponse = RetainedDataResponse;
@@ -610,6 +1253,101 @@ pub type IngestSpansBody = IngestSpansRequestInput;
 pub type IngestSpansResponse = IngestResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct ListAlertsParameters {
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    #[serde(rename = "crn", default, skip_serializing_if = "Option::is_none")]
+    pub crn: Option<String>,
+
+    #[serde(rename = "state", default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<ListAlertsParametersState>,
+
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ListAlertsParametersState {
+    Ok,
+    Pending,
+    Firing,
+    NoData,
+    Error,
+    Silenced,
+    Disabled,
+    Unknown(String),
+}
+impl ListAlertsParametersState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Ok => "ok",
+            Self::Pending => "pending",
+            Self::Firing => "firing",
+            Self::NoData => "no_data",
+            Self::Error => "error",
+            Self::Silenced => "silenced",
+            Self::Disabled => "disabled",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for ListAlertsParametersState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for ListAlertsParametersState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "ok" => Self::Ok,
+            "pending" => Self::Pending,
+            "firing" => Self::Firing,
+            "no_data" => Self::NoData,
+            "error" => Self::Error,
+            "silenced" => Self::Silenced,
+            "disabled" => Self::Disabled,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type ListAlertsQuery = ListAlertsParameters;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AlertListResponse {
+    #[serde(rename = "alerts")]
+    pub alerts: Vec<Alert>,
+
+    #[serde(rename = "meta")]
+    pub meta: PaginationMeta,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct PaginationMeta {
+    /// Total number of items
+    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+    /// Number of items per page
+    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i64>,
+    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
+    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
+    pub marker: Option<String>,
+    /// Whether there are more items
+    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
+    pub has_more: Option<bool>,
+}
+
+pub type ListAlertsResponse = AlertListResponse;
+
+pub type ListAlertsItem = Alert;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct ListLogGroupsParameters {
     #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -633,22 +1371,6 @@ pub struct LogGroupListResponse {
 
     #[serde(rename = "meta")]
     pub meta: PaginationMeta,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct PaginationMeta {
-    /// Total number of items
-    #[serde(rename = "total", default, skip_serializing_if = "Option::is_none")]
-    pub total: Option<i64>,
-    /// Number of items per page
-    #[serde(rename = "limit", default, skip_serializing_if = "Option::is_none")]
-    pub limit: Option<i64>,
-    /// Opaque cursor for the next page. Pass it back as the `marker` query parameter; treat it as a token, not a value to parse.
-    #[serde(rename = "marker", default, skip_serializing_if = "Option::is_none")]
-    pub marker: Option<String>,
-    /// Whether there are more items
-    #[serde(rename = "has_more", default, skip_serializing_if = "Option::is_none")]
-    pub has_more: Option<bool>,
 }
 
 pub type ListLogGroupsResponse = LogGroupListResponse;
@@ -1598,6 +2320,92 @@ pub struct TraceListResponse {
 }
 
 pub type SearchTracesResponse = TraceListResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct UpdateAlertRequestInput {
+    /// Required same-account, same-region notification topic reference: UUID, canonical CRN or exact name, classified by syntax. Multiple alerts may share a topic. Binding requires notifications:Publish and respects explicit topic-policy denies.
+    #[serde(rename = "topic", default, skip_serializing_if = "Option::is_none")]
+    pub topic: Option<String>,
+
+    #[serde(
+        rename = "expression",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub expression: Option<AlertExpressionInput>,
+
+    #[serde(rename = "operator", default, skip_serializing_if = "Option::is_none")]
+    pub operator: Option<UpdateAlertRequestInputOperator>,
+
+    #[serde(rename = "threshold", default, skip_serializing_if = "Option::is_none")]
+    pub threshold: Option<f64>,
+    /// Whole-minute window. Evaluated every minute against the last complete UTC-aligned window.
+    #[serde(
+        rename = "window_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub window_seconds: Option<i64>,
+    /// Continuous breach duration before firing; 0 fires immediately. Missing data, query failures and scheduling gaps reset a pending duration.
+    #[serde(
+        rename = "for_seconds",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub for_seconds: Option<i64>,
+
+    #[serde(rename = "enabled", default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    /// Mute notifications until this instant (at most 30 days ahead). Evaluation continues; null removes silence. An active alert notifies on the next evaluation after silence expires.
+    #[serde(
+        rename = "silenced_until",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::response::present_nullable"
+    )]
+    pub silenced_until: Option<crate::Nullable<String>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateAlertRequestInputOperator {
+    Gt,
+    Gte,
+    Lt,
+    Lte,
+    Unknown(String),
+}
+impl UpdateAlertRequestInputOperator {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Gt => "gt",
+            Self::Gte => "gte",
+            Self::Lt => "lt",
+            Self::Lte => "lte",
+            Self::Unknown(value) => value,
+        }
+    }
+}
+impl serde::Serialize for UpdateAlertRequestInputOperator {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for UpdateAlertRequestInputOperator {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "gt" => Self::Gt,
+            "gte" => Self::Gte,
+            "lt" => Self::Lt,
+            "lte" => Self::Lte,
+            _ => Self::Unknown(value),
+        })
+    }
+}
+
+pub type UpdateAlertBody = UpdateAlertRequestInput;
+
+pub type UpdateAlertResponse = AlertResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct UpdateLogGroupRequestInput {

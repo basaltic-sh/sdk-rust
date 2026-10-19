@@ -792,6 +792,626 @@ Verify zone ownership
 pub fn verify_zone_ownership(&self, zone_id: &str) -> Request<m::VerifyZoneOwnershipResponse>
 ```
 
+## `email.add_suppression_override`
+
+Add a suppression override address
+
+`POST /v1/configuration-sets/{configuration_set_id}/suppression-overrides`
+
+```rust
+pub fn add_suppression_override(&self, configuration_set_id: &str, body: &m::AddSuppressionOverrideBody) -> Request<m::AddSuppressionOverrideResponse>
+```
+
+## `email.begin_dkim_rotation`
+
+Begin DKIM key rotation
+
+`POST /v1/identities/{identity_id}/dkim/rotate`
+
+```rust
+pub fn begin_dkim_rotation(&self, identity_id: &str) -> Request<m::BeginDKIMRotationResponse>
+```
+
+## `email.cancel_dkim_rotation`
+
+Cancel in-progress DKIM rotation
+
+`DELETE /v1/identities/{identity_id}/dkim/rotate`
+
+```rust
+pub fn cancel_dkim_rotation(&self, identity_id: &str) -> Request<m::CancelDKIMRotationResponse>
+```
+
+## `email.create_configuration_set`
+
+Create a configuration set
+
+`POST /v1/configuration-sets`
+
+```rust
+pub fn create_configuration_set(&self, body: &m::CreateConfigurationSetBody) -> Request<m::CreateConfigurationSetResponse>
+```
+
+## `email.create_ip_pool`
+
+Create an IP pool
+
+`POST /v1/ip-pools`
+
+```rust
+pub fn create_ip_pool(&self, body: &m::CreateIPPoolBody) -> Request<m::CreateIPPoolResponse>
+```
+
+## `email.create_identity`
+
+Create a sender identity
+
+`POST /v1/identities`
+
+```rust
+pub fn create_identity(&self, body: &m::CreateIdentityBody) -> Request<m::CreateIdentityResponse>
+```
+
+## `email.create_recipient_rule`
+
+Create recipient rule
+
+`POST /v1/identities/{identity_id}/recipient-rules`
+
+```rust
+pub fn create_recipient_rule(&self, identity_id: &str, body: &m::CreateRecipientRuleBody) -> Request<m::CreateRecipientRuleResponse>
+```
+
+## `email.create_suppression`
+
+Add a suppression entry
+
+`POST /v1/suppressions`
+
+```rust
+pub fn create_suppression(&self, body: &m::CreateSuppressionBody) -> Request<m::CreateSuppressionResponse>
+```
+
+## `email.create_template`
+
+Create a template
+
+`POST /v1/templates`
+
+```rust
+pub fn create_template(&self, body: &m::CreateTemplateBody) -> Request<m::CreateTemplateResponse>
+```
+
+## `email.delete_configuration_set`
+
+Delete a configuration set
+
+`DELETE /v1/configuration-sets/{configuration_set_id}`
+
+```rust
+pub fn delete_configuration_set(&self, configuration_set_id: &str) -> EmptyRequest
+```
+
+## `email.delete_ip_pool`
+
+Delete an IP pool
+
+`DELETE /v1/ip-pools/{ip_pool_id}`
+
+```rust
+pub fn delete_ip_pool(&self, ip_pool_id: &str) -> EmptyRequest
+```
+
+## `email.delete_identity`
+
+Delete an identity
+
+`DELETE /v1/identities/{identity_id}`
+
+```rust
+pub fn delete_identity(&self, identity_id: &str) -> EmptyRequest
+```
+
+## `email.delete_recipient_rule`
+
+Delete recipient rule
+
+`DELETE /v1/identities/{identity_id}/recipient-rules/{rule_id}`
+
+```rust
+pub fn delete_recipient_rule(&self, identity_id: &str, rule_id: &str) -> EmptyRequest
+```
+
+## `email.delete_suppression`
+
+Delete suppression
+
+`DELETE /v1/suppressions/{suppression_id}`
+
+```rust
+pub fn delete_suppression(&self, suppression_id: &str) -> EmptyRequest
+```
+
+## `email.delete_template`
+
+Delete a template
+
+`DELETE /v1/templates/{template_id}`
+
+```rust
+pub fn delete_template(&self, template_id: &str) -> EmptyRequest
+```
+
+## `email.describe_configuration_set`
+
+Describe a configuration set
+
+`GET /v1/configuration-sets/{configuration_set_id}`
+
+```rust
+pub fn describe_configuration_set(&self, configuration_set_id: &str) -> Request<m::DescribeConfigurationSetResponse>
+```
+
+## `email.describe_dedicated_ip`
+
+Describe a dedicated IP
+
+`GET /v1/dedicated-ips/{dedicated_ip_id}`
+
+```rust
+pub fn describe_dedicated_ip(&self, dedicated_ip_id: &str) -> Request<m::DescribeDedicatedIPResponse>
+```
+
+## `email.describe_ip_pool`
+
+Describe an IP pool
+
+`GET /v1/ip-pools/{ip_pool_id}`
+
+```rust
+pub fn describe_ip_pool(&self, ip_pool_id: &str) -> Request<m::DescribeIPPoolResponse>
+```
+
+## `email.describe_identity`
+
+Describe an identity
+
+`GET /v1/identities/{identity_id}`
+
+```rust
+pub fn describe_identity(&self, identity_id: &str) -> Request<m::DescribeIdentityResponse>
+```
+
+## `email.describe_received_message`
+
+Get received message metadata
+
+`GET /v1/received-messages/{message_id}`
+
+```rust
+pub fn describe_received_message(&self, message_id: &str) -> Request<m::DescribeReceivedMessageResponse>
+```
+
+## `email.describe_recipient_rule`
+
+Get recipient rule
+
+`GET /v1/identities/{identity_id}/recipient-rules/{rule_id}`
+
+```rust
+pub fn describe_recipient_rule(&self, identity_id: &str, rule_id: &str) -> Request<m::DescribeRecipientRuleResponse>
+```
+
+## `email.describe_sent_message`
+
+Describe a sent message
+
+`GET /v1/sent-messages/{message_id}`
+
+```rust
+pub fn describe_sent_message(&self, message_id: &str) -> Request<m::DescribeSentMessageResponse>
+```
+
+## `email.describe_suppression`
+
+Get suppression
+
+`GET /v1/suppressions/{suppression_id}`
+
+```rust
+pub fn describe_suppression(&self, suppression_id: &str) -> Request<m::DescribeSuppressionResponse>
+```
+
+## `email.describe_template`
+
+Describe a template
+
+`GET /v1/templates/{template_id}`
+
+```rust
+pub fn describe_template(&self, template_id: &str) -> Request<m::DescribeTemplateResponse>
+```
+
+## `email.download_received_attachment`
+
+Download received attachment
+
+`GET /v1/received-messages/{message_id}/attachments/{attachment_id}`
+
+```rust
+pub fn download_received_attachment(&self, message_id: &str, attachment_id: &str) -> BinaryRequest
+```
+
+## `email.download_received_message`
+
+Download received message
+
+`GET /v1/received-messages/{message_id}/raw`
+
+```rust
+pub fn download_received_message(&self, message_id: &str) -> BinaryRequest
+```
+
+## `email.download_sent_attachment`
+
+Download sent attachment
+
+`GET /v1/sent-messages/{message_id}/attachments/{attachment_id}`
+
+```rust
+pub fn download_sent_attachment(&self, message_id: &str, attachment_id: &str) -> BinaryRequest
+```
+
+## `email.download_sent_message`
+
+Download sent message
+
+`GET /v1/sent-messages/{message_id}/raw`
+
+```rust
+pub fn download_sent_message(&self, message_id: &str) -> BinaryRequest
+```
+
+## `email.finalize_dkim_rotation`
+
+Finalize DKIM key rotation
+
+`POST /v1/identities/{identity_id}/dkim/rotate/finalize`
+
+```rust
+pub fn finalize_dkim_rotation(&self, identity_id: &str) -> Request<m::FinalizeDKIMRotationResponse>
+```
+
+## `email.get_received_message_content`
+
+Get received message content
+
+`GET /v1/received-messages/{message_id}/content`
+
+```rust
+pub fn get_received_message_content(&self, message_id: &str) -> Request<m::GetReceivedMessageContentResponse>
+```
+
+## `email.get_receiving_configuration`
+
+Get receiving configuration
+
+`GET /v1/identities/{identity_id}/receiving`
+
+```rust
+pub fn get_receiving_configuration(&self, identity_id: &str) -> Request<m::GetReceivingConfigurationResponse>
+```
+
+## `email.get_sent_message_content`
+
+Get sent message content
+
+`GET /v1/sent-messages/{message_id}/content`
+
+```rust
+pub fn get_sent_message_content(&self, message_id: &str) -> Request<m::GetSentMessageContentResponse>
+```
+
+## `email.get_sent_message_engagement`
+
+Sent message engagement
+
+`GET /v1/sent-messages/{message_id}/engagement`
+
+```rust
+pub fn get_sent_message_engagement(&self, message_id: &str) -> Request<m::GetSentMessageEngagementResponse>
+```
+
+## `email.list_configuration_sets`
+
+List configuration sets
+
+`GET /v1/configuration-sets`
+
+```rust
+pub fn list_configuration_sets(&self, query: &m::ListConfigurationSetsQuery) -> PagedRequest<m::ListConfigurationSetsResponse, m::ListConfigurationSetsItem>
+```
+
+## `email.list_dmarc_reports`
+
+List DMARC report records
+
+`GET /v1/identities/{identity_id}/dmarc-reports`
+
+```rust
+pub fn list_dmarc_reports(&self, identity_id: &str, query: &m::ListDMARCReportsQuery) -> PagedRequest<m::ListDMARCReportsResponse, m::ListDMARCReportsItem>
+```
+
+## `email.list_dedicated_i_ps`
+
+List dedicated IPs
+
+`GET /v1/dedicated-ips`
+
+```rust
+pub fn list_dedicated_i_ps(&self, query: &m::ListDedicatedIPsQuery) -> PagedRequest<m::ListDedicatedIPsResponse, m::ListDedicatedIPsItem>
+```
+
+## `email.list_ip_pools`
+
+List IP pools
+
+`GET /v1/ip-pools`
+
+```rust
+pub fn list_ip_pools(&self, query: &m::ListIPPoolsQuery) -> PagedRequest<m::ListIPPoolsResponse, m::ListIPPoolsItem>
+```
+
+## `email.list_identities`
+
+List sender identities
+
+`GET /v1/identities`
+
+```rust
+pub fn list_identities(&self, query: &m::ListIdentitiesQuery) -> PagedRequest<m::ListIdentitiesResponse, m::ListIdentitiesItem>
+```
+
+## `email.list_received_messages`
+
+List received messages
+
+`GET /v1/received-messages`
+
+```rust
+pub fn list_received_messages(&self, query: &m::ListReceivedMessagesQuery) -> PagedRequest<m::ListReceivedMessagesResponse, m::ListReceivedMessagesItem>
+```
+
+## `email.list_recipient_rules`
+
+List recipient rules
+
+`GET /v1/identities/{identity_id}/recipient-rules`
+
+```rust
+pub fn list_recipient_rules(&self, identity_id: &str, query: &m::ListRecipientRulesQuery) -> PagedRequest<m::ListRecipientRulesResponse, m::ListRecipientRulesItem>
+```
+
+## `email.list_rejections`
+
+List API-side send rejections
+
+`GET /v1/rejections`
+
+```rust
+pub fn list_rejections(&self, query: &m::ListRejectionsQuery) -> PagedRequest<m::ListRejectionsResponse, m::ListRejectionsItem>
+```
+
+## `email.list_sent_messages`
+
+List sent messages
+
+`GET /v1/sent-messages`
+
+```rust
+pub fn list_sent_messages(&self, query: &m::ListSentMessagesQuery) -> PagedRequest<m::ListSentMessagesResponse, m::ListSentMessagesItem>
+```
+
+## `email.list_suppressions`
+
+List suppression entries
+
+`GET /v1/suppressions`
+
+```rust
+pub fn list_suppressions(&self, query: &m::ListSuppressionsQuery) -> PagedRequest<m::ListSuppressionsResponse, m::ListSuppressionsItem>
+```
+
+## `email.list_templates`
+
+List templates
+
+`GET /v1/templates`
+
+```rust
+pub fn list_templates(&self, query: &m::ListTemplatesQuery) -> PagedRequest<m::ListTemplatesResponse, m::ListTemplatesItem>
+```
+
+## `email.release_dedicated_ip`
+
+Release a dedicated IP
+
+`DELETE /v1/dedicated-ips/{dedicated_ip_id}`
+
+```rust
+pub fn release_dedicated_ip(&self, dedicated_ip_id: &str) -> EmptyRequest
+```
+
+## `email.remove_suppression_override`
+
+Remove a suppression override address
+
+`DELETE /v1/configuration-sets/{configuration_set_id}/suppression-overrides/{address}`
+
+```rust
+pub fn remove_suppression_override(&self, configuration_set_id: &str, address: &str) -> Request<m::RemoveSuppressionOverrideResponse>
+```
+
+## `email.request_dedicated_ip`
+
+Request a dedicated IP
+
+`POST /v1/dedicated-ips`
+
+```rust
+pub fn request_dedicated_ip(&self, body: Option<&m::RequestDedicatedIPBody>) -> Request<m::RequestDedicatedIPResponse>
+```
+
+## `email.send_message`
+
+Send a message
+
+`POST /v1/sent-messages`
+
+```rust
+pub fn send_message(&self, body: &m::SendMessageBody) -> Request<m::SendMessageResponse>
+```
+
+## `email.send_message_batch`
+
+Send message batch
+
+`POST /v1/sent-messages/batch`
+
+```rust
+pub fn send_message_batch(&self, body: &m::SendMessageBatchBody) -> Request<m::SendMessageBatchResponse>
+```
+
+## `email.set_bimi`
+
+Set BIMI logo / VMC URLs
+
+`PATCH /v1/identities/{identity_id}/bimi`
+
+```rust
+pub fn set_bimi(&self, identity_id: &str, body: &m::SetBIMIBody) -> Request<m::SetBIMIResponse>
+```
+
+## `email.set_mail_from_domain`
+
+Set custom MAIL FROM domain
+
+`PATCH /v1/identities/{identity_id}/mail-from-domain`
+
+```rust
+pub fn set_mail_from_domain(&self, identity_id: &str, body: &m::SetMailFromDomainBody) -> Request<m::SetMailFromDomainResponse>
+```
+
+## `email.update_configuration_set`
+
+Update a configuration set
+
+`PATCH /v1/configuration-sets/{configuration_set_id}`
+
+```rust
+pub fn update_configuration_set(&self, configuration_set_id: &str, body: &m::UpdateConfigurationSetBody) -> Request<m::UpdateConfigurationSetResponse>
+```
+
+## `email.update_dedicated_ip`
+
+Update a dedicated IP
+
+`PATCH /v1/dedicated-ips/{dedicated_ip_id}`
+
+```rust
+pub fn update_dedicated_ip(&self, dedicated_ip_id: &str, body: &m::UpdateDedicatedIPBody) -> Request<m::UpdateDedicatedIPResponse>
+```
+
+## `email.update_ip_pool`
+
+Update an IP pool
+
+`PATCH /v1/ip-pools/{ip_pool_id}`
+
+```rust
+pub fn update_ip_pool(&self, ip_pool_id: &str, body: &m::UpdateIPPoolBody) -> Request<m::UpdateIPPoolResponse>
+```
+
+## `email.update_identity`
+
+Update identity
+
+`PATCH /v1/identities/{identity_id}`
+
+```rust
+pub fn update_identity(&self, identity_id: &str, body: &m::UpdateIdentityBody) -> Request<m::UpdateIdentityResponse>
+```
+
+## `email.update_receiving_configuration`
+
+Update receiving configuration
+
+`PATCH /v1/identities/{identity_id}/receiving`
+
+```rust
+pub fn update_receiving_configuration(&self, identity_id: &str, body: &m::UpdateReceivingConfigurationBody) -> EmptyRequest
+```
+
+## `email.update_recipient_rule`
+
+Update recipient rule
+
+`PATCH /v1/identities/{identity_id}/recipient-rules/{rule_id}`
+
+```rust
+pub fn update_recipient_rule(&self, identity_id: &str, rule_id: &str, body: &m::UpdateRecipientRuleBody) -> Request<m::UpdateRecipientRuleResponse>
+```
+
+## `email.update_suppression`
+
+Update suppression
+
+`PATCH /v1/suppressions/{suppression_id}`
+
+```rust
+pub fn update_suppression(&self, suppression_id: &str, body: &m::UpdateSuppressionBody) -> Request<m::UpdateSuppressionResponse>
+```
+
+## `email.update_template`
+
+Update a template
+
+`PATCH /v1/templates/{template_id}`
+
+```rust
+pub fn update_template(&self, template_id: &str, body: &m::UpdateTemplateBody) -> Request<m::UpdateTemplateResponse>
+```
+
+## `email.verify_bimi`
+
+Verify BIMI logo (+ optional VMC)
+
+`POST /v1/identities/{identity_id}/bimi/verify`
+
+```rust
+pub fn verify_bimi(&self, identity_id: &str) -> Request<m::VerifyBIMIResponse>
+```
+
+## `email.verify_identity`
+
+Trigger DNS verification
+
+`POST /v1/identities/{identity_id}/verify`
+
+```rust
+pub fn verify_identity(&self, identity_id: &str) -> Request<m::VerifyIdentityResponse>
+```
+
+## `email.verify_mail_from_domain`
+
+Verify custom MAIL FROM domain MX
+
+`POST /v1/identities/{identity_id}/mail-from-domain/verify`
+
+```rust
+pub fn verify_mail_from_domain(&self, identity_id: &str) -> Request<m::VerifyMailFromDomainResponse>
+```
+
 ## `iam.assume_role`
 
 Assume role
@@ -830,16 +1450,6 @@ Attach policy to service account
 
 ```rust
 pub fn attach_service_account_policy(&self, service_account_id: &str, body: &m::AttachServiceAccountPolicyBody) -> EmptyRequest
-```
-
-## `iam.authorize_oauth_client`
-
-Approve a CLI login and issue an authorization code
-
-`POST /v1/oauth/authorize`
-
-```rust
-pub fn authorize_oauth_client(&self, body: &m::AuthorizeOAuthClientBody) -> Request<m::AuthorizeOAuthClientResponse>
 ```
 
 ## `iam.create_oidc_provider`
@@ -2642,6 +3252,356 @@ Update VPC
 pub fn update_vpc(&self, vpc_id: &str, body: &m::UpdateVpcBody) -> Request<m::UpdateVpcResponse>
 ```
 
+## `notifications.create_topic`
+
+Create a topic
+
+`POST /v1/topics`
+
+```rust
+pub fn create_topic(&self, body: &m::CreateTopicBody) -> Request<m::CreateTopicResponse>
+```
+
+## `notifications.delete_topic`
+
+Delete a topic
+
+`DELETE /v1/topics/{topic_id}`
+
+```rust
+pub fn delete_topic(&self, topic_id: &str) -> EmptyRequest
+```
+
+## `notifications.delete_topic_policy`
+
+Delete the topic's resource policy
+
+`DELETE /v1/topics/{topic_id}/policy`
+
+```rust
+pub fn delete_topic_policy(&self, topic_id: &str) -> EmptyRequest
+```
+
+## `notifications.describe_message`
+
+Describe a published notification
+
+`GET /v1/topics/{topic_id}/messages/{message_id}`
+
+```rust
+pub fn describe_message(&self, topic_id: &str, message_id: &str) -> Request<m::DescribeMessageResponse>
+```
+
+## `notifications.describe_subscription`
+
+Describe a subscription
+
+`GET /v1/topics/{topic_id}/subscriptions/{subscription_id}`
+
+```rust
+pub fn describe_subscription(&self, topic_id: &str, subscription_id: &str) -> Request<m::DescribeSubscriptionResponse>
+```
+
+## `notifications.describe_topic`
+
+Describe a topic
+
+`GET /v1/topics/{topic_id}`
+
+```rust
+pub fn describe_topic(&self, topic_id: &str) -> Request<m::DescribeTopicResponse>
+```
+
+## `notifications.get_subscription_signing_secret`
+
+Read the webhook signing secret
+
+`GET /v1/topics/{topic_id}/subscriptions/{subscription_id}/signing-secret`
+
+```rust
+pub fn get_subscription_signing_secret(&self, topic_id: &str, subscription_id: &str) -> Request<m::GetSubscriptionSigningSecretResponse>
+```
+
+## `notifications.get_topic_policy`
+
+Read the topic's resource policy
+
+`GET /v1/topics/{topic_id}/policy`
+
+```rust
+pub fn get_topic_policy(&self, topic_id: &str) -> Request<m::GetTopicPolicyResponse>
+```
+
+## `notifications.list_deliveries`
+
+List delivery records
+
+`GET /v1/topics/{topic_id}/deliveries`
+
+```rust
+pub fn list_deliveries(&self, topic_id: &str, query: &m::ListDeliveriesQuery) -> PagedRequest<m::ListDeliveriesResponse, m::ListDeliveriesItem>
+```
+
+## `notifications.list_messages`
+
+List messages
+
+`GET /v1/topics/{topic_id}/messages`
+
+```rust
+pub fn list_messages(&self, topic_id: &str, query: &m::ListMessagesQuery) -> PagedRequest<m::ListMessagesResponse, m::ListMessagesItem>
+```
+
+## `notifications.list_subscriptions`
+
+List subscriptions
+
+`GET /v1/topics/{topic_id}/subscriptions`
+
+```rust
+pub fn list_subscriptions(&self, topic_id: &str, query: &m::ListSubscriptionsQuery) -> PagedRequest<m::ListSubscriptionsResponse, m::ListSubscriptionsItem>
+```
+
+## `notifications.list_topics`
+
+List topics
+
+`GET /v1/topics`
+
+```rust
+pub fn list_topics(&self, query: &m::ListTopicsQuery) -> PagedRequest<m::ListTopicsResponse, m::ListTopicsItem>
+```
+
+## `notifications.publish`
+
+Publish a notification
+
+`POST /v1/topics/{topic_id}/publish`
+
+```rust
+pub fn publish(&self, topic_id: &str, body: &m::PublishBody) -> Request<m::PublishResponse>
+```
+
+## `notifications.publish_batch`
+
+Publish up to 10 notifications
+
+`POST /v1/topics/{topic_id}/publish-batch`
+
+```rust
+pub fn publish_batch(&self, topic_id: &str, body: &m::PublishBatchBody) -> Request<m::PublishBatchResponse>
+```
+
+## `notifications.put_topic_policy`
+
+Set the topic's resource policy
+
+`PUT /v1/topics/{topic_id}/policy`
+
+```rust
+pub fn put_topic_policy(&self, topic_id: &str, body: &m::PutTopicPolicyBody) -> Request<m::PutTopicPolicyResponse>
+```
+
+## `notifications.resend_confirmation`
+
+Re-send the confirmation handshake
+
+`POST /v1/topics/{topic_id}/subscriptions/{subscription_id}/resend-confirmation`
+
+```rust
+pub fn resend_confirmation(&self, topic_id: &str, subscription_id: &str) -> Request<m::ResendConfirmationResponse>
+```
+
+## `notifications.rotate_subscription_signing_secret`
+
+Rotate the webhook signing secret
+
+`POST /v1/topics/{topic_id}/subscriptions/{subscription_id}/signing-secret/rotate`
+
+```rust
+pub fn rotate_subscription_signing_secret(&self, topic_id: &str, subscription_id: &str) -> Request<m::RotateSubscriptionSigningSecretResponse>
+```
+
+## `notifications.subscribe`
+
+Subscribe an endpoint to a topic
+
+`POST /v1/topics/{topic_id}/subscriptions`
+
+```rust
+pub fn subscribe(&self, topic_id: &str, body: &m::SubscribeBody) -> Request<m::SubscribeResponse>
+```
+
+## `notifications.unsubscribe`
+
+Unsubscribe
+
+`DELETE /v1/topics/{topic_id}/subscriptions/{subscription_id}`
+
+```rust
+pub fn unsubscribe(&self, topic_id: &str, subscription_id: &str) -> EmptyRequest
+```
+
+## `notifications.update_subscription`
+
+Update mutable subscription settings
+
+`PATCH /v1/topics/{topic_id}/subscriptions/{subscription_id}`
+
+```rust
+pub fn update_subscription(&self, topic_id: &str, subscription_id: &str, body: &m::UpdateSubscriptionBody) -> Request<m::UpdateSubscriptionResponse>
+```
+
+## `notifications.update_topic`
+
+Update mutable topic metadata
+
+`PATCH /v1/topics/{topic_id}`
+
+```rust
+pub fn update_topic(&self, topic_id: &str, body: &m::UpdateTopicBody) -> Request<m::UpdateTopicResponse>
+```
+
+## `queue.change_message_visibility`
+
+Extend or shorten a lease
+
+`POST /v1/queues/{queue_id}/messages/visibility`
+
+```rust
+pub fn change_message_visibility(&self, queue_id: &str, body: &m::ChangeMessageVisibilityBody) -> EmptyRequest
+```
+
+## `queue.change_message_visibility_batch`
+
+Extend or shorten up to ten leases
+
+`POST /v1/queues/{queue_id}/messages/visibility-batch`
+
+```rust
+pub fn change_message_visibility_batch(&self, queue_id: &str, body: &m::ChangeMessageVisibilityBatchBody) -> Request<m::ChangeMessageVisibilityBatchResponse>
+```
+
+## `queue.create_queue`
+
+Create a queue
+
+`POST /v1/queues`
+
+```rust
+pub fn create_queue(&self, body: &m::CreateQueueBody) -> Request<m::CreateQueueResponse>
+```
+
+## `queue.delete_message`
+
+Delete a leased message
+
+`DELETE /v1/queues/{queue_id}/messages`
+
+```rust
+pub fn delete_message(&self, queue_id: &str, query: &m::DeleteMessageQuery) -> EmptyRequest
+```
+
+## `queue.delete_message_batch`
+
+Delete up to ten leased messages
+
+`POST /v1/queues/{queue_id}/messages/delete-batch`
+
+```rust
+pub fn delete_message_batch(&self, queue_id: &str, body: &m::DeleteMessageBatchBody) -> Request<m::DeleteMessageBatchResponse>
+```
+
+## `queue.delete_queue`
+
+Delete a queue
+
+`DELETE /v1/queues/{queue_id}`
+
+```rust
+pub fn delete_queue(&self, queue_id: &str) -> EmptyRequest
+```
+
+## `queue.describe_queue`
+
+Describe a queue
+
+`GET /v1/queues/{queue_id}`
+
+```rust
+pub fn describe_queue(&self, queue_id: &str) -> Request<m::DescribeQueueResponse>
+```
+
+## `queue.list_queues`
+
+List queues
+
+`GET /v1/queues`
+
+```rust
+pub fn list_queues(&self, query: &m::ListQueuesQuery) -> PagedRequest<m::ListQueuesResponse, m::ListQueuesItem>
+```
+
+## `queue.peek_messages`
+
+Peek at a queue's messages
+
+`GET /v1/queues/{queue_id}/messages`
+
+```rust
+pub fn peek_messages(&self, queue_id: &str, query: &m::PeekMessagesQuery) -> Request<m::PeekMessagesResponse>
+```
+
+## `queue.purge_queue`
+
+Delete every message on a queue
+
+`POST /v1/queues/{queue_id}/purge`
+
+```rust
+pub fn purge_queue(&self, queue_id: &str) -> Request<m::PurgeQueueResponse>
+```
+
+## `queue.receive_messages`
+
+Lease messages
+
+`POST /v1/queues/{queue_id}/messages/receive`
+
+```rust
+pub fn receive_messages(&self, queue_id: &str, body: Option<&m::ReceiveMessagesBody>) -> Request<m::ReceiveMessagesResponse>
+```
+
+## `queue.send_message`
+
+Send a message
+
+`POST /v1/queues/{queue_id}/messages`
+
+```rust
+pub fn send_message(&self, queue_id: &str, body: &m::SendMessageBody) -> Request<m::SendMessageResponse>
+```
+
+## `queue.send_message_batch`
+
+Send up to ten messages
+
+`POST /v1/queues/{queue_id}/messages/batch`
+
+```rust
+pub fn send_message_batch(&self, queue_id: &str, body: &m::SendMessageBatchBody) -> Request<m::SendMessageBatchResponse>
+```
+
+## `queue.update_queue`
+
+Update queue attributes
+
+`PATCH /v1/queues/{queue_id}`
+
+```rust
+pub fn update_queue(&self, queue_id: &str, body: &m::UpdateQueueBody) -> Request<m::UpdateQueueResponse>
+```
+
 ## `quota.list_quotas`
 
 List quotas
@@ -2650,6 +3610,266 @@ List quotas
 
 ```rust
 pub fn list_quotas(&self, query: &m::ListQuotasQuery) -> PagedRequest<m::ListQuotasResponse, m::ListQuotasItem>
+```
+
+## `registry.batch_delete_image`
+
+Delete images
+
+`POST /v1/repositories/{repository_id}/images/batch-delete`
+
+```rust
+pub fn batch_delete_image(&self, repository_id: &str, body: &m::BatchDeleteImageBody) -> Request<m::BatchDeleteImageResponse>
+```
+
+## `registry.create_pull_through_cache_rule`
+
+Create a pull-through cache rule
+
+`POST /v1/pull-through-cache-rules`
+
+```rust
+pub fn create_pull_through_cache_rule(&self, body: &m::CreatePullThroughCacheRuleBody) -> Request<m::CreatePullThroughCacheRuleResponse>
+```
+
+## `registry.create_repository`
+
+Create a repository
+
+`POST /v1/repositories`
+
+```rust
+pub fn create_repository(&self, body: &m::CreateRepositoryBody) -> Request<m::CreateRepositoryResponse>
+```
+
+## `registry.delete_encryption_configuration`
+
+Delete encryption configuration
+
+`DELETE /v1/encryption-configuration`
+
+```rust
+pub fn delete_encryption_configuration(&self) -> EmptyRequest
+```
+
+## `registry.delete_lifecycle_policy`
+
+Delete the lifecycle policy
+
+`DELETE /v1/repositories/{repository_id}/lifecycle-policy`
+
+```rust
+pub fn delete_lifecycle_policy(&self, repository_id: &str) -> EmptyRequest
+```
+
+## `registry.delete_pull_through_cache_rule`
+
+Delete a pull-through cache rule
+
+`DELETE /v1/pull-through-cache-rules/{prefix}`
+
+```rust
+pub fn delete_pull_through_cache_rule(&self, prefix: &str) -> EmptyRequest
+```
+
+## `registry.delete_repository`
+
+Delete a repository
+
+`DELETE /v1/repositories/{repository_id}`
+
+```rust
+pub fn delete_repository(&self, repository_id: &str, query: &m::DeleteRepositoryQuery) -> EmptyRequest
+```
+
+## `registry.delete_repository_policy`
+
+Delete the repository policy
+
+`DELETE /v1/repositories/{repository_id}/policy`
+
+```rust
+pub fn delete_repository_policy(&self, repository_id: &str) -> EmptyRequest
+```
+
+## `registry.describe_image`
+
+Describe an image
+
+`GET /v1/repositories/{repository_id}/images/{image_reference}`
+
+```rust
+pub fn describe_image(&self, repository_id: &str, image_reference: &str) -> Request<m::DescribeImageResponse>
+```
+
+## `registry.describe_images`
+
+List images
+
+`GET /v1/repositories/{repository_id}/images`
+
+```rust
+pub fn describe_images(&self, repository_id: &str, query: &m::DescribeImagesQuery) -> Request<m::DescribeImagesResponse>
+```
+
+## `registry.describe_pull_through_cache_rule`
+
+Get a pull-through cache rule
+
+`GET /v1/pull-through-cache-rules/{prefix}`
+
+```rust
+pub fn describe_pull_through_cache_rule(&self, prefix: &str) -> Request<m::DescribePullThroughCacheRuleResponse>
+```
+
+## `registry.describe_pull_through_cache_rules`
+
+List pull-through cache rules
+
+`GET /v1/pull-through-cache-rules`
+
+```rust
+pub fn describe_pull_through_cache_rules(&self, query: &m::DescribePullThroughCacheRulesQuery) -> Request<m::DescribePullThroughCacheRulesResponse>
+```
+
+## `registry.describe_repositories`
+
+List repositories
+
+`GET /v1/repositories`
+
+```rust
+pub fn describe_repositories(&self, query: &m::DescribeRepositoriesQuery) -> Request<m::DescribeRepositoriesResponse>
+```
+
+## `registry.describe_repository`
+
+Describe a repository
+
+`GET /v1/repositories/{repository_id}`
+
+```rust
+pub fn describe_repository(&self, repository_id: &str) -> Request<m::DescribeRepositoryResponse>
+```
+
+## `registry.get_authorization_token`
+
+Get a docker login credential
+
+`POST /v1/authorization-token`
+
+```rust
+pub fn get_authorization_token(&self) -> Request<m::GetAuthorizationTokenResponse>
+```
+
+## `registry.get_encryption_configuration`
+
+Get the encryption configuration
+
+`GET /v1/encryption-configuration`
+
+```rust
+pub fn get_encryption_configuration(&self) -> Request<m::GetEncryptionConfigurationResponse>
+```
+
+## `registry.get_lifecycle_policy`
+
+Get the lifecycle policy
+
+`GET /v1/repositories/{repository_id}/lifecycle-policy`
+
+```rust
+pub fn get_lifecycle_policy(&self, repository_id: &str) -> Request<m::GetLifecyclePolicyResponse>
+```
+
+## `registry.get_repository_policy`
+
+Get the repository policy
+
+`GET /v1/repositories/{repository_id}/policy`
+
+```rust
+pub fn get_repository_policy(&self, repository_id: &str) -> Request<m::GetRepositoryPolicyResponse>
+```
+
+## `registry.get_retained_registry_presence`
+
+Check retained registry data presence
+
+`GET /v1/encryption-configuration/retained-data`
+
+```rust
+pub fn get_retained_registry_presence(&self) -> Request<m::GetRetainedRegistryPresenceResponse>
+```
+
+## `registry.list_tags`
+
+List tags
+
+`GET /v1/repositories/{repository_id}/tags`
+
+```rust
+pub fn list_tags(&self, repository_id: &str, query: &m::ListTagsQuery) -> PagedRequest<m::ListTagsResponse, m::ListTagsItem>
+```
+
+## `registry.put_encryption_configuration`
+
+Set the encryption configuration
+
+`PUT /v1/encryption-configuration`
+
+```rust
+pub fn put_encryption_configuration(&self, body: &m::PutEncryptionConfigurationBody) -> Request<m::PutEncryptionConfigurationResponse>
+```
+
+## `registry.put_lifecycle_policy`
+
+Set the lifecycle policy
+
+`PUT /v1/repositories/{repository_id}/lifecycle-policy`
+
+```rust
+pub fn put_lifecycle_policy(&self, repository_id: &str, body: &m::PutLifecyclePolicyBody) -> Request<m::PutLifecyclePolicyResponse>
+```
+
+## `registry.set_repository_policy`
+
+Set the repository policy
+
+`PUT /v1/repositories/{repository_id}/policy`
+
+```rust
+pub fn set_repository_policy(&self, repository_id: &str, body: &m::SetRepositoryPolicyBody) -> Request<m::SetRepositoryPolicyResponse>
+```
+
+## `registry.start_lifecycle_policy_preview`
+
+Preview a lifecycle policy
+
+`POST /v1/repositories/{repository_id}/lifecycle-policy/preview`
+
+```rust
+pub fn start_lifecycle_policy_preview(&self, repository_id: &str, body: Option<&m::StartLifecyclePolicyPreviewBody>) -> Request<m::StartLifecyclePolicyPreviewResponse>
+```
+
+## `registry.update_pull_through_cache_rule`
+
+Update a pull-through cache rule
+
+`PATCH /v1/pull-through-cache-rules/{prefix}`
+
+```rust
+pub fn update_pull_through_cache_rule(&self, prefix: &str, body: &m::UpdatePullThroughCacheRuleBody) -> Request<m::UpdatePullThroughCacheRuleResponse>
+```
+
+## `registry.update_repository`
+
+Update repository settings
+
+`PATCH /v1/repositories/{repository_id}`
+
+```rust
+pub fn update_repository(&self, repository_id: &str, body: &m::UpdateRepositoryBody) -> Request<m::UpdateRepositoryResponse>
 ```
 
 ## `secrets.create_secret`
@@ -3302,6 +4522,16 @@ Upload a part
 pub fn upload_part(&self, bucket: &str, upload_id: &str, part_number: &str, body: reqwest::Body) -> Request<m::UploadPartResponse>
 ```
 
+## `telemetry.create_alert`
+
+Create a metric alert
+
+`POST /v1/alerts`
+
+```rust
+pub fn create_alert(&self, body: &m::CreateAlertBody) -> Request<m::CreateAlertResponse>
+```
+
 ## `telemetry.create_log_group`
 
 Create a log group
@@ -3310,6 +4540,16 @@ Create a log group
 
 ```rust
 pub fn create_log_group(&self, body: &m::CreateLogGroupBody) -> Request<m::CreateLogGroupResponse>
+```
+
+## `telemetry.delete_alert`
+
+Delete a metric alert
+
+`DELETE /v1/alerts/{id}`
+
+```rust
+pub fn delete_alert(&self, id: &str) -> EmptyRequest
 ```
 
 ## `telemetry.delete_log_group`
@@ -3330,6 +4570,16 @@ Delete trace settings
 
 ```rust
 pub fn delete_trace_settings(&self) -> EmptyRequest
+```
+
+## `telemetry.get_alert`
+
+Get a metric alert
+
+`GET /v1/alerts/{id}`
+
+```rust
+pub fn get_alert(&self, id: &str) -> Request<m::GetAlertResponse>
 ```
 
 ## `telemetry.get_log`
@@ -3400,6 +4650,16 @@ Ingest a batch of trace spans
 
 ```rust
 pub fn ingest_spans(&self, body: &m::IngestSpansBody) -> Request<m::IngestSpansResponse>
+```
+
+## `telemetry.list_alerts`
+
+List metric alerts
+
+`GET /v1/alerts`
+
+```rust
+pub fn list_alerts(&self, query: &m::ListAlertsQuery) -> PagedRequest<m::ListAlertsResponse, m::ListAlertsItem>
 ```
 
 ## `telemetry.list_log_groups`
@@ -3520,6 +4780,16 @@ List traces
 
 ```rust
 pub fn search_traces(&self, query: &m::SearchTracesQuery) -> Request<m::SearchTracesResponse>
+```
+
+## `telemetry.update_alert`
+
+Update a metric alert
+
+`PATCH /v1/alerts/{id}`
+
+```rust
+pub fn update_alert(&self, id: &str, body: &m::UpdateAlertBody) -> Request<m::UpdateAlertResponse>
 ```
 
 ## `telemetry.update_log_group`

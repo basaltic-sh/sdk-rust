@@ -48,6 +48,14 @@ impl Client {
         }
     }
 }
+pub mod email;
+impl Client {
+    pub fn email(&self) -> email::EmailService {
+        email::EmailService {
+            client: self.clone(),
+        }
+    }
+}
 pub mod iam;
 impl Client {
     pub fn iam(&self) -> iam::IamService {
@@ -80,10 +88,34 @@ impl Client {
         }
     }
 }
+pub mod notifications;
+impl Client {
+    pub fn notifications(&self) -> notifications::NotificationsService {
+        notifications::NotificationsService {
+            client: self.clone(),
+        }
+    }
+}
+pub mod queue;
+impl Client {
+    pub fn queue(&self) -> queue::QueueService {
+        queue::QueueService {
+            client: self.clone(),
+        }
+    }
+}
 pub mod quota;
 impl Client {
     pub fn quota(&self) -> quota::QuotaService {
         quota::QuotaService {
+            client: self.clone(),
+        }
+    }
+}
+pub mod registry;
+impl Client {
+    pub fn registry(&self) -> registry::RegistryService {
+        registry::RegistryService {
             client: self.clone(),
         }
     }

@@ -5,6 +5,17 @@ use crate::transport::{Core, Operation, Payload, QueryEncoding};
 use crate::{BinaryRequest, Client, EmptyRequest, PagedRequest, Request, WebSocketRequest};
 const ENDPOINT: &str = "https://telemetry.{region}.basaltic.sh";
 static OP_0: Operation = Operation {
+    id: "createAlert",
+    method: "POST",
+    path: "/v1/alerts",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_1: Operation = Operation {
     id: "createLogGroup",
     method: "POST",
     path: "/v1/log-groups",
@@ -15,7 +26,18 @@ static OP_0: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_1: Operation = Operation {
+static OP_2: Operation = Operation {
+    id: "deleteAlert",
+    method: "DELETE",
+    path: "/v1/alerts/{id}",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_3: Operation = Operation {
     id: "deleteLogGroup",
     method: "DELETE",
     path: "/v1/log-groups/{id}",
@@ -26,7 +48,7 @@ static OP_1: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_2: Operation = Operation {
+static OP_4: Operation = Operation {
     id: "deleteTraceSettings",
     method: "DELETE",
     path: "/v1/trace-settings",
@@ -37,7 +59,18 @@ static OP_2: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_3: Operation = Operation {
+static OP_5: Operation = Operation {
+    id: "getAlert",
+    method: "GET",
+    path: "/v1/alerts/{id}",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_6: Operation = Operation {
     id: "getLog",
     method: "GET",
     path: "/v1/logs/{log_id}",
@@ -48,7 +81,7 @@ static OP_3: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_4: Operation = Operation {
+static OP_7: Operation = Operation {
     id: "getLogGroup",
     method: "GET",
     path: "/v1/log-groups/{id}",
@@ -59,7 +92,7 @@ static OP_4: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_5: Operation = Operation {
+static OP_8: Operation = Operation {
     id: "getRetainedTelemetryPresence",
     method: "GET",
     path: "/v1/retained-data",
@@ -70,7 +103,7 @@ static OP_5: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_6: Operation = Operation {
+static OP_9: Operation = Operation {
     id: "getTrace",
     method: "GET",
     path: "/v1/traces/{trace_id}",
@@ -81,7 +114,7 @@ static OP_6: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_7: Operation = Operation {
+static OP_10: Operation = Operation {
     id: "getTraceSettings",
     method: "GET",
     path: "/v1/trace-settings",
@@ -92,7 +125,7 @@ static OP_7: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_8: Operation = Operation {
+static OP_11: Operation = Operation {
     id: "ingestLogs",
     method: "POST",
     path: "/v1/logs",
@@ -103,7 +136,7 @@ static OP_8: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_9: Operation = Operation {
+static OP_12: Operation = Operation {
     id: "ingestSpans",
     method: "POST",
     path: "/v1/spans",
@@ -114,7 +147,44 @@ static OP_9: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_10: Operation = Operation {
+static OP_13: Operation = Operation {
+    id: "listAlerts",
+    method: "GET",
+    path: "/v1/alerts",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "",
+    accept: "application/json",
+    query_encoding: &[
+        QueryEncoding {
+            name: "name",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "crn",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "state",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "limit",
+            style: "form",
+            explode: true,
+        },
+        QueryEncoding {
+            name: "marker",
+            style: "form",
+            explode: true,
+        },
+    ],
+};
+static OP_14: Operation = Operation {
     id: "listLogGroups",
     method: "GET",
     path: "/v1/log-groups",
@@ -146,7 +216,7 @@ static OP_10: Operation = Operation {
         },
     ],
 };
-static OP_11: Operation = Operation {
+static OP_15: Operation = Operation {
     id: "listMetricNames",
     method: "GET",
     path: "/v1/metrics/names",
@@ -178,7 +248,7 @@ static OP_11: Operation = Operation {
         },
     ],
 };
-static OP_12: Operation = Operation {
+static OP_16: Operation = Operation {
     id: "listMetricNamesPost",
     method: "POST",
     path: "/v1/metrics/names",
@@ -189,7 +259,7 @@ static OP_12: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_13: Operation = Operation {
+static OP_17: Operation = Operation {
     id: "listMetricSeries",
     method: "GET",
     path: "/v1/metrics/series",
@@ -226,7 +296,7 @@ static OP_13: Operation = Operation {
         },
     ],
 };
-static OP_14: Operation = Operation {
+static OP_18: Operation = Operation {
     id: "listMetricSeriesPost",
     method: "POST",
     path: "/v1/metrics/series",
@@ -237,7 +307,7 @@ static OP_14: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_15: Operation = Operation {
+static OP_19: Operation = Operation {
     id: "listTraceSpans",
     method: "GET",
     path: "/v1/traces/{trace_id}/spans",
@@ -259,7 +329,7 @@ static OP_15: Operation = Operation {
         },
     ],
 };
-static OP_16: Operation = Operation {
+static OP_20: Operation = Operation {
     id: "queryMetricsInstant",
     method: "GET",
     path: "/v1/metrics/query",
@@ -301,7 +371,7 @@ static OP_16: Operation = Operation {
         },
     ],
 };
-static OP_17: Operation = Operation {
+static OP_21: Operation = Operation {
     id: "queryMetricsInstantPost",
     method: "POST",
     path: "/v1/metrics/query",
@@ -312,7 +382,7 @@ static OP_17: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_18: Operation = Operation {
+static OP_22: Operation = Operation {
     id: "queryMetricsRange",
     method: "GET",
     path: "/v1/metrics/query-range",
@@ -359,7 +429,7 @@ static OP_18: Operation = Operation {
         },
     ],
 };
-static OP_19: Operation = Operation {
+static OP_23: Operation = Operation {
     id: "queryMetricsRangePost",
     method: "POST",
     path: "/v1/metrics/query-range",
@@ -370,7 +440,7 @@ static OP_19: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_20: Operation = Operation {
+static OP_24: Operation = Operation {
     id: "searchLogs",
     method: "GET",
     path: "/v1/logs",
@@ -432,7 +502,7 @@ static OP_20: Operation = Operation {
         },
     ],
 };
-static OP_21: Operation = Operation {
+static OP_25: Operation = Operation {
     id: "searchTraces",
     method: "GET",
     path: "/v1/traces",
@@ -484,7 +554,18 @@ static OP_21: Operation = Operation {
         },
     ],
 };
-static OP_22: Operation = Operation {
+static OP_26: Operation = Operation {
+    id: "updateAlert",
+    method: "PATCH",
+    path: "/v1/alerts/{id}",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_27: Operation = Operation {
     id: "updateLogGroup",
     method: "PATCH",
     path: "/v1/log-groups/{id}",
@@ -495,7 +576,7 @@ static OP_22: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_23: Operation = Operation {
+static OP_28: Operation = Operation {
     id: "updateTraceSettings",
     method: "PATCH",
     path: "/v1/trace-settings",
@@ -506,7 +587,7 @@ static OP_23: Operation = Operation {
     accept: "application/json",
     query_encoding: &[],
 };
-static OP_24: Operation = Operation {
+static OP_29: Operation = Operation {
     id: "writeMetrics",
     method: "POST",
     path: "/v1/metrics/write",
@@ -522,11 +603,8 @@ pub struct TelemetryService {
     pub(crate) client: Client,
 }
 impl TelemetryService {
-    /// Create a log group
-    pub fn create_log_group(
-        &self,
-        body: &m::CreateLogGroupBody,
-    ) -> Request<m::CreateLogGroupResponse> {
+    /// Create a metric alert
+    pub fn create_alert(&self, body: &m::CreateAlertBody) -> Request<m::CreateAlertResponse> {
         Request::new(Core::new(
             self.client.clone(),
             "telemetry",
@@ -537,13 +615,40 @@ impl TelemetryService {
             Ok(serde_json::json!({})),
         ))
     }
+    /// Create a log group
+    pub fn create_log_group(
+        &self,
+        body: &m::CreateLogGroupBody,
+    ) -> Request<m::CreateLogGroupResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "telemetry",
+            ENDPOINT,
+            &OP_1,
+            &[],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Delete a metric alert
+    pub fn delete_alert(&self, id: &str) -> EmptyRequest {
+        EmptyRequest::new(Core::new(
+            self.client.clone(),
+            "telemetry",
+            ENDPOINT,
+            &OP_2,
+            &[("id", id)],
+            Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
     /// Delete a log group
     pub fn delete_log_group(&self, id: &str) -> EmptyRequest {
         EmptyRequest::new(Core::new(
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_1,
+            &OP_3,
             &[("id", id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -555,11 +660,55 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_2,
+            &OP_4,
             &[],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
         ))
+    }
+    /// Get a metric alert
+    pub fn get_alert(&self, id: &str) -> Request<m::GetAlertResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "telemetry",
+            ENDPOINT,
+            &OP_5,
+            &[("id", id)],
+            Ok(Payload::Empty),
+            Ok(serde_json::json!({})),
+        ))
+    }
+    /// Resolve one resource by UUID, CRN, or an unambiguous name.
+    pub fn get_alert_by_reference(
+        &self,
+        reference: &str,
+        scope: &m::GetAlertScope,
+    ) -> Request<m::GetAlertResource> {
+        let (core, extract) = crate::request::reference_core(
+            Core::new(
+                self.client.clone(),
+                "telemetry",
+                ENDPOINT,
+                &OP_5,
+                &[("id", reference)],
+                Ok(Payload::Empty),
+                Ok(serde_json::json!({})),
+            ),
+            Core::new(
+                self.client.clone(),
+                "telemetry",
+                ENDPOINT,
+                &OP_13,
+                &[],
+                Ok(Payload::Empty),
+                serde_json::to_value(scope).map_err(crate::Error::from),
+            ),
+            reference,
+            true,
+            Some("alert"),
+            "alerts",
+        );
+        Request::reference(core, extract)
     }
     /// Get a single log record by id
     pub fn get_log(&self, log_id: &str) -> Request<m::GetLogResponse> {
@@ -567,7 +716,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_3,
+            &OP_6,
             &[("log_id", log_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -579,7 +728,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_4,
+            &OP_7,
             &[("id", id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -596,7 +745,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_4,
+                &OP_7,
                 &[("id", reference)],
                 Ok(Payload::Empty),
                 Ok(serde_json::json!({})),
@@ -605,7 +754,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_10,
+                &OP_14,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(scope).map_err(crate::Error::from),
@@ -625,7 +774,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_5,
+            &OP_8,
             &[],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -637,7 +786,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_6,
+            &OP_9,
             &[("trace_id", trace_id)],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -649,7 +798,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_7,
+            &OP_10,
             &[],
             Ok(Payload::Empty),
             Ok(serde_json::json!({})),
@@ -661,7 +810,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_8,
+            &OP_11,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -673,11 +822,29 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_9,
+            &OP_12,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
         ))
+    }
+    /// List metric alerts
+    pub fn list_alerts(
+        &self,
+        query: &m::ListAlertsQuery,
+    ) -> PagedRequest<m::ListAlertsResponse, m::ListAlertsItem> {
+        PagedRequest::new(
+            Core::new(
+                self.client.clone(),
+                "telemetry",
+                ENDPOINT,
+                &OP_13,
+                &[],
+                Ok(Payload::Empty),
+                serde_json::to_value(query).map_err(crate::Error::from),
+            ),
+            "alerts",
+        )
     }
     /// List log groups (or look up one by name)
     pub fn list_log_groups(
@@ -689,7 +856,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_10,
+                &OP_14,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -707,7 +874,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_11,
+                &OP_15,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -724,7 +891,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_12,
+            &OP_16,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -740,7 +907,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_13,
+                &OP_17,
                 &[],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -757,7 +924,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_14,
+            &OP_18,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -774,7 +941,7 @@ impl TelemetryService {
                 self.client.clone(),
                 "telemetry",
                 ENDPOINT,
-                &OP_15,
+                &OP_19,
                 &[("trace_id", trace_id)],
                 Ok(Payload::Empty),
                 serde_json::to_value(query).map_err(crate::Error::from),
@@ -791,7 +958,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_16,
+            &OP_20,
             &[],
             Ok(Payload::Empty),
             serde_json::to_value(query).map_err(crate::Error::from),
@@ -806,7 +973,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_17,
+            &OP_21,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -821,7 +988,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_18,
+            &OP_22,
             &[],
             Ok(Payload::Empty),
             serde_json::to_value(query).map_err(crate::Error::from),
@@ -836,7 +1003,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_19,
+            &OP_23,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -848,7 +1015,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_20,
+            &OP_24,
             &[],
             Ok(Payload::Empty),
             serde_json::to_value(query).map_err(crate::Error::from),
@@ -860,10 +1027,26 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_21,
+            &OP_25,
             &[],
             Ok(Payload::Empty),
             serde_json::to_value(query).map_err(crate::Error::from),
+        ))
+    }
+    /// Update a metric alert
+    pub fn update_alert(
+        &self,
+        id: &str,
+        body: &m::UpdateAlertBody,
+    ) -> Request<m::UpdateAlertResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "telemetry",
+            ENDPOINT,
+            &OP_26,
+            &[("id", id)],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
         ))
     }
     /// Update a log group
@@ -876,7 +1059,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_22,
+            &OP_27,
             &[("id", id)],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -891,7 +1074,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_23,
+            &OP_28,
             &[],
             Payload::json(body),
             Ok(serde_json::json!({})),
@@ -903,7 +1086,7 @@ impl TelemetryService {
             self.client.clone(),
             "telemetry",
             ENDPOINT,
-            &OP_24,
+            &OP_29,
             &[],
             Ok(Payload::binary(body)),
             Ok(serde_json::json!({})),
