@@ -2739,6 +2739,7 @@ pub enum AutoscalingStatusStatus {
     Stabilizing,
     Cooldown,
     Draining,
+    ScaleInBlocked,
     Unknown(String),
 }
 impl AutoscalingStatusStatus {
@@ -2754,6 +2755,7 @@ impl AutoscalingStatusStatus {
             Self::Stabilizing => "stabilizing",
             Self::Cooldown => "cooldown",
             Self::Draining => "draining",
+            Self::ScaleInBlocked => "scale_in_blocked",
             Self::Unknown(value) => value,
         }
     }
@@ -2777,6 +2779,7 @@ impl<'de> serde::Deserialize<'de> for AutoscalingStatusStatus {
             "stabilizing" => Self::Stabilizing,
             "cooldown" => Self::Cooldown,
             "draining" => Self::Draining,
+            "scale_in_blocked" => Self::ScaleInBlocked,
             _ => Self::Unknown(value),
         })
     }
