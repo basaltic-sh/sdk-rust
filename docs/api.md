@@ -602,6 +602,16 @@ Update an instance pool's description, size, tags or launch template
 pub fn update_instance_pool(&self, pool_id: &str, body: &m::UpdateInstancePoolBody) -> Request<m::UpdateInstancePoolResponse>
 ```
 
+## `compute.update_instance_pool_member_protection`
+
+Update member scale-in protection
+
+`PATCH /v1/instance-pools/{pool_id}/instances/{instance_id}`
+
+```rust
+pub fn update_instance_pool_member_protection(&self, pool_id: &str, instance_id: &str, body: &m::UpdateInstancePoolMemberProtectionBody) -> Request<m::UpdateInstancePoolMemberProtectionResponse>
+```
+
 ## `compute.update_instance_volume_attachment`
 
 Update a volume attachment's settings
@@ -3609,7 +3619,7 @@ List quotas
 `GET /v1/quotas`
 
 ```rust
-pub fn list_quotas(&self, query: &m::ListQuotasQuery) -> PagedRequest<m::ListQuotasResponse, m::ListQuotasItem>
+pub fn list_quotas(&self, query: &m::ListQuotasQuery) -> Request<m::ListQuotasResponse>
 ```
 
 ## `registry.batch_delete_image`

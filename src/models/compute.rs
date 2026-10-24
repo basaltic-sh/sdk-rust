@@ -2358,6 +2358,20 @@ pub struct InstancePool {
         skip_serializing_if = "Option::is_none"
     )]
     pub rollout_surge: Option<bool>,
+    /// Instance UUIDs protected from manual and automatic scale-in. Protection does not prevent refresh, failed-instance replacement, or explicit deletion.
+    #[serde(
+        rename = "scale_in_protected_instances",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub scale_in_protected_instances: Option<Vec<String>>,
+    /// Why scale-in protection currently prevents the requested reduction. Omitted when not blocked.
+    #[serde(
+        rename = "scale_in_blocked_reason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub scale_in_blocked_reason: Option<String>,
 
     #[serde(
         rename = "retiring_instances",
@@ -4032,6 +4046,13 @@ pub type UpdateInstanceResponse = UpdateInstanceResult;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct InstancePoolUpdateRequestInput {
+    /// Exact member UUIDs to retire. Requires an explicit lower desired_count and exactly current desired_count minus new desired_count members. The pool must have converged membership and no retirement or refresh in progress. Selected members must belong to this pool and be unprotected. Only sizing and autoscaling fields may accompany selection. Selection and sizing are committed atomically; stale or protected selections return 409 without substituting another member. Use Idempotency-Key when retrying.
+    #[serde(
+        rename = "scale_in_instances",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub scale_in_instances: Option<Vec<String>>,
     /// Replace the eligible placement set. Omit to preserve it. Affects future launches; run an explicit refresh to move existing members. All selected subnets must share a VPC.
     #[serde(rename = "subnets", default, skip_serializing_if = "Option::is_none")]
     pub subnets: Option<Vec<String>>,
@@ -4073,6 +4094,24 @@ pub struct InstancePoolUpdateRequestInput {
 pub type UpdateInstancePoolBody = InstancePoolUpdateRequestInput;
 
 pub type UpdateInstancePoolResponse = InstancePoolResponse;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct InstancePoolMemberProtectionRequestInput {
+    /// Protect this member from manual and automatic scale-in. Remove protection before selecting it for scale-in. Cannot change a retiring member. Explicit refresh, failed-instance replacement, instance deletion and pool deletion are unaffected. Replacement instances start unprotected.
+    #[serde(rename = "scale_in_protected")]
+    pub scale_in_protected: bool,
+}
+impl InstancePoolMemberProtectionRequestInput {
+    /// Set the required fields; optional fields start omitted.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(scale_in_protected: bool) -> Self {
+        Self { scale_in_protected }
+    }
+}
+
+pub type UpdateInstancePoolMemberProtectionBody = InstancePoolMemberProtectionRequestInput;
+
+pub type UpdateInstancePoolMemberProtectionResponse = InstancePoolResponse;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UpdateInstanceVolumeAttachmentRequest {

@@ -25,21 +25,15 @@ pub struct QuotaService {
 }
 impl QuotaService {
     /// List quotas
-    pub fn list_quotas(
-        &self,
-        query: &m::ListQuotasQuery,
-    ) -> PagedRequest<m::ListQuotasResponse, m::ListQuotasItem> {
-        PagedRequest::new(
-            Core::new(
-                self.client.clone(),
-                "quota",
-                ENDPOINT,
-                &OP_0,
-                &[],
-                Ok(Payload::Empty),
-                serde_json::to_value(query).map_err(crate::Error::from),
-            ),
-            "quotas",
-        )
+    pub fn list_quotas(&self, query: &m::ListQuotasQuery) -> Request<m::ListQuotasResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "quota",
+            ENDPOINT,
+            &OP_0,
+            &[],
+            Ok(Payload::Empty),
+            serde_json::to_value(query).map_err(crate::Error::from),
+        ))
     }
 }

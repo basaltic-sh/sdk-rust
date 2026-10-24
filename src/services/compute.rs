@@ -650,6 +650,17 @@ static OP_37: Operation = Operation {
     query_encoding: &[],
 };
 static OP_38: Operation = Operation {
+    id: "updateInstancePoolMemberProtection",
+    method: "PATCH",
+    path: "/v1/instance-pools/{pool_id}/instances/{instance_id}",
+    authenticated: true,
+    required_query: &[],
+    required_headers: &[],
+    content_type: "application/json",
+    accept: "application/json",
+    query_encoding: &[],
+};
+static OP_39: Operation = Operation {
     id: "updateInstanceVolumeAttachment",
     method: "PATCH",
     path: "/v1/instances/{instance_id}/volumes/{volume_id}",
@@ -1361,6 +1372,23 @@ impl ComputeService {
             Ok(serde_json::json!({})),
         ))
     }
+    /// Update member scale-in protection
+    pub fn update_instance_pool_member_protection(
+        &self,
+        pool_id: &str,
+        instance_id: &str,
+        body: &m::UpdateInstancePoolMemberProtectionBody,
+    ) -> Request<m::UpdateInstancePoolMemberProtectionResponse> {
+        Request::new(Core::new(
+            self.client.clone(),
+            "compute",
+            ENDPOINT,
+            &OP_38,
+            &[("pool_id", pool_id), ("instance_id", instance_id)],
+            Payload::json(body),
+            Ok(serde_json::json!({})),
+        ))
+    }
     /// Update a volume attachment's settings
     pub fn update_instance_volume_attachment(
         &self,
@@ -1372,7 +1400,7 @@ impl ComputeService {
             self.client.clone(),
             "compute",
             ENDPOINT,
-            &OP_38,
+            &OP_39,
             &[("instance_id", instance_id), ("volume_id", volume_id)],
             Payload::json(body),
             Ok(serde_json::json!({})),

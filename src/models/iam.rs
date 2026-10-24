@@ -414,7 +414,7 @@ pub struct SSHKeyCreateRequestInput {
     /// One OpenSSH public key. Ed25519, ECDSA, security-key variants, and RSA of at least 2048 bits are supported. Private keys, certificates, multiple keys and authorized_keys options are rejected.
     #[serde(rename = "public_key")]
     pub public_key: String,
-    /// Optional expiry at least one minute in the future. Rotation requires a new credential and revocation of the old one.
+    /// Optional expiry at least one minute in the future. Expired keys stop authorizing new logins and stop consuming quota immediately; records are automatically deleted after seven days by an hourly cleanup. Rotation requires a new credential and revocation of the old one.
     #[serde(
         rename = "expires_at",
         default,
@@ -464,7 +464,7 @@ pub struct SSHKey {
 
     #[serde(rename = "created_at")]
     pub created_at: String,
-    /// Optional expiry. Expired keys remain listed until revoked.
+    /// Optional expiry. Expired keys do not count toward the SSH key quota. They remain listed for seven days after expiry, then are automatically deleted by an hourly cleanup.
     #[serde(
         rename = "expires_at",
         default,
